@@ -1,0 +1,44 @@
+{
+  "backend": "json",
+  "level": "DEBUG",
+  "log_directory": "./logs",
+  "redaction": {
+    "enabled": false,
+    "placeholder": "[DEV_REDACTED]",
+    "patterns": [
+      {
+        "pattern": "\\b\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}\\b",
+        "placeholder": "[CREDIT_CARD_REDACTED]"
+      }
+    ]
+  },
+  "formatters": {
+    "default": {
+      "format": "{\"timestamp\": \"%(asctime)s\", \"level\": \"%(levelname)s\", \"logger\": \"%(name)s\", \"message\": %(message)s}",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  },
+  "handlers": {
+    "console": {
+      "type": "console",
+      "level": "DEBUG"
+    },
+    "file": {
+      "type": "file",
+      "level": "DEBUG",
+      "filename": "dev_application.log"
+    }
+  },
+  "delayed_logging": {
+    "enabled": true,
+    "queue_size_kb": 10,
+    "flush_on_exception": true,
+    "flush_on_completion": true
+  },
+  "duration_logging": {
+    "slow_threshold_seconds": 0.5,
+    "warn_threshold_seconds": 2.0,
+    "error_threshold_seconds": 10.0
+  },
+  "notes": "Development environment configuration optimized for developer experience. Features: delayed logging enabled for performance testing, moderate duration thresholds, basic redaction for sensitive data protection, JSON backend for structured development logging"
+}

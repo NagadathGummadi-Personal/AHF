@@ -1,0 +1,43 @@
+{
+  "backend": "standard",
+  "level": "DEBUG",
+  "log_directory": "./logs",
+  "redaction": {
+    "enabled": false
+  },
+  "formatters": {
+    "default": {
+      "format": "[TEST] %(asctime)s - %(name)s - %(levelname)s - %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "detailed": {
+      "format": "[TEST] %(asctime)s - %(name)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  },
+  "handlers": {
+    "console": {
+      "type": "console",
+      "level": "DEBUG",
+      "formatter": "detailed"
+    },
+    "file": {
+      "type": "file",
+      "level": "DEBUG",
+      "formatter": "detailed",
+      "filename": "test_application.log"
+    }
+  },
+  "delayed_logging": {
+    "enabled": false,
+    "queue_size_kb": 0,
+    "flush_on_exception": false,
+    "flush_on_completion": false
+  },
+  "duration_logging": {
+    "slow_threshold_seconds": 0.1,
+    "warn_threshold_seconds": 0.5,
+    "error_threshold_seconds": 2.0
+  },
+  "notes": "Test environment configuration for comprehensive testing. Features: delayed logging disabled for immediate feedback, sensitive duration thresholds to catch performance issues early, detailed logging for debugging, redaction disabled to see full data during testing"
+} 

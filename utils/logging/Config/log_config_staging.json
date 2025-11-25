@@ -1,0 +1,63 @@
+{
+  "backend": "detailed",
+  "level": "INFO",
+  "log_directory": "./logs",
+  "redaction": {
+    "enabled": true,
+    "placeholder": "[STAGING_REDACTED]",
+    "patterns": [
+      {
+        "pattern": "password=\\S+",
+        "placeholder": "password=[HIDDEN]",
+        "flags": ["ignorecase"]
+      },
+      {
+        "pattern": "\\b\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}\\b",
+        "placeholder": "[CREDIT_CARD_REDACTED]"
+      },
+      {
+        "pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+        "placeholder": "[EMAIL_REDACTED]"
+      }
+    ]
+  },
+  "formatters": {
+    "default": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "detailed": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "json": {
+      "format": "{\"timestamp\": \"%(asctime)s\", \"level\": \"%(levelname)s\", \"logger\": \"%(name)s\", \"message\": \"%(message)s\"}",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  },
+  "handlers": {
+    "console": {
+      "type": "console",
+      "level": "INFO",
+      "formatter": "default"
+    },
+    "file": {
+      "type": "rotating_file",
+      "level": "INFO",
+      "filename": "staging_application.log",
+      "max_bytes": 10485760,
+      "backup_count": 5
+    }
+  },
+  "delayed_logging": {
+    "enabled": true,
+    "queue_size_kb": 8,
+    "flush_on_exception": true,
+    "flush_on_completion": true
+  },
+  "duration_logging": {
+    "slow_threshold_seconds": 0.8,
+    "warn_threshold_seconds": 5.0,
+    "error_threshold_seconds": 30.0
+  }
+} 
