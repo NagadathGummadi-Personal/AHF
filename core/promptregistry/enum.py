@@ -1,0 +1,38 @@
+"""
+Enumerations for Prompt Registry Subsystem.
+"""
+
+from enum import Enum
+from .constants import (
+    STATUS_DRAFT,
+    STATUS_ACTIVE,
+    STATUS_DEPRECATED,
+    STATUS_ARCHIVED,
+    CATEGORY_SYSTEM,
+    CATEGORY_USER,
+    CATEGORY_ASSISTANT,
+    CATEGORY_FUNCTION,
+    CATEGORY_TOOL,
+    CATEGORY_TEMPLATE,
+    CATEGORY_EXAMPLE,
+)
+
+
+class PromptStatus(str, Enum):
+    """Status of a prompt."""
+    DRAFT = STATUS_DRAFT
+    ACTIVE = STATUS_ACTIVE
+    DEPRECATED = STATUS_DEPRECATED
+    ARCHIVED = STATUS_ARCHIVED
+
+
+class PromptCategory(str, Enum):
+    """Category of a prompt."""
+    SYSTEM = CATEGORY_SYSTEM
+    USER = CATEGORY_USER
+    ASSISTANT = CATEGORY_ASSISTANT
+    FUNCTION = CATEGORY_FUNCTION
+    TOOL = CATEGORY_TOOL
+    TEMPLATE = CATEGORY_TEMPLATE
+    EXAMPLE = CATEGORY_EXAMPLE
+
