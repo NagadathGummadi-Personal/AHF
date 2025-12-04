@@ -112,8 +112,11 @@ class AgentBuilder:
         self._tags: List[str] = []
         self._metadata: Dict[str, Any] = {}
         
-        # Custom agent class
+        # Custom agent class (direct class override)
         self._agent_class: Optional[Type['IAgent']] = None
+        
+        # Custom type via factory registration
+        self._custom_type_id: Optional[str] = None
     
     # ==================== Identity ====================
     
@@ -129,12 +132,36 @@ class AgentBuilder:
     
     def as_type(self, agent_type: AgentType) -> 'AgentBuilder':
         """
-        Specify the type of agent to build.
+        Specify a built-in type of agent to build.
         
         Args:
             agent_type: Type of agent (react, goal_based, hierarchical, simple)
         """
         self._agent_type = agent_type
+        self._custom_type_id = None  # Clear custom type
+        return self
+    
+    def as_custom_type(self, type_id: str) -> 'AgentBuilder':
+        """
+        Specify a custom registered agent type to build.
+        
+        Use AgentFactory.register() to register custom types before using this.
+        
+        Args:
+            type_id: The registered custom type identifier
+            
+        Example:
+            # First register the type
+            AgentFactory.register("air_agent", AIRAgent, ...)
+            
+            # Then use it
+            agent = (AgentBuilder()
+                .with_name("my_agent")
+                .with_llm(llm)
+                .as_custom_type("air_agent")
+                .build())
+        """
+        self._custom_type_id = type_id
         return self
     
     # ==================== LLMs ====================
@@ -363,32 +390,18 @@ class AgentBuilder:
     
     def _get_agent_class(self) -> Type['IAgent']:
         """Get the appropriate agent class based on type."""
+        # Priority 1: Direct class override
         if self._agent_class:
             return self._agent_class
         
-        # Import agent implementations
-        from ..implementations import (
-            ReactAgent,
-            GoalBasedAgent,
-            HierarchicalAgent,
-            SimpleAgent,
-        )
+        # Priority 2: Custom type via factory
+        if self._custom_type_id:
+            from ..runtimes.agent_factory import AgentFactory
+            return AgentFactory.get_agent_class(self._custom_type_id)
         
-        type_map = {
-            AgentType.REACT: ReactAgent,
-            AgentType.GOAL_BASED: GoalBasedAgent,
-            AgentType.HIERARCHICAL: HierarchicalAgent,
-            AgentType.SIMPLE: SimpleAgent,
-        }
-        
-        agent_class = type_map.get(self._agent_type)
-        if not agent_class:
-            raise AgentBuildError(
-                f"Unknown agent type: {self._agent_type}",
-                details={"available_types": list(type_map.keys())}
-            )
-        
-        return agent_class
+        # Priority 3: Built-in type via factory
+        from ..runtimes.agent_factory import AgentFactory
+        return AgentFactory.get_agent_class(self._agent_type)
     
     def build(self) -> 'IAgent':
         """

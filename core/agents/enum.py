@@ -54,7 +54,12 @@ from .constants import (
 
 
 class AgentType(str, Enum):
-    """Agent type identifiers."""
+    """
+    Built-in agent type identifiers.
+    
+    For custom agent types, use AgentFactory.register() instead of modifying this enum.
+    Custom types can use any string identifier.
+    """
     REACT = AGENT_TYPE_REACT
     GOAL_BASED = AGENT_TYPE_GOAL_BASED
     HIERARCHICAL = AGENT_TYPE_HIERARCHICAL

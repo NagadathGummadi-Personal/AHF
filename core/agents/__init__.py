@@ -123,6 +123,9 @@ from .runtimes import (
     NoOpObserver,
     LoggingObserver,
     ObserverFactory,
+    # Agent Factory
+    AgentFactory,
+    AgentTypeRegistration,
 )
 
 # Implementations
@@ -193,6 +196,9 @@ __all__ = [
     "NoOpObserver",
     "LoggingObserver",
     "ObserverFactory",
+    # Agent Factory
+    "AgentFactory",
+    "AgentTypeRegistration",
     # Implementations
     "BaseAgent",
     "SimpleAgent",

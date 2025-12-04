@@ -17,6 +17,9 @@ from .checklist import BasicChecklist, ChecklistFactory
 # Observer implementations
 from .observers import NoOpObserver, LoggingObserver, ObserverFactory
 
+# Agent factory
+from .agent_factory import AgentFactory, AgentTypeRegistration
+
 __all__ = [
     # Memory
     "NoOpAgentMemory",
@@ -33,5 +36,8 @@ __all__ = [
     "NoOpObserver",
     "LoggingObserver",
     "ObserverFactory",
+    # Agent Factory
+    "AgentFactory",
+    "AgentTypeRegistration",
 ]
 

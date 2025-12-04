@@ -37,6 +37,7 @@ AZURE_CONFIG = {
     "endpoint": "https://zeenie-sweden.openai.azure.com/",
     "deployment_name": "gpt-4.1-mini",  # Using GPT-4.1 Mini deployment
     "api_version": "2024-02-15-preview",
+    "api_key": "ss",
     "timeout": 60,
 }
 
