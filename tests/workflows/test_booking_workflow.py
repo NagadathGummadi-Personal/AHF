@@ -23,32 +23,26 @@ Key Architecture Concepts Demonstrated:
 - WorkflowTool for agent integration
 """
 
+import json
+import time
 import pytest
-import asyncio
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
+from core.llms import LLMFactory, create_context
 from core.workflows import (
     # Builder and Engine
     WorkflowBuilder,
     WorkflowEngine,
     # Enums
     NodeType,
-    EdgeType,
-    NodeState,
-    WorkflowState,
     ConditionOperator,
-    RoutingStrategy,
     DataType,
     DataFormat,
-    IntentType,
     VariableRequirement,
     ConditionSourceType,
     # Spec Models
-    WorkflowSpec,
     NodeSpec,
-    EdgeSpec,
-    ConditionSpec,
     WorkflowContext,
     IOSpec,
     IOFieldSpec,
@@ -56,33 +50,38 @@ from core.workflows import (
     TransitionVariable,
     TransitionCondition,
     # Implementations
-    Workflow,
     BaseNode,
-    StartNode,
-    EndNode,
     LLMNode,
-    SwitchNode,
-    HumanInputNode,
-    AgentNode,
     # Tools
     WorkflowTool,
     create_workflow_tool,
     # Interfaces
-    INode,
     IWorkflowContext,
     IWorkflowObserver,
-    INodeObserver,
-)
-from core.workflows.exceptions import (
-    WorkflowError,
-    NodeExecutionError,
-    WorkflowBuildError,
 )
 from utils.logging.LoggerAdaptor import LoggerAdaptor
 
 # Setup logger
 logger = LoggerAdaptor.get_logger("tests.workflows.booking")
 
+# ============================================================================
+# AZURE GPT-4.1 MINI CONFIG
+# ============================================================================
+
+# AZURE_CONFIG = {
+#     "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT", "),
+#     "deployment_name": os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-mini"),
+#     "api_version": os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+#     "api_key": os.getenv("AZURE_OPENAI_KEY", ""),
+#     "timeout": int(os.getenv("AZURE_OPENAI_TIMEOUT", "60")),
+# }
+
+AZURE_CONFIG = {
+    "endpoint": "https://zeenie-sweden.openai.azure.com/",
+    "deployment_name": "gpt-4.1-mini",  # Using GPT-4.1 Mini deployment
+    "api_version": "2024-02-15-preview",
+    "timeout": 60,
+}
 
 # ============================================================================
 # MOCK LLM FOR TESTING
@@ -111,7 +110,17 @@ class MockLLM:
                 return MockResponse(response)
         
         # Default response
-        return MockResponse("I understand. How can I help you today?")
+        default_payload = {
+            "intent": "unknown",
+            "detected_services": [],
+            "service_name": None,
+            "guest_name": None,
+        }
+        return MockResponse(json.dumps(default_payload))
+
+    async def get_answer(self, messages: List[Dict[str, str]], ctx: Any = None, **kwargs) -> Any:
+        """Mock get_answer to mirror real LLM interface."""
+        return await self.generate(messages, **kwargs)
 
 
 class MockResponse:
@@ -146,30 +155,75 @@ class GreetingNode(BaseNode):
     
     async def execute(self, input_data: Any, context: IWorkflowContext) -> Any:
         logger.info(f"[GREETING] Processing: {input_data}")
+        started_at = time.perf_counter()
         
         message = input_data.get("message", "") if isinstance(input_data, dict) else str(input_data)
+        llm = context.get("llm")
         
-        # Simple intent detection (in real system, use LLM)
+        # Try LLM-based intent & entity extraction when available
         intent = "unknown"
-        if any(word in message.lower() for word in ["book", "appointment", "schedule", "reserve"]):
-            intent = "book"
-        elif any(word in message.lower() for word in ["cancel", "remove"]):
-            intent = "cancel"
-        elif any(word in message.lower() for word in ["reschedule", "change", "move"]):
-            intent = "reschedule"
-        elif any(word in message.lower() for word in ["hi", "hello", "hey"]):
-            intent = "greeting"
-        
-        # Extract any mentioned services
-        services = []
-        service_keywords = ["haircut", "massage", "facial", "manicure", "spa"]
-        for service in service_keywords:
-            if service in message.lower():
-                services.append(service)
-        
-        # Extract names (simple pattern - would use NER in real system)
+        services: List[str] = []
+        service_name = None
         guest_name = None
-        if "my name is" in message.lower():
+        
+        if llm:
+            try:
+                system_prompt = (
+                    "You are an intent classifier for salon bookings. "
+                    "Extract intent (book, cancel, reschedule, inquiry, greeting, unknown), "
+                    "service_name, a list of detected_services, and guest_name if stated. "
+                    "Return JSON with keys: intent (lowercase string), service_name (string or null), "
+                    "detected_services (array of strings), guest_name (string or null). "
+                    "If unsure, set intent to \"unknown\" and detected_services to []."
+                )
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": message},
+                ]
+                llm_start = time.perf_counter()
+                if hasattr(llm, "get_answer"):
+                    llm_ctx = create_context(
+                        user_id=str(getattr(context, "workflow_id", "workflow")),
+                        session_id=str(getattr(context, "execution_id", "session")),
+                    )
+                    resp = await llm.get_answer(messages, llm_ctx, max_tokens=200)
+                else:
+                    resp = await llm.generate(messages, max_tokens=200)
+                llm_ms = (time.perf_counter() - llm_start) * 1000
+                parsed = self._parse_llm_response(resp)
+                intent = parsed.get("intent", intent) or intent
+                services = parsed.get("detected_services", services) or services
+                service_name = parsed.get("service_name", service_name) or service_name
+                guest_name = parsed.get("guest_name", guest_name) or guest_name
+                logger.info(
+                    f"[GREETING] LLM intent parsed in {llm_ms:.1f}ms: intent={intent}, "
+                    f"services={services}, service_name={service_name}, guest_name={guest_name}"
+                )
+            except Exception as e:
+                logger.warning(f"[GREETING] LLM intent extraction failed, falling back. Error: {e}")
+        
+        # Heuristic fallback if LLM not available or insufficient
+        if intent == "unknown":
+            if any(word in message.lower() for word in ["book", "appointment", "schedule", "reserve"]):
+                intent = "book"
+            elif any(word in message.lower() for word in ["cancel", "remove"]):
+                intent = "cancel"
+            elif any(word in message.lower() for word in ["reschedule", "change", "move"]):
+                intent = "reschedule"
+            elif any(word in message.lower() for word in ["hi", "hello", "hey"]):
+                intent = "greeting"
+        
+        if not services:
+            service_keywords = ["haircut", "massage", "facial", "manicure", "spa"]
+            for service in service_keywords:
+                if service in message.lower():
+                    services.append(service)
+        
+        # Derive service_name if still missing
+        if not service_name and services:
+            service_name = services[0]
+        
+        if not guest_name and "my name is" in message.lower():
             parts = message.lower().split("my name is")
             if len(parts) > 1:
                 guest_name = parts[1].strip().split()[0].title()
@@ -179,20 +233,52 @@ class GreetingNode(BaseNode):
         context.set("detected_services", services)
         if guest_name:
             context.set("guest_name", guest_name)
-        if services:
-            context.set("service_name", services[0])
+        if service_name:
+            context.set("service_name", service_name)
         
         result = {
             "greeting": "Hello! Welcome to our service center.",
             "message": message,
             "detected_intent": intent,
             "detected_services": services,
+            "service_name": service_name,
             "guest_name": guest_name,
             "needs_more_info": intent == "unknown" or intent == "greeting",
         }
         
-        logger.info(f"[GREETING] Detected intent: {intent}, services: {services}")
+        total_ms = (time.perf_counter() - started_at) * 1000
+        logger.info(
+            f"[GREETING] Detected intent: {intent}, services: {services}, "
+            f"service_name={service_name}, guest_name={guest_name}, duration={total_ms:.1f}ms"
+        )
         return result
+    
+    def _parse_llm_response(self, response: Any) -> Dict[str, Any]:
+        """Parse LLM JSON response safely."""
+        content = getattr(response, "content", "") if response else ""
+        try:
+            data = json.loads(content)
+            if not isinstance(data, dict):
+                return {}
+            # Normalize keys
+            intent = str(data.get("intent", "unknown")).lower()
+            services = data.get("detected_services") or []
+            if isinstance(services, str):
+                services = [services]
+            service_name = data.get("service_name")
+            if service_name:
+                service_name = str(service_name).strip().lower()
+            guest_name = data.get("guest_name")
+            if guest_name:
+                guest_name = str(guest_name).strip().title()
+            return {
+                "intent": intent,
+                "detected_services": services,
+                "service_name": service_name,
+                "guest_name": guest_name,
+            }
+        except Exception:
+            return {}
 
 
 class IntentRouterNode(BaseNode):
@@ -203,7 +289,7 @@ class IntentRouterNode(BaseNode):
     """
     
     async def execute(self, input_data: Any, context: IWorkflowContext) -> Any:
-        logger.info(f"[ROUTER] Routing based on intent")
+        logger.info("[ROUTER] Routing based on intent")
         
         # Get intent from context or input
         intent = context.get("detected_intent", "unknown")
@@ -251,7 +337,7 @@ class BookingValidationNode(BaseNode):
     """
     
     async def execute(self, input_data: Any, context: IWorkflowContext) -> Any:
-        logger.info(f"[BOOKING_VALIDATION] Checking required fields")
+        logger.info("[BOOKING_VALIDATION] Checking required fields")
         
         # Get current values
         service_name = context.get("service_name")
@@ -309,7 +395,7 @@ class ServiceLookupNode(BaseNode):
     }
     
     async def execute(self, input_data: Any, context: IWorkflowContext) -> Any:
-        logger.info(f"[SERVICE_LOOKUP] Looking up service")
+        logger.info("[SERVICE_LOOKUP] Looking up service")
         
         service_name = context.get("service_name", "")
         if isinstance(input_data, dict):
@@ -350,7 +436,7 @@ class BookingConfirmationNode(BaseNode):
     """
     
     async def execute(self, input_data: Any, context: IWorkflowContext) -> Any:
-        logger.info(f"[BOOKING_CONFIRMATION] Creating booking")
+        logger.info("[BOOKING_CONFIRMATION] Creating booking")
         
         service_name = context.get("service_name", "Unknown")
         guest_name = context.get("guest_name", "Guest")
@@ -381,7 +467,7 @@ class ClarificationNode(BaseNode):
     """
     
     async def execute(self, input_data: Any, context: IWorkflowContext) -> Any:
-        logger.info(f"[CLARIFICATION] Requesting clarification")
+        logger.info("[CLARIFICATION] Requesting clarification")
         
         result = {
             "message": "I'm not quite sure what you'd like to do. Would you like to:\n"
@@ -437,10 +523,43 @@ class BookingWorkflowObserver(IWorkflowObserver):
 def mock_llm():
     """Create a mock LLM for testing."""
     return MockLLM({
-        "book": "I'd like to book an appointment.",
-        "haircut": "I need a haircut appointment.",
-        "cancel": "I want to cancel my booking.",
+        "book": json.dumps({
+            "intent": "book",
+            "detected_services": ["haircut"],
+            "guest_name": "John",
+        }),
+        "haircut": json.dumps({
+            "intent": "book",
+            "detected_services": ["haircut"],
+            "guest_name": "John",
+        }),
+        "cancel": json.dumps({
+            "intent": "cancel",
+            "detected_services": [],
+            "guest_name": None,
+        }),
     })
+
+
+@pytest.fixture
+def skip_if_no_azure_llm():
+    """Skip tests that require Azure GPT-4.1 Mini when credentials are missing."""
+    if not AZURE_CONFIG["api_key"] or "your-resource" in AZURE_CONFIG["endpoint"]:
+        pytest.skip("Azure GPT-4.1 Mini credentials not configured")
+
+
+@pytest.fixture
+async def azure_llm(skip_if_no_azure_llm):
+    """Create a real Azure GPT-4.1 Mini LLM instance."""
+    llm = LLMFactory.create_llm(
+        "azure-gpt-4.1-mini",
+        connector_config=AZURE_CONFIG
+    )
+    
+    yield llm
+    
+    if hasattr(llm.connector, "close"):
+        await llm.connector.close()
 
 
 @pytest.fixture
@@ -457,7 +576,7 @@ def workflow_observer():
 class TestBasicBookingFlow:
     """Test basic booking workflow scenarios."""
     
-    async def test_greeting_node_detects_booking_intent(self):
+    async def test_greeting_node_detects_booking_intent(self, azure_llm):
         """Test that greeting node correctly identifies booking intent."""
         logger.info("=" * 60)
         logger.info("TEST: greeting_node_detects_booking_intent")
@@ -471,10 +590,11 @@ class TestBasicBookingFlow:
         node = GreetingNode(spec)
         
         context = WorkflowContext(workflow_id="test")
+        context.set("llm", azure_llm)
         
         # Test booking intent
         result = await node.execute(
-            {"message": "Hi, I'd like to book a haircut appointment"},
+            {"message": "Hi, I'd like to book a haircut"},
             context
         )
         
@@ -623,7 +743,7 @@ class TestCompleteBookingWorkflow:
         
         logger.info(f"[OK] Booking confirmed: {context.get('booking_id')}")
     
-    async def test_booking_with_intent_routing(self, workflow_observer):
+    async def test_booking_with_intent_routing(self, workflow_observer, azure_llm):
         """Test booking workflow with intent-based routing."""
         logger.info("=" * 60)
         logger.info("TEST: booking_with_intent_routing")
@@ -671,14 +791,108 @@ class TestCompleteBookingWorkflow:
         
         engine = WorkflowEngine(workflow_observers=[workflow_observer])
         
+        # Pre-load context with real LLM for intent extraction
+        context = WorkflowContext(workflow_id="intent-routing")
+        context.set("llm", azure_llm)
+        
         # Test booking intent
         input_data = {"message": "I want to book a haircut"}
-        output, context = await engine.execute(workflow, input_data)
+        output, context = await engine.execute(workflow, input_data, context=context)
         
         assert context.get("detected_intent") == "book"
         assert "booking_flow" in context.execution_path
         
-        logger.info(f"[OK] Routed to booking_flow based on intent")
+        logger.info("[OK] Routed to booking_flow based on intent")
+
+
+# ============================================================================
+# TESTS: Real LLM Integration (Azure GPT-4.1 Mini)
+# ============================================================================
+
+
+@pytest.mark.asyncio
+class TestBookingWorkflowWithRealLLM:
+    """Integration tests that call a real Azure GPT-4.1 Mini LLM."""
+    
+    async def test_llm_node_generates_confirmation(
+        self,
+        skip_if_no_azure_llm,
+        azure_llm,
+        workflow_observer,
+    ):
+        """Ensure LLMNode can craft a booking confirmation with real LLM output."""
+
+        class AzureLLMGenerateAdapter:
+            """Adapter to expose generate() using the Azure LLM get_answer API."""
+
+            def __init__(self, llm):
+                self._llm = llm
+                self.name = getattr(llm, "metadata", None) and getattr(llm.metadata, "model_name", "azure-llm")
+
+            async def generate(self, messages, **kwargs):
+                llm_ctx = create_context(
+                    user_id="llm-confirmation-user",
+                    session_id="llm-confirmation-session",
+                )
+                return await self._llm.get_answer(messages, llm_ctx, **kwargs)
+
+        llm_config = {
+            "system_prompt": (
+                "You are a friendly booking assistant. "
+                "Always mention the service and guest name when confirming a booking. "
+                "Keep replies under 50 words."
+            ),
+            "user_prompt_template": (
+                "User message: {message}\n"
+                "Service: {service_name}\n"
+                "Guest: {guest_name}\n"
+                "Write a concise confirmation that includes the service and guest."
+            ),
+            "max_tokens": 120,
+        }
+        
+        workflow = (
+            WorkflowBuilder()
+            .with_name("LLM Booking Confirmation")
+            .with_description("Confirms bookings using a real LLM node")
+            .add_node("start", NodeType.START)
+            .add_node("llm_confirmation", NodeType.LLM, name="LLM Confirmation", config=llm_config)
+            .add_node("end", NodeType.END)
+            .add_edge("start", "llm_confirmation")
+            .add_edge("llm_confirmation", "end")
+            .build()
+        )
+        
+        # Inject LLM-backed node
+        workflow._nodes["llm_confirmation"] = LLMNode(
+            NodeSpec(
+                id="llm_confirmation",
+                name="LLM Confirmation",
+                node_type=NodeType.LLM,
+                config=llm_config,
+            ),
+            llm=AzureLLMGenerateAdapter(azure_llm),
+        )
+        
+        engine = WorkflowEngine(workflow_observers=[workflow_observer])
+        
+        input_data = {
+            "message": "Please confirm my haircut booking later today.",
+            "variables": {
+                "service_name": "haircut",
+                "guest_name": "Alice",
+            },
+        }
+        
+        output, context = await engine.execute(workflow, input_data)
+        
+        assert isinstance(output, dict)
+        assert "content" in output
+        
+        content_lower = str(output.get("content", "")).lower()
+        assert "haircut" in content_lower
+        assert "alice" in content_lower
+        assert "llm_confirmation" in context.execution_path
 
 
 # ============================================================================

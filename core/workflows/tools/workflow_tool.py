@@ -255,13 +255,21 @@ class WorkflowTool:
         
         # Map input
         workflow_input = self._map_input(kwargs)
+
+        # Prepare context with timeout metadata (engine reads from context.metadata)
+        from ..spec import WorkflowContext  # Local import to avoid cycles
+        context = WorkflowContext(
+            workflow_id=getattr(workflow, "id", "workflow_tool"),
+            input_data=workflow_input,
+            metadata={"timeout_seconds": self._timeout_s},
+        )
         
         try:
             # Execute workflow
             output, context = await engine.execute(
                 workflow,
                 workflow_input,
-                timeout_seconds=self._timeout_s,
+                context=context,
             )
             
             # Map output

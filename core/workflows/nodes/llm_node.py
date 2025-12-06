@@ -9,8 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from ..interfaces import IWorkflowContext
-from ..enum import NodeType, DataFormat
-from ..spec import NodeSpec, IOSpec, IOFieldSpec, DataType
+from ..enum import NodeType, DataFormat, DataType
+from ..spec import NodeSpec, IOSpec, IOFieldSpec
 from ..exceptions import NodeExecutionError
 from .base_node import BaseNode
 
