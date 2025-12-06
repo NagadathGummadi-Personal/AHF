@@ -64,13 +64,25 @@ class NodeFactory:
         from .start_end_nodes import StartNode, EndNode
         from .subworkflow_node import SubworkflowNode
         from .webhook_node import WebhookNode
+        from .llm_node import LLMNode
+        from .switch_node import SwitchNode
+        from .loop_node import LoopNode
+        from .human_input_node import HumanInputNode
         
-        # Register built-in nodes
+        # =================================================================
+        # EXECUTION NODES
+        # =================================================================
+        self.register(
+            NodeType.LLM,
+            LLMNode,
+            "LLM Node",
+            "Invokes a language model directly",
+        )
         self.register(
             NodeType.AGENT,
             AgentNode,
             "Agent Node",
-            "Executes an AI agent",
+            "Executes an AI agent with tools and memory",
         )
         self.register(
             NodeType.TOOL,
@@ -79,23 +91,69 @@ class NodeFactory:
             "Executes a tool or function",
         )
         self.register(
+            NodeType.SUBWORKFLOW,
+            SubworkflowNode,
+            "Subworkflow Node",
+            "Executes another workflow (nested composition)",
+        )
+        
+        # =================================================================
+        # CONTROL-FLOW NODES
+        # =================================================================
+        self.register(
             NodeType.DECISION,
             DecisionNode,
             "Decision Node",
-            "Makes routing decisions based on conditions",
+            "Router/conditional branching based on conditions",
+        )
+        self.register(
+            NodeType.SWITCH,
+            SwitchNode,
+            "Switch Node",
+            "Switch/case matching against multiple values",
         )
         self.register(
             NodeType.PARALLEL,
             ParallelNode,
             "Parallel Node",
-            "Executes multiple branches in parallel",
+            "Fan-out for concurrent execution",
         )
+        self.register(
+            NodeType.LOOP,
+            LoopNode,
+            "Loop Node",
+            "Repeat until condition is met",
+        )
+        
+        # =================================================================
+        # DATA & INTEGRATION NODES
+        # =================================================================
         self.register(
             NodeType.TRANSFORM,
             TransformNode,
             "Transform Node",
             "Transforms data between formats",
         )
+        self.register(
+            NodeType.WEBHOOK,
+            WebhookNode,
+            "Webhook Node",
+            "Makes HTTP webhook calls",
+        )
+        
+        # =================================================================
+        # HUMAN INTERACTION NODES
+        # =================================================================
+        self.register(
+            NodeType.HUMAN_INPUT,
+            HumanInputNode,
+            "Human Input Node",
+            "Pauses for human input or approval (HITL)",
+        )
+        
+        # =================================================================
+        # UTILITY NODES
+        # =================================================================
         self.register(
             NodeType.DELAY,
             DelayNode,
@@ -113,18 +171,6 @@ class NodeFactory:
             EndNode,
             "End Node",
             "Workflow exit point",
-        )
-        self.register(
-            NodeType.SUBWORKFLOW,
-            SubworkflowNode,
-            "Subworkflow Node",
-            "Executes another workflow",
-        )
-        self.register(
-            NodeType.WEBHOOK,
-            WebhookNode,
-            "Webhook Node",
-            "Makes HTTP webhook calls",
         )
         
         logger.debug(f"Registered {len(self._registrations)} built-in node types")
@@ -300,4 +346,3 @@ class NodeFactory:
         for type_id in to_remove:
             del cls._registrations[type_id]
         logger.info(f"Cleared {len(to_remove)} custom node types")
-

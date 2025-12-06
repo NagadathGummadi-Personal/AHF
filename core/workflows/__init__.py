@@ -8,9 +8,17 @@ Key Components:
 - Workflow: Main workflow class
 - WorkflowBuilder: Fluent API for building workflows
 - WorkflowEngine: Execution engine for running workflows
-- Nodes: Various node types (Agent, Tool, Decision, Transform, etc.)
-- Edges: Edge types with conditions and transformations
+- Nodes: Various node types (LLM, Agent, Tool, Decision, Switch, Loop, etc.)
+- Edges: Edge types with conditions, transitions, and transformations
 - Factories: Node and Edge factories for extensibility
+- WorkflowTool: Wrapper to use workflows as agent tools
+
+Node Categories:
+- Execution Nodes: LLM, Agent, Tool, Subworkflow
+- Control-Flow Nodes: Decision, Switch, Parallel, Loop
+- Data & Integration Nodes: Transform, Webhook (HTTP/DB via tools)
+- Human Interaction Nodes: HumanInput (HITL)
+- Utility Nodes: Delay, Start, End
 
 Example:
     from core.workflows import (
@@ -35,6 +43,10 @@ Example:
     # Execute
     engine = WorkflowEngine()
     result, context = await engine.execute(workflow, {"query": "Hello"})
+    
+    # Use workflow as a tool in an agent
+    from core.workflows.tools import WorkflowTool
+    tool = WorkflowTool(workflow=workflow, tool_name="my_workflow")
 """
 
 # Enums
@@ -47,8 +59,13 @@ from .enum import (
     RoutingStrategy,
     ExecutionMode,
     DataTransformType,
+    DataType,
+    DataFormat,
     TriggerType,
     RetryStrategy,
+    ConditionSourceType,
+    VariableRequirement,
+    IntentType,
 )
 
 # Interfaces
@@ -87,6 +104,13 @@ from .spec import (
     # Condition Models
     ConditionSpec,
     ConditionGroup,
+    # I/O Specification Models (new)
+    IOFieldSpec,
+    IOSpec,
+    # Transition Models (new)
+    TransitionVariable,
+    TransitionCondition,
+    TransitionSpec,
     # Transform Models
     TransformSpec,
     # Node Models
@@ -116,17 +140,33 @@ from .spec import (
 # Node Implementations
 from .nodes import (
     BaseNode,
+    NodeFactory,
+    # Execution Nodes
+    LLMNode,
     AgentNode,
     ToolNode,
+    SubworkflowNode,
+    # Control-Flow Nodes
     DecisionNode,
+    SwitchNode,
     ParallelNode,
+    LoopNode,
+    # Data & Integration Nodes
     TransformNode,
+    WebhookNode,
+    # Human Interaction Nodes
+    HumanInputNode,
+    # Utility Nodes
     DelayNode,
     StartNode,
     EndNode,
-    SubworkflowNode,
-    WebhookNode,
-    NodeFactory,
+)
+
+# Tools (Workflow-Agent Interoperability)
+from .tools import (
+    WorkflowTool,
+    WorkflowToolSpec,
+    create_workflow_tool,
 )
 
 # Edge Implementations
@@ -183,8 +223,13 @@ __all__ = [
     "RoutingStrategy",
     "ExecutionMode",
     "DataTransformType",
+    "DataType",
+    "DataFormat",
     "TriggerType",
     "RetryStrategy",
+    "ConditionSourceType",
+    "VariableRequirement",
+    "IntentType",
     # Interfaces
     "INode",
     "INodeExecutor",
@@ -208,6 +253,11 @@ __all__ = [
     # Spec Models
     "ConditionSpec",
     "ConditionGroup",
+    "IOFieldSpec",
+    "IOSpec",
+    "TransitionVariable",
+    "TransitionCondition",
+    "TransitionSpec",
     "TransformSpec",
     "NodeSpec",
     "NodeInputMapping",
@@ -227,17 +277,21 @@ __all__ = [
     "WebhookConfig",
     # Node Implementations
     "BaseNode",
+    "NodeFactory",
+    "LLMNode",
     "AgentNode",
     "ToolNode",
+    "SubworkflowNode",
     "DecisionNode",
+    "SwitchNode",
     "ParallelNode",
+    "LoopNode",
     "TransformNode",
+    "WebhookNode",
+    "HumanInputNode",
     "DelayNode",
     "StartNode",
     "EndNode",
-    "SubworkflowNode",
-    "WebhookNode",
-    "NodeFactory",
     # Edge Implementations
     "BaseEdge",
     "BaseCondition",
@@ -253,6 +307,10 @@ __all__ = [
     # Runtime
     "WorkflowEngine",
     "DefaultRouter",
+    # Tools (Agent-Workflow Interoperability)
+    "WorkflowTool",
+    "WorkflowToolSpec",
+    "create_workflow_tool",
     # Exceptions
     "WorkflowError",
     "WorkflowNotFoundError",
@@ -275,4 +333,3 @@ __all__ = [
     "SubworkflowError",
     "WorkflowStateError",
 ]
-

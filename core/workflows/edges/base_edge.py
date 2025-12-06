@@ -351,3 +351,5 @@ class BaseEdge(IEdge):
     def __repr__(self) -> str:
         return f"<Edge(id={self._id}, {self._source_id} -> {self._target_id})>"
 
+
+

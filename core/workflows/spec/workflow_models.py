@@ -3,11 +3,18 @@ Workflow Specification Models Module.
 
 This module defines all Pydantic models for workflow configuration,
 execution context, and results.
+
+Key Models:
+- IOSpec: Input/Output type specifications with formats
+- TransitionVariable: Variables required for edge transitions
+- NodeSpec: Enhanced node specification with I/O types
+- EdgeSpec: Enhanced edge specification with transition conditions
+- WorkflowSpec: Complete workflow specification
 """
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -19,9 +26,14 @@ from ..enum import (
     ConditionOperator,
     RoutingStrategy,
     DataTransformType,
+    DataType,
+    DataFormat,
     TriggerType,
     RetryStrategy,
     ExecutionMode,
+    ConditionSourceType,
+    VariableRequirement,
+    IntentType,
 )
 from ..constants import (
     DEFAULT_MAX_WORKFLOW_ITERATIONS,
@@ -79,6 +91,276 @@ class ConditionGroup(BaseModel):
         if v.lower() not in ("and", "or"):
             raise ValueError("logic must be 'and' or 'or'")
         return v.lower()
+
+
+# =============================================================================
+# INPUT/OUTPUT SPECIFICATION MODELS
+# =============================================================================
+
+
+class IOFieldSpec(BaseModel):
+    """Specification for a single input/output field."""
+    
+    name: str = Field(
+        description="Field name"
+    )
+    data_type: DataType = Field(
+        default=DataType.ANY,
+        description="Data type of the field"
+    )
+    format: Optional[DataFormat] = Field(
+        default=None,
+        description="Data format (text, json, markdown, etc.)"
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Human-readable description of the field"
+    )
+    required: bool = Field(
+        default=False,
+        description="Whether this field is required"
+    )
+    default: Any = Field(
+        default=None,
+        description="Default value if not provided"
+    )
+    json_schema: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="JSON Schema for complex validation"
+    )
+    examples: List[Any] = Field(
+        default_factory=list,
+        description="Example values for documentation"
+    )
+    
+    model_config = {"extra": "allow"}
+
+
+class IOSpec(BaseModel):
+    """
+    Input/Output specification for nodes and workflows.
+    
+    Defines the expected structure, types, and formats of data
+    flowing into and out of nodes/workflows.
+    """
+    
+    fields: List[IOFieldSpec] = Field(
+        default_factory=list,
+        description="List of field specifications"
+    )
+    format: DataFormat = Field(
+        default=DataFormat.JSON,
+        description="Overall data format"
+    )
+    json_schema: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="JSON Schema for the entire input/output"
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Description of the input/output"
+    )
+    
+    model_config = {"extra": "allow"}
+    
+    def get_required_fields(self) -> List[str]:
+        """Get names of required fields."""
+        return [f.name for f in self.fields if f.required]
+    
+    def get_field(self, name: str) -> Optional[IOFieldSpec]:
+        """Get a field by name."""
+        for field in self.fields:
+            if field.name == name:
+                return field
+        return None
+    
+    def validate_data(self, data: Dict[str, Any]) -> List[str]:
+        """Validate data against this spec, returning list of errors."""
+        errors = []
+        for field in self.fields:
+            if field.required and field.name not in data:
+                errors.append(f"Missing required field: {field.name}")
+        return errors
+
+
+# =============================================================================
+# TRANSITION VARIABLE MODELS
+# =============================================================================
+
+
+class TransitionVariable(BaseModel):
+    """
+    Variable specification for edge transitions.
+    
+    Used to define what data must be extracted/available before
+    transitioning to the next node. Supports prompting for missing
+    required variables.
+    """
+    
+    name: str = Field(
+        description="Variable name"
+    )
+    data_type: DataType = Field(
+        default=DataType.STRING,
+        description="Expected data type"
+    )
+    requirement: VariableRequirement = Field(
+        default=VariableRequirement.OPTIONAL,
+        description="Whether this variable is required, optional, or conditional"
+    )
+    source: Optional[str] = Field(
+        default=None,
+        description="Source path to extract variable (e.g., '$output.service_name')"
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Description of what this variable represents"
+    )
+    prompt_if_missing: Optional[str] = Field(
+        default=None,
+        description="Prompt to ask user if variable is missing and required"
+    )
+    extraction_instruction: Optional[str] = Field(
+        default=None,
+        description="LLM instruction for extracting this variable from conversation"
+    )
+    validation_regex: Optional[str] = Field(
+        default=None,
+        description="Regex pattern for validation"
+    )
+    allowed_values: Optional[List[Any]] = Field(
+        default=None,
+        description="List of allowed values (enum-like constraint)"
+    )
+    default: Any = Field(
+        default=None,
+        description="Default value if not provided and not required"
+    )
+    
+    model_config = {"extra": "allow"}
+    
+    def is_required(self) -> bool:
+        """Check if this variable is required."""
+        return self.requirement == VariableRequirement.REQUIRED
+
+
+class TransitionCondition(BaseModel):
+    """
+    Enhanced condition for edge transitions.
+    
+    Supports multiple condition sources including LLM classification,
+    tool results, and context variables. Can be combined with required
+    transition variables.
+    """
+    
+    source_type: ConditionSourceType = Field(
+        default=ConditionSourceType.CONTEXT,
+        description="Source of the condition value"
+    )
+    field: str = Field(
+        description="Field/path to evaluate"
+    )
+    operator: ConditionOperator = Field(
+        default=ConditionOperator.EQUALS,
+        description="Comparison operator"
+    )
+    value: Any = Field(
+        default=None,
+        description="Value to compare against"
+    )
+    
+    # For LLM-based conditions
+    llm_prompt: Optional[str] = Field(
+        default=None,
+        description="Prompt for LLM classification (used with LLM_CLASSIFICATION source)"
+    )
+    intent: Optional[IntentType] = Field(
+        default=None,
+        description="Expected intent type (for intent-based routing)"
+    )
+    
+    # Negation
+    negate: bool = Field(
+        default=False,
+        description="Negate the condition result"
+    )
+    
+    model_config = {"extra": "allow"}
+
+
+class TransitionSpec(BaseModel):
+    """
+    Complete specification for edge transitions.
+    
+    Combines conditions with required/optional variables and
+    defines behavior when requirements aren't met.
+    """
+    
+    conditions: List[TransitionCondition] = Field(
+        default_factory=list,
+        description="Conditions that must be met for transition"
+    )
+    variables: List[TransitionVariable] = Field(
+        default_factory=list,
+        description="Variables to extract/require for transition"
+    )
+    logic: str = Field(
+        default="and",
+        description="How to combine conditions: 'and' or 'or'"
+    )
+    on_missing_required: str = Field(
+        default="prompt",
+        description="Behavior when required variables missing: 'prompt', 'fail', 'skip'"
+    )
+    prompt_template: Optional[str] = Field(
+        default=None,
+        description="Template for prompting user for missing variables"
+    )
+    
+    model_config = {"extra": "allow"}
+    
+    @field_validator("logic")
+    @classmethod
+    def validate_logic(cls, v: str) -> str:
+        if v.lower() not in ("and", "or"):
+            raise ValueError("logic must be 'and' or 'or'")
+        return v.lower()
+    
+    @field_validator("on_missing_required")
+    @classmethod
+    def validate_on_missing(cls, v: str) -> str:
+        if v.lower() not in ("prompt", "fail", "skip"):
+            raise ValueError("on_missing_required must be 'prompt', 'fail', or 'skip'")
+        return v.lower()
+    
+    def get_required_variables(self) -> List[TransitionVariable]:
+        """Get all required transition variables."""
+        return [v for v in self.variables if v.is_required()]
+    
+    def get_missing_required(self, data: Dict[str, Any]) -> List[TransitionVariable]:
+        """Get required variables that are missing from data."""
+        missing = []
+        for var in self.get_required_variables():
+            if var.name not in data or data.get(var.name) is None:
+                missing.append(var)
+        return missing
+    
+    def build_missing_prompt(self, missing_vars: List[TransitionVariable]) -> str:
+        """Build a prompt to ask for missing required variables."""
+        if self.prompt_template:
+            return self.prompt_template.format(
+                variables=", ".join(v.name for v in missing_vars)
+            )
+        
+        prompts = []
+        for var in missing_vars:
+            if var.prompt_if_missing:
+                prompts.append(var.prompt_if_missing)
+            else:
+                prompts.append(f"Please provide {var.name}" + 
+                             (f" ({var.description})" if var.description else ""))
+        
+        return " ".join(prompts)
 
 
 # =============================================================================
@@ -193,7 +475,12 @@ class NodeOutputMapping(BaseModel):
 
 
 class NodeSpec(BaseModel):
-    """Specification for a workflow node."""
+    """
+    Specification for a workflow node.
+    
+    Enhanced with explicit input/output type specifications,
+    supporting strong typing and validation.
+    """
     
     id: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
@@ -216,7 +503,17 @@ class NodeSpec(BaseModel):
         description="Node-type-specific configuration"
     )
     
-    # Input/Output mappings
+    # Input/Output TYPE SPECIFICATIONS (new)
+    input_spec: Optional[IOSpec] = Field(
+        default=None,
+        description="Specification for node input types and formats"
+    )
+    output_spec: Optional[IOSpec] = Field(
+        default=None,
+        description="Specification for node output types and formats"
+    )
+    
+    # Input/Output mappings (legacy/compatibility)
     input_mappings: List[NodeInputMapping] = Field(
         default_factory=list,
         description="Mappings from context to node input"
@@ -247,6 +544,12 @@ class NodeSpec(BaseModel):
         description="Condition group - only run node if conditions are met"
     )
     
+    # System prompt (for LLM/Agent nodes)
+    system_prompt: Optional[str] = Field(
+        default=None,
+        description="System prompt for LLM/Agent nodes"
+    )
+    
     # Metadata
     tags: List[str] = Field(
         default_factory=list,
@@ -264,6 +567,18 @@ class NodeSpec(BaseModel):
     )
     
     model_config = {"extra": "allow"}
+    
+    def get_required_inputs(self) -> List[str]:
+        """Get names of required input fields."""
+        if self.input_spec:
+            return self.input_spec.get_required_fields()
+        return [m.target for m in self.input_mappings if m.required]
+    
+    def validate_input(self, data: Dict[str, Any]) -> List[str]:
+        """Validate input data against spec."""
+        if self.input_spec:
+            return self.input_spec.validate_data(data)
+        return []
 
 
 # =============================================================================
@@ -272,7 +587,15 @@ class NodeSpec(BaseModel):
 
 
 class EdgeSpec(BaseModel):
-    """Specification for a workflow edge."""
+    """
+    Specification for a workflow edge.
+    
+    Enhanced with transition specifications that support:
+    - Required/optional transition variables
+    - LLM-based condition evaluation
+    - Prompting for missing required data
+    - Intent-based routing
+    """
     
     id: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
@@ -289,7 +612,7 @@ class EdgeSpec(BaseModel):
         description="Type of edge"
     )
     
-    # Conditions
+    # Legacy Conditions (for backward compatibility)
     conditions: List[ConditionSpec] = Field(
         default_factory=list,
         description="List of conditions (AND logic)"
@@ -299,10 +622,34 @@ class EdgeSpec(BaseModel):
         description="Complex condition group with AND/OR logic"
     )
     
+    # Enhanced Transition Specification (new)
+    transition_spec: Optional[TransitionSpec] = Field(
+        default=None,
+        description="Enhanced transition specification with variables and prompts"
+    )
+    
+    # Intent-based routing
+    intent: Optional[IntentType] = Field(
+        default=None,
+        description="Required intent type for this transition (for conversational flows)"
+    )
+    intent_confidence_threshold: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Minimum confidence score for intent match"
+    )
+    
     # Data transformation
     transform: Optional[TransformSpec] = Field(
         default=None,
         description="Data transformation to apply"
+    )
+    
+    # Variables to pass through this edge
+    pass_through_variables: List[str] = Field(
+        default_factory=list,
+        description="Variable names to pass from source to target node"
     )
     
     # Priority and ordering
@@ -328,6 +675,18 @@ class EdgeSpec(BaseModel):
     )
     
     model_config = {"extra": "allow"}
+    
+    def has_required_variables(self) -> bool:
+        """Check if this edge has required transition variables."""
+        if not self.transition_spec:
+            return False
+        return len(self.transition_spec.get_required_variables()) > 0
+    
+    def get_missing_requirements(self, data: Dict[str, Any]) -> List[TransitionVariable]:
+        """Get missing required variables from data."""
+        if not self.transition_spec:
+            return []
+        return self.transition_spec.get_missing_required(data)
 
 
 # =============================================================================
@@ -511,7 +870,15 @@ class WorkflowMetadata(BaseModel):
 
 
 class WorkflowSpec(BaseModel):
-    """Complete specification for a workflow."""
+    """
+    Complete specification for a workflow.
+    
+    Enhanced with:
+    - Explicit input/output type specifications
+    - Support for conversational/intent-based workflows
+    - Nested workflow support (subworkflows)
+    - Agent integration support
+    """
     
     id: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
@@ -549,7 +916,17 @@ class WorkflowSpec(BaseModel):
         description="IDs of end nodes (auto-detected if not specified)"
     )
     
-    # Variables
+    # INPUT/OUTPUT SPECIFICATIONS (new)
+    input_spec: Optional[IOSpec] = Field(
+        default=None,
+        description="Specification for workflow input types and formats"
+    )
+    output_spec: Optional[IOSpec] = Field(
+        default=None,
+        description="Specification for workflow output types and formats"
+    )
+    
+    # Legacy Variables (for backward compatibility)
     input_variables: List[WorkflowVariable] = Field(
         default_factory=list,
         description="Expected input variables"
@@ -583,6 +960,16 @@ class WorkflowSpec(BaseModel):
     routing_strategy: RoutingStrategy = Field(
         default=RoutingStrategy.FIRST_MATCH,
         description="Default routing strategy"
+    )
+    
+    # Conversational/Intent-based configuration
+    is_conversational: bool = Field(
+        default=False,
+        description="Whether this is a conversational workflow with turns"
+    )
+    conversation_context_key: str = Field(
+        default="conversation_history",
+        description="Context key for storing conversation history"
     )
     
     # Error handling
@@ -631,6 +1018,37 @@ class WorkflowSpec(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError("Edge IDs must be unique")
         return v
+    
+    def get_required_inputs(self) -> List[str]:
+        """Get names of required input fields."""
+        if self.input_spec:
+            return self.input_spec.get_required_fields()
+        return [v.name for v in self.input_variables if v.required]
+    
+    def validate_input(self, data: Dict[str, Any]) -> List[str]:
+        """Validate input data against spec."""
+        if self.input_spec:
+            return self.input_spec.validate_data(data)
+        errors = []
+        for var in self.input_variables:
+            if var.required and var.name not in data:
+                errors.append(f"Missing required input: {var.name}")
+        return errors
+    
+    def get_node(self, node_id: str) -> Optional[NodeSpec]:
+        """Get a node spec by ID."""
+        for node in self.nodes:
+            if node.id == node_id:
+                return node
+        return None
+    
+    def get_edges_from(self, node_id: str) -> List[EdgeSpec]:
+        """Get all edges originating from a node."""
+        return [e for e in self.edges if e.source_id == node_id]
+    
+    def get_edges_to(self, node_id: str) -> List[EdgeSpec]:
+        """Get all edges targeting a node."""
+        return [e for e in self.edges if e.target_id == node_id]
 
 
 # =============================================================================

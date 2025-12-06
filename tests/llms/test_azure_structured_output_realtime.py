@@ -55,10 +55,11 @@ if hasattr(llm_logger, 'logger') and llm_logger.logger:
 logger.info(f"Logging configured - writing to: {log_file_path}")
 
 AZURE_CONFIG = {
-    "endpoint": "https://zeenie-sweden.openai.azure.com/",
-    "deployment_name": "gpt-4.1-mini",  # Using GPT-4.1 Mini deployment
+    "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT", "https://your-resource.openai.azure.com/"),
+    "deployment_name": os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-mini"),
     "api_version": "2024-08-01-preview",  # Required for structured output (json_schema)
     "timeout": 60,
+    "api_key": os.getenv("AZURE_OPENAI_KEY", ""),  # Set via environment variable
 }
 
 # ============================================================================

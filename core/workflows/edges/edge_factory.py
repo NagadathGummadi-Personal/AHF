@@ -223,3 +223,5 @@ class EdgeFactory:
         """Check if edge type is registered."""
         return type_id in cls._registrations
 
+
+

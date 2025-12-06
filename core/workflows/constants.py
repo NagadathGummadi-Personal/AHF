@@ -2,25 +2,56 @@
 Workflow Constants Module.
 
 This module defines all constants used throughout the workflows subsystem.
+
+Node Types are organized into categories:
+- Execution Nodes: LLM, Agent, Tool, Subworkflow
+- Control-Flow Nodes: Decision/Router, Switch, Parallel, Loop
+- Data & Integration Nodes: VectorStore, HTTP, Database, Transform
+- Human Interaction Nodes: HumanInput (HITL), VoiceAgent, Notification
+- Utility Nodes: Delay, ErrorHandler, Start, End
 """
 
 # =============================================================================
-# NODE TYPE CONSTANTS
+# NODE TYPE CONSTANTS - EXECUTION NODES
 # =============================================================================
-NODE_TYPE_AGENT = "agent"
-NODE_TYPE_TOOL = "tool"
-NODE_TYPE_DECISION = "decision"
-NODE_TYPE_PARALLEL = "parallel"
-NODE_TYPE_LOOP = "loop"
-NODE_TYPE_SUBWORKFLOW = "subworkflow"
-NODE_TYPE_TRANSFORM = "transform"
-NODE_TYPE_WEBHOOK = "webhook"
-NODE_TYPE_DELAY = "delay"
-NODE_TYPE_HUMAN_INPUT = "human_input"
-NODE_TYPE_START = "start"
-NODE_TYPE_END = "end"
-NODE_TYPE_ERROR_HANDLER = "error_handler"
-NODE_TYPE_CUSTOM = "custom"
+NODE_TYPE_LLM = "llm"  # Invoke language model (GPT, Claude, etc.)
+NODE_TYPE_AGENT = "agent"  # Intelligent agent with tools and memory
+NODE_TYPE_TOOL = "tool"  # External function or API call
+NODE_TYPE_SUBWORKFLOW = "subworkflow"  # Nested workflow execution
+
+# =============================================================================
+# NODE TYPE CONSTANTS - CONTROL-FLOW NODES
+# =============================================================================
+NODE_TYPE_DECISION = "decision"  # Router/conditional branching
+NODE_TYPE_SWITCH = "switch"  # Match against multiple values (switch/case)
+NODE_TYPE_PARALLEL = "parallel"  # Fan-out for concurrent execution
+NODE_TYPE_LOOP = "loop"  # Repeat until condition met
+NODE_TYPE_JOIN = "join"  # Wait for parallel branches to complete
+
+# =============================================================================
+# NODE TYPE CONSTANTS - DATA & INTEGRATION NODES
+# =============================================================================
+NODE_TYPE_VECTOR_STORE = "vector_store"  # RAG similarity search
+NODE_TYPE_HTTP = "http"  # HTTP/REST API calls
+NODE_TYPE_DATABASE = "database"  # Database operations
+NODE_TYPE_TRANSFORM = "transform"  # Data transformation
+NODE_TYPE_WEBHOOK = "webhook"  # Webhook receiver/sender
+
+# =============================================================================
+# NODE TYPE CONSTANTS - HUMAN INTERACTION NODES
+# =============================================================================
+NODE_TYPE_HUMAN_INPUT = "human_input"  # HITL - pause for human input/approval
+NODE_TYPE_VOICE_AGENT = "voice_agent"  # Speech-to-text/text-to-speech
+NODE_TYPE_NOTIFICATION = "notification"  # Send notifications (email, SMS, push)
+
+# =============================================================================
+# NODE TYPE CONSTANTS - UTILITY NODES
+# =============================================================================
+NODE_TYPE_DELAY = "delay"  # Timer/delay node
+NODE_TYPE_START = "start"  # Workflow entry point
+NODE_TYPE_END = "end"  # Workflow exit point
+NODE_TYPE_ERROR_HANDLER = "error_handler"  # Error handling
+NODE_TYPE_CUSTOM = "custom"  # Custom node type
 
 # =============================================================================
 # EDGE TYPE CONSTANTS
@@ -32,7 +63,62 @@ EDGE_TYPE_TIMEOUT = "timeout"
 EDGE_TYPE_ERROR = "error"
 EDGE_TYPE_LOOP_BACK = "loop_back"
 EDGE_TYPE_PARALLEL_JOIN = "parallel_join"
+EDGE_TYPE_INTENT = "intent"  # Intent-based routing (LLM classification)
 EDGE_TYPE_CUSTOM = "custom"
+
+# =============================================================================
+# TRANSITION CONDITION SOURCE TYPES
+# =============================================================================
+CONDITION_SOURCE_CONTEXT = "context"  # Evaluate from workflow context
+CONDITION_SOURCE_NODE_OUTPUT = "node_output"  # Evaluate from node output
+CONDITION_SOURCE_TOOL_RESULT = "tool_result"  # Evaluate from tool execution result
+CONDITION_SOURCE_LLM_CLASSIFICATION = "llm_classification"  # LLM-based intent/decision
+CONDITION_SOURCE_USER_INPUT = "user_input"  # User-provided input
+CONDITION_SOURCE_CUSTOM = "custom"  # Custom evaluation function
+
+# =============================================================================
+# VARIABLE REQUIREMENT TYPES (for edge transition requirements)
+# =============================================================================
+VAR_REQUIREMENT_REQUIRED = "required"
+VAR_REQUIREMENT_OPTIONAL = "optional"
+VAR_REQUIREMENT_CONDITIONAL = "conditional"
+
+# =============================================================================
+# INPUT/OUTPUT DATA TYPES
+# =============================================================================
+DATA_TYPE_STRING = "string"
+DATA_TYPE_NUMBER = "number"
+DATA_TYPE_INTEGER = "integer"
+DATA_TYPE_BOOLEAN = "boolean"
+DATA_TYPE_ARRAY = "array"
+DATA_TYPE_OBJECT = "object"
+DATA_TYPE_ANY = "any"
+DATA_TYPE_NULL = "null"
+
+# =============================================================================
+# INPUT/OUTPUT DATA FORMATS
+# =============================================================================
+DATA_FORMAT_TEXT = "text"
+DATA_FORMAT_JSON = "json"
+DATA_FORMAT_MARKDOWN = "markdown"
+DATA_FORMAT_HTML = "html"
+DATA_FORMAT_XML = "xml"
+DATA_FORMAT_CSV = "csv"
+DATA_FORMAT_BINARY = "binary"
+DATA_FORMAT_BASE64 = "base64"
+
+# =============================================================================
+# INTENT TYPES (for conversational workflows)
+# =============================================================================
+INTENT_TYPE_BOOK = "book"
+INTENT_TYPE_CANCEL = "cancel"
+INTENT_TYPE_RESCHEDULE = "reschedule"
+INTENT_TYPE_INQUIRY = "inquiry"
+INTENT_TYPE_GREETING = "greeting"
+INTENT_TYPE_FAREWELL = "farewell"
+INTENT_TYPE_CONFIRMATION = "confirmation"
+INTENT_TYPE_HANDOVER = "handover"
+INTENT_TYPE_UNKNOWN = "unknown"
 
 # =============================================================================
 # WORKFLOW STATE CONSTANTS

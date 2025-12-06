@@ -190,3 +190,5 @@ class EndNode(BaseNode):
         """Validate end node configuration."""
         return []  # End node has no required configuration
 
+
+
