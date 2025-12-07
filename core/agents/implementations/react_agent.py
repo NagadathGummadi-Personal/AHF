@@ -2,6 +2,7 @@
 ReAct Agent Implementation.
 
 Implements the Reason-Act pattern: Thought -> Action -> Observation -> Thought.
+Uses the prompt registry for prompt management with fallback to built-in defaults.
 """
 
 import json
@@ -23,6 +24,12 @@ from ..constants import (
     SCRATCHPAD_OBSERVATION_PREFIX,
 )
 
+# Import prompt registry constants
+try:
+    from ...promptregistry.constants import PROMPT_LABEL_REACT_AGENT
+except ImportError:
+    PROMPT_LABEL_REACT_AGENT = "agent.react.system"
+
 
 class ReactAgent(BaseAgent):
     """
@@ -36,12 +43,18 @@ class ReactAgent(BaseAgent):
     
     The agent uses a scratchpad to maintain the reasoning trace.
     
+    Prompt Management:
+    - Uses prompt registry if configured (recommended)
+    - Falls back to built-in prompt if registry unavailable
+    - Supports dynamic variables: {tools}, {tool_names}, {question}, {scratchpad}
+    
     Usage:
         agent = (AgentBuilder()
             .with_name("react_agent")
             .with_llm(llm)
             .with_tools([search_tool, calculator_tool])
             .with_scratchpad(StructuredScratchpad())
+            .with_prompt_registry(LocalPromptRegistry())  # Optional but recommended
             .as_type(AgentType.REACT)
             .build())
         
@@ -58,7 +71,8 @@ class ReactAgent(BaseAgent):
         Final Answer: <the final response>
     """
     
-    REACT_PROMPT_TEMPLATE = '''You are a helpful AI assistant that can use tools to answer questions.
+    # Default prompt template (used as fallback when registry is unavailable)
+    DEFAULT_REACT_PROMPT_TEMPLATE = '''You are a helpful AI assistant that can use tools to answer questions.
 
 Available tools:
 {tools}
@@ -79,6 +93,46 @@ Begin!
 Question: {question}
 {scratchpad}'''
     
+    # Prompt label for registry lookup
+    PROMPT_LABEL = PROMPT_LABEL_REACT_AGENT
+    
+    def __init__(self, *args, **kwargs):
+        """Initialize ReactAgent."""
+        super().__init__(*args, **kwargs)
+        self._cached_prompt_template: Optional[str] = None
+        self._prompt_id: Optional[str] = None
+    
+    async def _get_react_prompt_template(self) -> str:
+        """
+        Get the ReAct prompt template.
+        
+        Tries to fetch from prompt registry first, falls back to default.
+        Caches the result for performance.
+        
+        Returns:
+            Prompt template string
+        """
+        if self._cached_prompt_template:
+            return self._cached_prompt_template
+        
+        # Try prompt registry first
+        if self.prompt_registry:
+            try:
+                result = await self.prompt_registry.get_prompt_with_fallback(
+                    self.PROMPT_LABEL,
+                    model=getattr(self.llm, 'model_name', None),
+                )
+                self._cached_prompt_template = result.content
+                self._prompt_id = result.prompt_id
+                return self._cached_prompt_template
+            except (ValueError, AttributeError):
+                # Prompt not found in registry, use default
+                pass
+        
+        # Use default
+        self._cached_prompt_template = self.DEFAULT_REACT_PROMPT_TEMPLATE
+        return self._cached_prompt_template
+    
     async def _execute_iteration(
         self,
         input_data: Any,
@@ -95,7 +149,7 @@ Question: {question}
             - If action needed: (None, True)
         """
         # Build prompt with scratchpad
-        prompt = self._build_react_prompt(input_data, system_prompt)
+        prompt = await self._build_react_prompt(input_data, system_prompt)
         
         messages = [{"role": "user", "content": prompt}]
         
@@ -166,7 +220,7 @@ Question: {question}
         system_prompt: Optional[str]
     ) -> AsyncIterator[AgentStreamChunk]:
         """Stream a ReAct iteration."""
-        prompt = self._build_react_prompt(input_data, system_prompt)
+        prompt = await self._build_react_prompt(input_data, system_prompt)
         messages = [{"role": "user", "content": prompt}]
         
         # Stream LLM response
@@ -231,7 +285,7 @@ Question: {question}
                 tool_result=observation,
             )
     
-    def _build_react_prompt(
+    async def _build_react_prompt(
         self,
         input_data: Any,
         system_prompt: Optional[str]
@@ -246,22 +300,34 @@ Question: {question}
         
         question = input_data if isinstance(input_data, str) else str(input_data)
         
-        base_prompt = system_prompt or self.REACT_PROMPT_TEMPLATE
-        
-        if "{tools}" in base_prompt:
-            return base_prompt.format(
-                tools=tool_descriptions,
-                tool_names=tool_names,
-                question=question,
-                scratchpad=scratchpad_content,
-            )
+        # Use system prompt if provided, otherwise get from registry/default
+        if system_prompt and "{tools}" in system_prompt:
+            base_prompt = system_prompt
         else:
-            return self.REACT_PROMPT_TEMPLATE.format(
-                tools=tool_descriptions,
-                tool_names=tool_names,
-                question=question,
-                scratchpad=scratchpad_content,
-            )
+            base_prompt = await self._get_react_prompt_template()
+        
+        # Prepare variables for substitution
+        variables = {
+            "tools": tool_descriptions,
+            "tool_names": tool_names,
+            "question": question,
+            "scratchpad": scratchpad_content,
+        }
+        
+        # Try to render with prompt registry template if available
+        if self.prompt_registry and "{tools}" in base_prompt:
+            try:
+                return base_prompt.format(**variables)
+            except KeyError:
+                pass
+        
+        # Direct format
+        if "{tools}" in base_prompt:
+            return base_prompt.format(**variables)
+        else:
+            # If custom system prompt doesn't have our variables,
+            # use default template
+            return self.DEFAULT_REACT_PROMPT_TEMPLATE.format(**variables)
     
     def _parse_react_response(self, response: str) -> Dict[str, Any]:
         """
@@ -299,4 +365,29 @@ Question: {question}
                 result[REACT_ACTION_INPUT] = {"input": input_str}
         
         return result
-
+    
+    async def _record_prompt_usage(
+        self,
+        latency_ms: float,
+        prompt_tokens: int,
+        completion_tokens: int,
+        cost: float = 0.0,
+        success: bool = True
+    ) -> None:
+        """
+        Record usage metrics for the prompt.
+        
+        Called after each LLM call to track prompt performance.
+        """
+        if self.prompt_registry and self._prompt_id:
+            try:
+                await self.prompt_registry.record_usage(
+                    self._prompt_id,
+                    latency_ms=latency_ms,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    cost=cost,
+                    success=success
+                )
+            except Exception:
+                pass  # Don't fail execution if metrics recording fails

@@ -358,19 +358,23 @@ class BaseAgent(IAgent, ABC):
         self,
         messages: List[Dict[str, Any]],
         ctx: AgentContext,
+        prompt_id: Optional[str] = None,
         **kwargs
     ) -> Any:
         """
-        Call the LLM with failover support.
+        Call the LLM with failover support and metrics tracking.
         
         Args:
             messages: Messages to send
             ctx: Agent context
+            prompt_id: Optional prompt ID for metrics tracking
             **kwargs: Additional LLM parameters
             
         Returns:
             LLM response
         """
+        import time
+        
         await self._notify_llm_call(messages, ctx)
         self._usage.llm_calls += 1
         
@@ -383,6 +387,10 @@ class BaseAgent(IAgent, ABC):
             tenant_id=ctx.tenant_id,
             trace_id=ctx.trace_id,
         )
+        
+        start_time = time.time()
+        success = True
+        response = None
         
         try:
             response = await self.llm.get_answer(messages, llm_ctx, **kwargs)
@@ -397,10 +405,12 @@ class BaseAgent(IAgent, ABC):
             return response
             
         except Exception as primary_error:
+            success = False
             if self.backup_llm:
                 try:
                     response = await self.backup_llm.get_answer(messages, llm_ctx, **kwargs)
                     await self._notify_llm_response(response, ctx)
+                    success = True
                     
                     if response.usage:
                         self._usage.prompt_tokens += response.usage.prompt_tokens
@@ -412,6 +422,56 @@ class BaseAgent(IAgent, ABC):
                 except Exception as backup_error:
                     raise LLMFailoverError(primary_error, backup_error)
             raise
+        
+        finally:
+            # Record prompt usage metrics if prompt registry is available
+            latency_ms = (time.time() - start_time) * 1000
+            await self._record_prompt_metrics(
+                prompt_id=prompt_id,
+                latency_ms=latency_ms,
+                response=response,
+                success=success
+            )
+    
+    async def _record_prompt_metrics(
+        self,
+        prompt_id: Optional[str],
+        latency_ms: float,
+        response: Any,
+        success: bool
+    ) -> None:
+        """
+        Record metrics for prompt usage.
+        
+        Args:
+            prompt_id: Prompt ID to record metrics for
+            latency_ms: Call latency in milliseconds
+            response: LLM response (may be None on failure)
+            success: Whether the call succeeded
+        """
+        if not self.prompt_registry or not prompt_id:
+            return
+        
+        try:
+            prompt_tokens = 0
+            completion_tokens = 0
+            cost = 0.0
+            
+            if response and hasattr(response, 'usage') and response.usage:
+                prompt_tokens = response.usage.prompt_tokens or 0
+                completion_tokens = response.usage.completion_tokens or 0
+                # Cost calculation can be added based on model pricing
+            
+            await self.prompt_registry.record_usage(
+                prompt_id,
+                latency_ms=latency_ms,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                cost=cost,
+                success=success
+            )
+        except Exception:
+            pass  # Don't fail execution if metrics recording fails
     
     # ==================== Tool Methods ====================
     

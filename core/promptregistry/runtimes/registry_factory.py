@@ -7,7 +7,7 @@ Factory for creating prompt registry implementations.
 from typing import Dict, Type
 
 from ..interfaces.prompt_registry_interfaces import IPromptRegistry
-from .local_registry import LocalPromptRegistry
+from .storage import LocalPromptRegistry
 from ..constants import DEFAULT_STORAGE_PATH
 
 

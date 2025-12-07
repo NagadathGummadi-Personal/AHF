@@ -2,6 +2,7 @@
 Goal-Based Agent Implementation.
 
 An agent that works towards achieving specific goals using a checklist.
+Uses the prompt registry for prompt management with fallback to built-in defaults.
 """
 
 from typing import Any, Optional, List, Dict
@@ -9,6 +10,18 @@ from typing import Any, Optional, List, Dict
 from .base_agent import BaseAgent
 from ..spec.agent_context import AgentContext
 from ..enum import ChecklistStatus
+
+# Import prompt registry constants
+try:
+    from ...promptregistry.constants import (
+        PROMPT_LABEL_GOAL_BASED_PLANNING,
+        PROMPT_LABEL_GOAL_BASED_EXECUTION,
+        PROMPT_LABEL_GOAL_BASED_FINAL,
+    )
+except ImportError:
+    PROMPT_LABEL_GOAL_BASED_PLANNING = "agent.goal_based.planning"
+    PROMPT_LABEL_GOAL_BASED_EXECUTION = "agent.goal_based.execution"
+    PROMPT_LABEL_GOAL_BASED_FINAL = "agent.goal_based.final"
 
 
 class GoalBasedAgent(BaseAgent):
@@ -21,19 +34,26 @@ class GoalBasedAgent(BaseAgent):
     3. Executing tasks in order
     4. Completing when all tasks are done
     
+    Prompt Management:
+    - Uses prompt registry if configured (recommended)
+    - Falls back to built-in prompts if registry unavailable
+    - Supports three prompt types: planning, execution, final
+    
     Usage:
         agent = (AgentBuilder()
             .with_name("goal_agent")
             .with_llm(llm)
             .with_tools([research_tool, write_tool])
             .with_checklist(BasicChecklist())
+            .with_prompt_registry(LocalPromptRegistry())  # Optional but recommended
             .as_type(AgentType.GOAL_BASED)
             .build())
         
         result = await agent.run("Write a summary about AI", ctx)
     """
     
-    PLANNING_PROMPT = '''You are a helpful AI assistant. Break down the following goal into a list of specific, actionable tasks.
+    # Default prompts (used as fallback when registry is unavailable)
+    DEFAULT_PLANNING_PROMPT = '''You are a helpful AI assistant. Break down the following goal into a list of specific, actionable tasks.
 
 Goal: {goal}
 
@@ -54,7 +74,7 @@ Example response:
 
 Tasks (as JSON):'''
 
-    TASK_EXECUTION_PROMPT = '''You are working on the following goal: {goal}
+    DEFAULT_TASK_EXECUTION_PROMPT = '''You are working on the following goal: {goal}
 
 Current task: {task}
 
@@ -69,6 +89,59 @@ Action Input: <json parameters>
 If you can complete without a tool, respond with:
 Result: <your answer or output>'''
 
+    DEFAULT_FINAL_PROMPT = '''Based on the following work, provide the final answer to the goal.
+
+Goal: {goal}
+
+Work completed:
+{context}
+{checklist_summary}
+
+Final Answer:'''
+    
+    # Prompt labels for registry lookup
+    PLANNING_PROMPT_LABEL = PROMPT_LABEL_GOAL_BASED_PLANNING
+    EXECUTION_PROMPT_LABEL = PROMPT_LABEL_GOAL_BASED_EXECUTION
+    FINAL_PROMPT_LABEL = PROMPT_LABEL_GOAL_BASED_FINAL
+    
+    def __init__(self, *args, **kwargs):
+        """Initialize GoalBasedAgent."""
+        super().__init__(*args, **kwargs)
+        self._cached_prompts: Dict[str, str] = {}
+        self._prompt_ids: Dict[str, str] = {}
+    
+    async def _get_prompt(self, label: str, default: str) -> str:
+        """
+        Get a prompt from registry or use default.
+        
+        Args:
+            label: Prompt label for registry lookup
+            default: Default prompt template
+            
+        Returns:
+            Prompt template string
+        """
+        if label in self._cached_prompts:
+            return self._cached_prompts[label]
+        
+        # Try prompt registry first
+        if self.prompt_registry:
+            try:
+                result = await self.prompt_registry.get_prompt_with_fallback(
+                    label,
+                    model=getattr(self.llm, 'model_name', None),
+                )
+                self._cached_prompts[label] = result.content
+                self._prompt_ids[label] = result.prompt_id
+                return result.content
+            except (ValueError, AttributeError):
+                # Prompt not found in registry, use default
+                pass
+        
+        # Use default
+        self._cached_prompts[label] = default
+        return default
+    
     async def _execute_iteration(
         self,
         input_data: Any,
@@ -148,7 +221,14 @@ Result: <your answer or output>'''
         else:
             # Use LLM to create plan
             tool_descriptions = self._get_tool_descriptions()
-            prompt = self.PLANNING_PROMPT.format(
+            
+            # Get prompt from registry or use default
+            planning_template = await self._get_prompt(
+                self.PLANNING_PROMPT_LABEL,
+                self.DEFAULT_PLANNING_PROMPT
+            )
+            
+            prompt = planning_template.format(
                 goal=goal,
                 tools=tool_descriptions
             )
@@ -198,7 +278,13 @@ Result: <your answer or output>'''
         if self._tool_map:
             tools_available = f"Available tools: {', '.join(self._tool_map.keys())}"
         
-        prompt = self.TASK_EXECUTION_PROMPT.format(
+        # Get prompt from registry or use default
+        execution_template = await self._get_prompt(
+            self.EXECUTION_PROMPT_LABEL,
+            self.DEFAULT_TASK_EXECUTION_PROMPT
+        )
+        
+        prompt = execution_template.format(
             goal=goal,
             task=task_desc,
             context=context,
@@ -248,15 +334,17 @@ Result: <your answer or output>'''
             progress = self.checklist.get_progress()
             checklist_summary = f"\nCompleted {progress['completed']} of {progress['total']} tasks."
         
-        prompt = f'''Based on the following work, provide the final answer to the goal.
-
-Goal: {goal}
-
-Work completed:
-{context}
-{checklist_summary}
-
-Final Answer:'''
+        # Get prompt from registry or use default
+        final_template = await self._get_prompt(
+            self.FINAL_PROMPT_LABEL,
+            self.DEFAULT_FINAL_PROMPT
+        )
+        
+        prompt = final_template.format(
+            goal=goal,
+            context=context,
+            checklist_summary=checklist_summary
+        )
         
         messages = [{"role": "user", "content": prompt}]
         response = await self._call_llm(messages, ctx)
@@ -273,4 +361,3 @@ Final Answer:'''
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": goal})
         return messages
-

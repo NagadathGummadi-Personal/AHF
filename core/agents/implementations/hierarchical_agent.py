@@ -2,6 +2,7 @@
 Hierarchical Agent Implementation.
 
 A manager agent that delegates tasks to worker agents.
+Uses the prompt registry for prompt management with fallback to built-in defaults.
 """
 
 from typing import Any, Optional, List, Dict
@@ -10,6 +11,12 @@ from .base_agent import BaseAgent
 from ..spec.agent_context import AgentContext
 from ..interfaces.agent_interfaces import IAgent
 
+# Import prompt registry constants
+try:
+    from ...promptregistry.constants import PROMPT_LABEL_HIERARCHICAL_MANAGER
+except ImportError:
+    PROMPT_LABEL_HIERARCHICAL_MANAGER = "agent.hierarchical.manager"
+
 
 class HierarchicalAgent(BaseAgent):
     """
@@ -17,6 +24,11 @@ class HierarchicalAgent(BaseAgent):
     
     A manager agent that can delegate tasks to worker (sub) agents.
     The manager decides which worker to use and coordinates their outputs.
+    
+    Prompt Management:
+    - Uses prompt registry if configured (recommended)
+    - Falls back to built-in prompt if registry unavailable
+    - Supports dynamic variables: {workers}, {task}, {context}
     
     Usage:
         # Create worker agents
@@ -33,10 +45,11 @@ class HierarchicalAgent(BaseAgent):
             .as_type(AgentType.SIMPLE)
             .build())
         
-        # Create manager
+        # Create manager with prompt registry
         manager = (AgentBuilder()
             .with_name("manager")
             .with_llm(llm)
+            .with_prompt_registry(LocalPromptRegistry())  # Optional but recommended
             .as_type(AgentType.HIERARCHICAL)
             .build())
         
@@ -47,7 +60,8 @@ class HierarchicalAgent(BaseAgent):
         result = await manager.run("Research AI and write a summary", ctx)
     """
     
-    MANAGER_PROMPT = '''You are a manager AI that coordinates work between specialized workers.
+    # Default prompt (used as fallback when registry is unavailable)
+    DEFAULT_MANAGER_PROMPT = '''You are a manager AI that coordinates work between specialized workers.
 
 Available workers:
 {workers}
@@ -71,12 +85,48 @@ FINAL ANSWER:
 {context}
 
 Your decision:'''
+    
+    # Prompt label for registry lookup
+    MANAGER_PROMPT_LABEL = PROMPT_LABEL_HIERARCHICAL_MANAGER
 
     def __init__(self, *args, **kwargs):
         """Initialize hierarchical agent."""
         super().__init__(*args, **kwargs)
         self._workers: Dict[str, IAgent] = {}
         self._worker_descriptions: Dict[str, str] = {}
+        self._cached_prompt_template: Optional[str] = None
+        self._prompt_id: Optional[str] = None
+    
+    async def _get_manager_prompt_template(self) -> str:
+        """
+        Get the manager prompt template.
+        
+        Tries to fetch from prompt registry first, falls back to default.
+        Caches the result for performance.
+        
+        Returns:
+            Prompt template string
+        """
+        if self._cached_prompt_template:
+            return self._cached_prompt_template
+        
+        # Try prompt registry first
+        if self.prompt_registry:
+            try:
+                result = await self.prompt_registry.get_prompt_with_fallback(
+                    self.MANAGER_PROMPT_LABEL,
+                    model=getattr(self.llm, 'model_name', None),
+                )
+                self._cached_prompt_template = result.content
+                self._prompt_id = result.prompt_id
+                return self._cached_prompt_template
+            except (ValueError, AttributeError):
+                # Prompt not found in registry, use default
+                pass
+        
+        # Use default
+        self._cached_prompt_template = self.DEFAULT_MANAGER_PROMPT
+        return self._cached_prompt_template
     
     def add_worker(
         self,
@@ -136,11 +186,22 @@ Your decision:'''
             if scratchpad_content:
                 context = f"Previous work:\n{scratchpad_content}"
         
-        prompt = self.MANAGER_PROMPT.format(
-            workers=worker_list,
-            task=task,
-            context=context
-        )
+        # Get prompt from registry or use default
+        prompt_template = await self._get_manager_prompt_template()
+        
+        # Use system prompt if provided and has our variables, otherwise use template
+        if system_prompt and "{workers}" in system_prompt:
+            prompt = system_prompt.format(
+                workers=worker_list,
+                task=task,
+                context=context
+            )
+        else:
+            prompt = prompt_template.format(
+                workers=worker_list,
+                task=task,
+                context=context
+            )
         
         messages = [{"role": "user", "content": prompt}]
         response = await self._call_llm(messages, ctx)
@@ -214,4 +275,3 @@ Your decision:'''
             descriptions.append(f"- {name} (worker): {desc}")
         
         return "\n".join(descriptions)
-
