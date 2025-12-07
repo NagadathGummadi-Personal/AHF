@@ -286,3 +286,11 @@ ROW_COUNT='row_count'
 DEFAULT_REGION='us-west-2'
 ENDPOINT_URL='endpoint_url'
 REGION='region'
+
+# Error messages for new features
+ERROR_INVALID_SPEECH_MODE = "Invalid speech mode: {mode}. Available: auto, random, constant"
+ERROR_NO_RANDOM_MESSAGES = "Speech mode is 'random' but no random_messages provided"
+ERROR_NO_CONSTANT_MESSAGE = "Speech mode is 'constant' but no constant_message provided"
+ERROR_INVALID_VARIABLE_ASSIGNMENT = "Invalid variable assignment: {error}"
+ERROR_TRANSFORM_FUNCTION_NOT_CALLABLE = "Transform function must be callable"
+ERROR_TRANSFORM_EXECUTION_FAILED = "Transform function execution failed: {error}"

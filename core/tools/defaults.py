@@ -153,4 +153,19 @@ IDEMPOTENCY_DEFAULT_BYPASS_ON_MISSING_KEY = False
 HTTP_DEFAULT_METHOD = POST
 DB_DEFAULT_DRIVER = DYNAMODB
 
+# Interruption defaults
+INTERRUPTION_DEFAULT_DISABLED = False  # By default, interruptions are allowed
+
+# Pre-tool speech defaults
+SPEECH_DEFAULT_ENABLED = False
+SPEECH_DEFAULT_MODE = "auto"  # auto, random, constant
+SPEECH_DEFAULT_CONSTANT_MESSAGE = ""
+SPEECH_DEFAULT_RANDOM_MESSAGES: list = []
+
+# Execution mode defaults
+EXECUTION_DEFAULT_MODE = "sequential"  # sequential or parallel
+
+# Variable assignment defaults
+VARIABLE_ASSIGNMENT_DEFAULT_ENABLED = True
+
 

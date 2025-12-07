@@ -1,5 +1,5 @@
 """
-Tools Specification System (v1.2.0)
+Tools Specification System (v1.3.0)
 
 This module provides a modular, asynchronous tool execution system with SOLID separation,
 strict validation, security, idempotency, tracing, metrics, and circuit breaker-aware retries.
@@ -16,9 +16,27 @@ Core components:
 - Protocol interfaces for pluggable components (validators, security, policies, etc.)
 - Base executor classes for common tool types
 - Example implementations and usage patterns
+
+New in v1.3.0:
+- InterruptionConfig: Control whether user input can interrupt tool execution
+- PreToolSpeechConfig: Configure agent speech before tool execution
+- ExecutionConfig: Control speech/execution timing (sequential or parallel)
+- DynamicVariableConfig: Update variables based on tool results
+- SpeechMode: Enum for speech generation modes (AUTO, RANDOM, CONSTANT)
+- ExecutionMode: Enum for execution modes (SEQUENTIAL, PARALLEL)
+- VariableAssignmentOperator: Enum for variable assignment operators
 """
 
-from .enum import ToolType, ToolReturnType, ToolReturnTarget
+from .enum import (
+    ToolType,
+    ToolReturnType,
+    ToolReturnTarget,
+    SpeechMode,
+    ExecutionMode,
+    VariableAssignmentOperator,
+    SpeechContextScope,
+    TransformExecutionMode,
+)
 
 # Core spec models (re-export from subpackage)
 from .spec import (
@@ -34,6 +52,11 @@ from .spec import (
     RetryConfig,
     CircuitBreakerConfig,
     IdempotencyConfig,
+    InterruptionConfig,
+    PreToolSpeechConfig,
+    ExecutionConfig,
+    VariableAssignment,
+    DynamicVariableConfig,
 )
 
 # Interfaces (re-export from subpackage)
@@ -76,10 +99,15 @@ from .serializers import (
 )
 
 __all__ = [
-    # Types
+    # Types & Enums
     "ToolType",
     "ToolReturnType",
     "ToolReturnTarget",
+    "SpeechMode",
+    "ExecutionMode",
+    "VariableAssignmentOperator",
+    "SpeechContextScope",
+    "TransformExecutionMode",
     "ToolUsage",
     "ToolResult",
     "ToolError",
@@ -89,9 +117,15 @@ __all__ = [
     "HttpToolSpec",
     "DbToolSpec",
     "ToolContext",
+    # Config classes
     "RetryConfig",
     "CircuitBreakerConfig",
     "IdempotencyConfig",
+    "InterruptionConfig",
+    "PreToolSpeechConfig",
+    "ExecutionConfig",
+    "VariableAssignment",
+    "DynamicVariableConfig",
     # Interfaces
     "IToolExecutor",
     "IToolValidator",

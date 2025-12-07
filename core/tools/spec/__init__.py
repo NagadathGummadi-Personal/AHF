@@ -2,7 +2,16 @@
 Core spec exports for the tools system.
 """
 #Tool Config
-from .tool_config import RetryConfig, CircuitBreakerConfig, IdempotencyConfig
+from .tool_config import (
+    RetryConfig,
+    CircuitBreakerConfig,
+    IdempotencyConfig,
+    InterruptionConfig,
+    PreToolSpeechConfig,
+    ExecutionConfig,
+    VariableAssignment,
+    DynamicVariableConfig,
+)
 #Tool Context
 from .tool_context import ToolContext, ToolUsage
 from .tool_context_builder import ToolContextBuilder
@@ -35,6 +44,11 @@ __all__ = [
     "RetryConfig",
     "CircuitBreakerConfig",
     "IdempotencyConfig",
+    "InterruptionConfig",
+    "PreToolSpeechConfig",
+    "ExecutionConfig",
+    "VariableAssignment",
+    "DynamicVariableConfig",
     #Tool Context
     "ToolContext",
     "ToolUsage",

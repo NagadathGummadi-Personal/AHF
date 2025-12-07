@@ -16,7 +16,15 @@ from ..defaults import (
 from ..constants import RETURNS, ARBITRARY_TYPES_ALLOWED, POPULATE_BY_NAME
 from ..enum import ToolType, ToolReturnType, ToolReturnTarget
 from .tool_parameters import ToolParameter
-from .tool_config import RetryConfig, CircuitBreakerConfig, IdempotencyConfig
+from .tool_config import (
+    RetryConfig,
+    CircuitBreakerConfig,
+    IdempotencyConfig,
+    InterruptionConfig,
+    PreToolSpeechConfig,
+    ExecutionConfig,
+    DynamicVariableConfig,
+)
 
 if TYPE_CHECKING:
     from ..runtimes.idempotency.idempotency_key_generator import IIdempotencyKeyGenerator
@@ -37,13 +45,19 @@ class ToolSpec(BaseModel):
         required: Whether tool is required
         owner: Tool owner identifier
         permissions: List of required permissions
-        timeout_s: Execution timeout in seconds
+        timeout_s: Execution timeout in seconds (response timeout)
         examples: Usage examples
         retry: Retry configuration
         circuit_breaker: Circuit breaker configuration
         idempotency: Idempotency configuration
         idempotency_key_generator: Custom key generator (optional)
         metrics_tags: Static tags for metrics
+        
+        # New features
+        interruption: Interruption control configuration
+        pre_tool_speech: Pre-execution speech configuration
+        execution: Execution mode configuration
+        dynamic_variables: Dynamic variable assignment configuration
     """
     id: str
     version: str = DEFAULT_TOOL_VERSION
@@ -56,7 +70,7 @@ class ToolSpec(BaseModel):
     required: bool = False
     owner: Optional[str] = None
     permissions: List[str] = Field(default_factory=list)
-    timeout_s: int = DEFAULT_TOOL_TIMEOUT_S
+    timeout_s: int = DEFAULT_TOOL_TIMEOUT_S  # Response timeout in seconds
     examples: List[Dict[str, Any]] = Field(default_factory=list)
 
     # Advanced config
@@ -70,6 +84,31 @@ class ToolSpec(BaseModel):
     retry_policy: Optional[Any] = None  # IRetryPolicy instance
     
     metrics_tags: Dict[str, str] = Field(default_factory=dict)  # static tags for metrics
+    
+    # Interruption control
+    interruption: InterruptionConfig = Field(
+        default_factory=InterruptionConfig,
+        description="Controls whether user input can interrupt tool execution"
+    )
+    
+    # Pre-tool speech configuration
+    pre_tool_speech: PreToolSpeechConfig = Field(
+        default_factory=PreToolSpeechConfig,
+        description="Configuration for what agent says before executing tool"
+    )
+    
+    # Execution mode configuration
+    execution: ExecutionConfig = Field(
+        default_factory=ExecutionConfig,
+        description="Controls speech/execution timing (sequential or parallel)"
+    )
+    
+    # Dynamic variable assignments from tool results
+    dynamic_variables: DynamicVariableConfig = Field(
+        default_factory=DynamicVariableConfig,
+        description="Configuration for updating variables based on tool results"
+    )
+    
     model_config = {
         ARBITRARY_TYPES_ALLOWED: True,
         POPULATE_BY_NAME: True
