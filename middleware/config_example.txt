@@ -1,0 +1,29 @@
+# AHF Middleware Configuration
+# Copy this file to .env and update values
+
+# =============================================================================
+# AWS Configuration
+# =============================================================================
+AWS_DEFAULT_REGION=us-west-2
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+
+# For LocalStack testing (comment out for real AWS)
+# AWS_ENDPOINT_URL=http://localhost:4566
+
+# =============================================================================
+# S3 Buckets
+# =============================================================================
+S3_TOOLS_BUCKET=ahf-tools
+S3_AGENTS_BUCKET=ahf-agents
+S3_WORKFLOWS_BUCKET=ahf-workflows
+S3_PROMPTS_BUCKET=ahf-prompts
+
+# =============================================================================
+# API Configuration
+# =============================================================================
+API_HOST=0.0.0.0
+API_PORT=8000
+API_DEBUG=false
+API_PREFIX=/api/v1
+CORS_ORIGINS=*
