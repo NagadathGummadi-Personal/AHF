@@ -204,7 +204,8 @@ Your decision:'''
             )
         
         messages = [{"role": "user", "content": prompt}]
-        response = await self._call_llm(messages, ctx)
+        # Pass prompt_id for metrics tracking
+        response = await self._call_llm(messages, ctx, prompt_id=self._prompt_id)
         content = response.content if hasattr(response, 'content') else str(response)
         
         # Parse response
