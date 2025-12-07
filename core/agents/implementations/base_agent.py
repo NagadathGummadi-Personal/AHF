@@ -378,7 +378,7 @@ class BaseAgent(IAgent, ABC):
         await self._notify_llm_call(messages, ctx)
         self._usage.llm_calls += 1
         
-        # Create LLM context
+        # Create LLM context with prompt_id for automatic metrics recording
         from ...llms.spec.llm_context import LLMContext
         llm_ctx = LLMContext(
             request_id=ctx.request_id,
@@ -386,6 +386,7 @@ class BaseAgent(IAgent, ABC):
             session_id=ctx.session_id,
             tenant_id=ctx.tenant_id,
             trace_id=ctx.trace_id,
+            prompt_id=prompt_id,
         )
         
         start_time = time.time()

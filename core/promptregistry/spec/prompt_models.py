@@ -84,6 +84,7 @@ class RuntimeMetrics(BaseModel):
         """Restore private attributes from nested snapshots when loading from storage."""
         # Restore totals from nested snapshot if available
         if self.total_runtime_metrics:
+            self._total_latency_ms = self.total_runtime_metrics.get("latency_ms", 0.0)
             self._total_prompt_tokens = self.total_runtime_metrics.get("prompt_tokens", 0)
             self._total_completion_tokens = self.total_runtime_metrics.get("completion_tokens", 0)
             self._total_tokens = self.total_runtime_metrics.get("total_tokens", 0)
@@ -109,9 +110,6 @@ class RuntimeMetrics(BaseModel):
             self._p99_total_tokens = self.percentile_runtime_metrics.get("p99_total_tokens")
             self._p95_cost = self.percentile_runtime_metrics.get("p95_cost")
             self._p99_cost = self.percentile_runtime_metrics.get("p99_cost")
-        # Recompute total latency from samples if available
-        if self.latency_samples and self.usage_count > 0:
-            self._total_latency_ms = self._avg_latency_ms * self.usage_count
     
     def record_usage(
         self,
@@ -188,6 +186,7 @@ class RuntimeMetrics(BaseModel):
         self.total_runtime_metrics = {
             "usage_count": self.usage_count,
             "error_count": self.error_count,
+            "latency_ms": self._total_latency_ms,
             "prompt_tokens": self._total_prompt_tokens,
             "completion_tokens": self._total_completion_tokens,
             "total_tokens": self._total_tokens,
@@ -217,6 +216,10 @@ class RuntimeMetrics(BaseModel):
         }
     
     # Property accessors for backwards compatibility in code
+    @property
+    def total_latency_ms(self) -> float:
+        return self._total_latency_ms
+    
     @property
     def total_prompt_tokens(self) -> int:
         return self._total_prompt_tokens

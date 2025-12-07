@@ -110,10 +110,13 @@ class BasePromptRegistry(IPromptRegistry, ABC):
         if existing_data:
             entry = PromptEntry.from_dict(existing_data)
             
-            # Determine version
-            if metadata and metadata.version != DEFAULT_VERSION:
+            # Determine version: if metadata explicitly provides a version, use it;
+            # otherwise auto-increment from the latest version
+            if metadata is not None:
+                # User explicitly provided metadata with a version - use it
                 version = metadata.version
             else:
+                # No metadata provided - auto-increment
                 version = self._increment_version(entry.get_latest_version() or DEFAULT_VERSION)
             
             # Check for immutability violation

@@ -148,6 +148,7 @@ def azure_config():
         "endpoint": "https://zeenie-sweden.openai.azure.com/",
         "deployment_name": "gpt-4.1-mini",
         "api_version": "2024-02-15-preview",
+        "api_key": "test-azure-key",
         "timeout": 60,
     }
 
