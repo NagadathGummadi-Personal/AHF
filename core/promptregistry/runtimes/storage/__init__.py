@@ -6,8 +6,7 @@ Available storage implementations:
 - LocalPromptRegistry: Local registry using file storage
 """
 
-from .local_storage import LocalFileStorage
-from .local_registry import LocalPromptRegistry
+from .local import LocalFileStorage, LocalPromptRegistry
 
 __all__ = [
     "LocalFileStorage",

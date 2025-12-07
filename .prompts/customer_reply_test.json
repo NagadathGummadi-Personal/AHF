@@ -1,0 +1,155 @@
+{
+  "label": "customer_reply_test",
+  "description": "Staging prompt for customer replies",
+  "category": "template",
+  "prompt_type": "system",
+  "tags": [],
+  "versions": [
+    {
+      "version": "1.0.0",
+      "content": "PROD prompt: Provide a {tone} reply for {product}.",
+      "model_target": "azure-gpt-4.1-mini",
+      "environment": "prod",
+      "prompt_type": "system",
+      "response_format": null,
+      "metadata": {
+        "id": "e8e064ed-0fe2-4387-88fe-a7e0ba1c9ea4",
+        "version": "1.0.0",
+        "model_target": "azure-gpt-4.1-mini",
+        "environment": "prod",
+        "prompt_type": "system",
+        "tags": [],
+        "category": "template",
+        "status": "active",
+        "llm_eval_score": null,
+        "human_eval_score": null,
+        "performance_metrics": {},
+        "runtime_metrics": {
+          "usage_count": 0,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "latency_samples": [],
+          "total_tokens_samples": [],
+          "cost_samples": [],
+          "total_runtime_metrics": {},
+          "average_runtime_metrics": {},
+          "last_runtime_metrics": {},
+          "percentile_runtime_metrics": {}
+        },
+        "response_format": null,
+        "description": "Prod prompt for customer replies",
+        "author": null,
+        "created_at": "2025-12-07T08:21:34.110064",
+        "updated_at": "2025-12-07T08:21:34.110064",
+        "is_immutable": true,
+        "extras": {}
+      },
+      "created_at": "2025-12-07T08:21:34.110064"
+    },
+    {
+      "version": "1.0.1",
+      "content": "STAGING prompt: Dry-run {tone} reply for {product}.",
+      "model_target": "azure-gpt-4.1-mini",
+      "environment": "staging",
+      "prompt_type": "system",
+      "response_format": null,
+      "metadata": {
+        "id": "a1146825-8a3b-4fdb-84d9-08f952b183f1",
+        "version": "1.0.1",
+        "model_target": "azure-gpt-4.1-mini",
+        "environment": "staging",
+        "prompt_type": "system",
+        "tags": [],
+        "category": "template",
+        "status": "active",
+        "llm_eval_score": null,
+        "human_eval_score": null,
+        "performance_metrics": {},
+        "runtime_metrics": {
+          "usage_count": 10,
+          "error_count": 0,
+          "success_rate": 1.0,
+          "latency_samples": [
+            56.730031967163086,
+            65.86766242980957,
+            55.32073974609375,
+            50.74763298034668,
+            61.97547912597656,
+            55.36842346191406,
+            60.88995933532715,
+            57.03234672546387,
+            63.58742713928223,
+            52.72507667541504
+          ],
+          "total_tokens_samples": [
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "cost_samples": [
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005,
+            0.0005
+          ],
+          "total_runtime_metrics": {
+            "usage_count": 10,
+            "error_count": 0,
+            "prompt_tokens": 320,
+            "completion_tokens": 180,
+            "total_tokens": 500,
+            "cost": 0.005000000000000001
+          },
+          "average_runtime_metrics": {
+            "latency_ms": 58.0244779586792,
+            "tokens": 50.0,
+            "cost": 0.0005000000000000001,
+            "success_rate": 1.0
+          },
+          "last_runtime_metrics": {
+            "latency_ms": 52.72507667541504,
+            "prompt_tokens": 32,
+            "completion_tokens": 18,
+            "total_tokens": 50,
+            "cost": 0.0005,
+            "used_at": "2025-12-07T08:22:31.212721"
+          },
+          "percentile_runtime_metrics": {
+            "p95_latency_ms": 65.86766242980957,
+            "p99_latency_ms": 65.86766242980957,
+            "p95_total_tokens": 50.0,
+            "p99_total_tokens": 50.0,
+            "p95_cost": 0.0005,
+            "p99_cost": 0.0005
+          }
+        },
+        "response_format": null,
+        "description": "Staging prompt for customer replies",
+        "author": null,
+        "created_at": "2025-12-07T08:21:34.145339",
+        "updated_at": "2025-12-07T08:22:31.212721",
+        "is_immutable": true,
+        "extras": {}
+      },
+      "created_at": "2025-12-07T08:21:34.146345"
+    }
+  ],
+  "default_version": "1.0.0",
+  "default_model": "default",
+  "default_environment": "prod",
+  "created_at": "2025-12-07T08:21:34.110064",
+  "updated_at": "2025-12-07T08:21:34.146345"
+}

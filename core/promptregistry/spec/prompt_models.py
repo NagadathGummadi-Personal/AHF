@@ -12,7 +12,8 @@ Supports:
 """
 
 from typing import Any, Dict, List, Optional, Set
-from pydantic import BaseModel, Field, field_validator
+import math
+from pydantic import BaseModel, Field, PrivateAttr
 from datetime import datetime
 import uuid
 import re
@@ -21,7 +22,6 @@ from ..enum import PromptStatus, PromptCategory, PromptEnvironment, PromptType
 from ..constants import (
     DEFAULT_VERSION,
     DEFAULT_MODEL,
-    DEFAULT_ENVIRONMENT,
     VARIABLE_PATTERN,
     MIN_EVAL_SCORE,
     MAX_EVAL_SCORE,
@@ -33,40 +33,85 @@ class RuntimeMetrics(BaseModel):
     """
     Runtime metrics for prompt usage tracking.
     
-    Tracks real-time performance metrics when prompts are used in production.
-    These metrics are aggregated over time to help optimize prompt selection.
-    
-    Attributes:
-        usage_count: Total number of times this prompt was used
-        total_latency_ms: Cumulative latency in milliseconds
-        avg_latency_ms: Average latency per call
-        total_prompt_tokens: Total prompt tokens consumed
-        total_completion_tokens: Total completion tokens generated
-        total_tokens: Total tokens (prompt + completion)
-        avg_tokens: Average tokens per call
-        total_cost: Total cost incurred (in USD or smallest unit)
-        avg_cost: Average cost per call
-        last_used_at: Timestamp of last usage
-        error_count: Number of errors encountered
-        success_rate: Success rate (0.0 to 1.0)
+    Top-level fields are minimal; nested snapshots hold totals, averages, 
+    last observed values, and percentile data.
     
     Example:
         metrics = RuntimeMetrics()
         metrics.record_usage(latency_ms=150, prompt_tokens=100, completion_tokens=50, cost=0.001)
     """
     
+    # Minimal top-level public fields
     usage_count: int = Field(default=0, description="Total usage count")
-    total_latency_ms: float = Field(default=0.0, description="Total latency in ms")
-    avg_latency_ms: float = Field(default=0.0, description="Average latency in ms")
-    total_prompt_tokens: int = Field(default=0, description="Total prompt tokens")
-    total_completion_tokens: int = Field(default=0, description="Total completion tokens")
-    total_tokens: int = Field(default=0, description="Total tokens")
-    avg_tokens: float = Field(default=0.0, description="Average tokens per call")
-    total_cost: float = Field(default=0.0, description="Total cost")
-    avg_cost: float = Field(default=0.0, description="Average cost per call")
-    last_used_at: Optional[str] = Field(default=None, description="Last usage timestamp")
     error_count: int = Field(default=0, description="Error count")
     success_rate: float = Field(default=1.0, description="Success rate (0-1)")
+    
+    # Sample buffers for percentile computation (bounded)
+    latency_samples: List[float] = Field(default_factory=list, description="Recent latency samples")
+    total_tokens_samples: List[int] = Field(default_factory=list, description="Recent total token samples")
+    cost_samples: List[float] = Field(default_factory=list, description="Recent cost samples")
+    
+    # Nested snapshots for easy consumption
+    total_runtime_metrics: Dict[str, Any] = Field(default_factory=dict, description="Aggregated totals")
+    average_runtime_metrics: Dict[str, Any] = Field(default_factory=dict, description="Aggregated averages")
+    last_runtime_metrics: Dict[str, Any] = Field(default_factory=dict, description="Last observed values")
+    percentile_runtime_metrics: Dict[str, Any] = Field(default_factory=dict, description="Percentile metrics")
+    
+    # Private attributes for internal accumulation (not serialized)
+    _max_samples: int = PrivateAttr(default=10)
+    _total_latency_ms: float = PrivateAttr(default=0.0)
+    _total_prompt_tokens: int = PrivateAttr(default=0)
+    _total_completion_tokens: int = PrivateAttr(default=0)
+    _total_tokens: int = PrivateAttr(default=0)
+    _total_cost: float = PrivateAttr(default=0.0)
+    _last_used_at: Optional[str] = PrivateAttr(default=None)
+    _last_latency_ms: Optional[float] = PrivateAttr(default=None)
+    _last_prompt_tokens: Optional[int] = PrivateAttr(default=None)
+    _last_completion_tokens: Optional[int] = PrivateAttr(default=None)
+    _last_total_tokens: Optional[int] = PrivateAttr(default=None)
+    _last_cost: Optional[float] = PrivateAttr(default=None)
+    _avg_latency_ms: float = PrivateAttr(default=0.0)
+    _avg_tokens: float = PrivateAttr(default=0.0)
+    _avg_cost: float = PrivateAttr(default=0.0)
+    _p95_latency_ms: Optional[float] = PrivateAttr(default=None)
+    _p99_latency_ms: Optional[float] = PrivateAttr(default=None)
+    _p95_total_tokens: Optional[float] = PrivateAttr(default=None)
+    _p99_total_tokens: Optional[float] = PrivateAttr(default=None)
+    _p95_cost: Optional[float] = PrivateAttr(default=None)
+    _p99_cost: Optional[float] = PrivateAttr(default=None)
+    
+    def model_post_init(self, __context: Any) -> None:
+        """Restore private attributes from nested snapshots when loading from storage."""
+        # Restore totals from nested snapshot if available
+        if self.total_runtime_metrics:
+            self._total_prompt_tokens = self.total_runtime_metrics.get("prompt_tokens", 0)
+            self._total_completion_tokens = self.total_runtime_metrics.get("completion_tokens", 0)
+            self._total_tokens = self.total_runtime_metrics.get("total_tokens", 0)
+            self._total_cost = self.total_runtime_metrics.get("cost", 0.0)
+        # Restore averages from nested snapshot if available
+        if self.average_runtime_metrics:
+            self._avg_latency_ms = self.average_runtime_metrics.get("latency_ms", 0.0)
+            self._avg_tokens = self.average_runtime_metrics.get("tokens", 0.0)
+            self._avg_cost = self.average_runtime_metrics.get("cost", 0.0)
+        # Restore last values from nested snapshot if available
+        if self.last_runtime_metrics:
+            self._last_latency_ms = self.last_runtime_metrics.get("latency_ms")
+            self._last_prompt_tokens = self.last_runtime_metrics.get("prompt_tokens")
+            self._last_completion_tokens = self.last_runtime_metrics.get("completion_tokens")
+            self._last_total_tokens = self.last_runtime_metrics.get("total_tokens")
+            self._last_cost = self.last_runtime_metrics.get("cost")
+            self._last_used_at = self.last_runtime_metrics.get("used_at")
+        # Restore percentiles from nested snapshot if available
+        if self.percentile_runtime_metrics:
+            self._p95_latency_ms = self.percentile_runtime_metrics.get("p95_latency_ms")
+            self._p99_latency_ms = self.percentile_runtime_metrics.get("p99_latency_ms")
+            self._p95_total_tokens = self.percentile_runtime_metrics.get("p95_total_tokens")
+            self._p99_total_tokens = self.percentile_runtime_metrics.get("p99_total_tokens")
+            self._p95_cost = self.percentile_runtime_metrics.get("p95_cost")
+            self._p99_cost = self.percentile_runtime_metrics.get("p99_cost")
+        # Recompute total latency from samples if available
+        if self.latency_samples and self.usage_count > 0:
+            self._total_latency_ms = self._avg_latency_ms * self.usage_count
     
     def record_usage(
         self,
@@ -80,32 +125,173 @@ class RuntimeMetrics(BaseModel):
         Record a single usage of the prompt.
         
         Updates all metrics with the new usage data.
-        
-        Args:
-            latency_ms: Latency of this call in milliseconds
-            prompt_tokens: Number of prompt tokens used
-            completion_tokens: Number of completion tokens generated
-            cost: Cost of this call
-            success: Whether the call was successful
         """
         self.usage_count += 1
-        self.total_latency_ms += latency_ms
-        self.total_prompt_tokens += prompt_tokens
-        self.total_completion_tokens += completion_tokens
+        self._total_latency_ms += latency_ms
+        self._total_prompt_tokens += prompt_tokens
+        self._total_completion_tokens += completion_tokens
         total_call_tokens = prompt_tokens + completion_tokens
-        self.total_tokens += total_call_tokens
-        self.total_cost += cost
-        self.last_used_at = datetime.utcnow().isoformat()
+        self._total_tokens += total_call_tokens
+        self._total_cost += cost
+        self._last_used_at = datetime.utcnow().isoformat()
+        
+        # Track last values
+        self._last_latency_ms = latency_ms
+        self._last_prompt_tokens = prompt_tokens
+        self._last_completion_tokens = completion_tokens
+        self._last_total_tokens = total_call_tokens
+        self._last_cost = cost
         
         if not success:
             self.error_count += 1
         
         # Update averages
         if self.usage_count > 0:
-            self.avg_latency_ms = self.total_latency_ms / self.usage_count
-            self.avg_tokens = self.total_tokens / self.usage_count
-            self.avg_cost = self.total_cost / self.usage_count
+            self._avg_latency_ms = self._total_latency_ms / self.usage_count
+            self._avg_tokens = self._total_tokens / self.usage_count
+            self._avg_cost = self._total_cost / self.usage_count
             self.success_rate = (self.usage_count - self.error_count) / self.usage_count
+        
+        # Update percentile samples and compute p95/p99 (nearest-rank)
+        self._append_sample(self.latency_samples, latency_ms)
+        self._append_sample(self.total_tokens_samples, total_call_tokens)
+        self._append_sample(self.cost_samples, cost)
+        
+        self._p95_latency_ms = self._percentile(self.latency_samples, 95)
+        self._p99_latency_ms = self._percentile(self.latency_samples, 99)
+        self._p95_total_tokens = self._percentile(self.total_tokens_samples, 95)
+        self._p99_total_tokens = self._percentile(self.total_tokens_samples, 99)
+        self._p95_cost = self._percentile(self.cost_samples, 95)
+        self._p99_cost = self._percentile(self.cost_samples, 99)
+        
+        # Refresh nested snapshots
+        self._refresh_runtime_snapshots()
+    
+    def _append_sample(self, samples: List[Any], value: Any) -> None:
+        """Append a sample and enforce max sample window."""
+        samples.append(value)
+        if len(samples) > self._max_samples:
+            del samples[0]
+    
+    @staticmethod
+    def _percentile(samples: List[Any], percentile: float) -> Optional[float]:
+        """Compute nearest-rank percentile for a list of samples."""
+        if not samples:
+            return None
+        sorted_samples = sorted(samples)
+        rank = math.ceil((percentile / 100) * len(sorted_samples))
+        rank = max(1, rank)
+        return float(sorted_samples[rank - 1])
+    
+    def _refresh_runtime_snapshots(self) -> None:
+        """Populate nested runtime metric views."""
+        self.total_runtime_metrics = {
+            "usage_count": self.usage_count,
+            "error_count": self.error_count,
+            "prompt_tokens": self._total_prompt_tokens,
+            "completion_tokens": self._total_completion_tokens,
+            "total_tokens": self._total_tokens,
+            "cost": self._total_cost,
+        }
+        self.average_runtime_metrics = {
+            "latency_ms": self._avg_latency_ms,
+            "tokens": self._avg_tokens,
+            "cost": self._avg_cost,
+            "success_rate": self.success_rate,
+        }
+        self.last_runtime_metrics = {
+            "latency_ms": self._last_latency_ms,
+            "prompt_tokens": self._last_prompt_tokens,
+            "completion_tokens": self._last_completion_tokens,
+            "total_tokens": self._last_total_tokens,
+            "cost": self._last_cost,
+            "used_at": self._last_used_at,
+        }
+        self.percentile_runtime_metrics = {
+            "p95_latency_ms": self._p95_latency_ms,
+            "p99_latency_ms": self._p99_latency_ms,
+            "p95_total_tokens": self._p95_total_tokens,
+            "p99_total_tokens": self._p99_total_tokens,
+            "p95_cost": self._p95_cost,
+            "p99_cost": self._p99_cost,
+        }
+    
+    # Property accessors for backwards compatibility in code
+    @property
+    def total_prompt_tokens(self) -> int:
+        return self._total_prompt_tokens
+    
+    @property
+    def total_completion_tokens(self) -> int:
+        return self._total_completion_tokens
+    
+    @property
+    def total_tokens(self) -> int:
+        return self._total_tokens
+    
+    @property
+    def total_cost(self) -> float:
+        return self._total_cost
+    
+    @property
+    def avg_tokens(self) -> float:
+        return self._avg_tokens
+    
+    @property
+    def avg_latency_ms(self) -> float:
+        return self._avg_latency_ms
+    
+    @property
+    def avg_cost(self) -> float:
+        return self._avg_cost
+    
+    @property
+    def last_latency_ms(self) -> Optional[float]:
+        return self._last_latency_ms
+    
+    @property
+    def last_prompt_tokens(self) -> Optional[int]:
+        return self._last_prompt_tokens
+    
+    @property
+    def last_completion_tokens(self) -> Optional[int]:
+        return self._last_completion_tokens
+    
+    @property
+    def last_total_tokens(self) -> Optional[int]:
+        return self._last_total_tokens
+    
+    @property
+    def last_cost(self) -> Optional[float]:
+        return self._last_cost
+    
+    @property
+    def last_used_at(self) -> Optional[str]:
+        return self._last_used_at
+    
+    @property
+    def p95_latency_ms(self) -> Optional[float]:
+        return self._p95_latency_ms
+    
+    @property
+    def p99_latency_ms(self) -> Optional[float]:
+        return self._p99_latency_ms
+    
+    @property
+    def p95_total_tokens(self) -> Optional[float]:
+        return self._p95_total_tokens
+    
+    @property
+    def p99_total_tokens(self) -> Optional[float]:
+        return self._p99_total_tokens
+    
+    @property
+    def p95_cost(self) -> Optional[float]:
+        return self._p95_cost
+    
+    @property
+    def p99_cost(self) -> Optional[float]:
+        return self._p99_cost
 
 
 class PromptMetadata(BaseModel):

@@ -128,10 +128,12 @@ class AzureBaseLLM(BaseLLM):
         Get complete response from Azure OpenAI.
         
         Uses pluggable components for validation, transformation, and parsing.
+        If prompt_id is set in context and a prompt registry is configured,
+        usage metrics are automatically recorded.
         
         Args:
             messages: List of message dicts
-            ctx: LLM context
+            ctx: LLM context (can include prompt_id for metrics tracking)
             output_config: Output configuration (optional)
             **kwargs: Additional parameters
             
@@ -139,47 +141,59 @@ class AzureBaseLLM(BaseLLM):
             LLMResponse with content and usage
         """
         start_time = time.time()
+        success = True
+        llm_response = None
         
-        # 1. Check output support
-        self._check_text_output_support()
-        
-        # 2. Setup output configuration
-        self._setup_output_config(output_config, kwargs)
-        
-        # 3. Validate using pluggable validator
-        await self.validator.validate_messages(messages, self.metadata)
-        await self.validator.validate_parameters(kwargs, self.metadata)
-        
-        # 4. Model-specific validation hook
-        self._validate_model_specific(messages, kwargs)
-        
-        # 5. Merge and transform parameters using pluggable transformer
-        params = self._merge_parameters(kwargs)
-        params = self.transformer.transform(params, self.metadata)
-        params = self._transform_parameters(params)  # Model-specific hook
-        
-        # 6. Prepare for structured output
-        if self._output_config and self._output_config.expects_structured_output:
-            params = self.structured_handler.prepare_request(params, self._output_config)
-        
-        # 7. Validate token limits
-        max_tokens = params.get(PARAM_MAX_COMPLETION_TOKENS) or params.get(PARAM_MAX_TOKENS, self.metadata.max_output_tokens)
-        await self.validator.validate_token_limits(messages, max_tokens, self.metadata)
-        
-        # 8. Apply parameter mappings
-        mapped_params = self._apply_parameter_mappings(params)
-        
-        # 9. Build payload
-        payload = self._build_azure_payload(messages, mapped_params)
-        payload = self._build_model_payload(payload)  # Model-specific hook
-        
-        # 10. Execute with retry logic
-        llm_response = await self._execute_with_retry(messages, payload, start_time)
-        
-        # 11. Reset state
-        self._reset_output_state()
-        
-        return llm_response
+        try:
+            # 1. Check output support
+            self._check_text_output_support()
+            
+            # 2. Setup output configuration
+            self._setup_output_config(output_config, kwargs)
+            
+            # 3. Validate using pluggable validator
+            await self.validator.validate_messages(messages, self.metadata)
+            await self.validator.validate_parameters(kwargs, self.metadata)
+            
+            # 4. Model-specific validation hook
+            self._validate_model_specific(messages, kwargs)
+            
+            # 5. Merge and transform parameters using pluggable transformer
+            params = self._merge_parameters(kwargs)
+            params = self.transformer.transform(params, self.metadata)
+            params = self._transform_parameters(params)  # Model-specific hook
+            
+            # 6. Prepare for structured output
+            if self._output_config and self._output_config.expects_structured_output:
+                params = self.structured_handler.prepare_request(params, self._output_config)
+            
+            # 7. Validate token limits
+            max_tokens = params.get(PARAM_MAX_COMPLETION_TOKENS) or params.get(PARAM_MAX_TOKENS, self.metadata.max_output_tokens)
+            await self.validator.validate_token_limits(messages, max_tokens, self.metadata)
+            
+            # 8. Apply parameter mappings
+            mapped_params = self._apply_parameter_mappings(params)
+            
+            # 9. Build payload
+            payload = self._build_azure_payload(messages, mapped_params)
+            payload = self._build_model_payload(payload)  # Model-specific hook
+            
+            # 10. Execute with retry logic
+            llm_response = await self._execute_with_retry(messages, payload, start_time)
+            
+            return llm_response
+            
+        except Exception:
+            success = False
+            raise
+            
+        finally:
+            # 11. Record prompt usage if registry is set
+            latency_ms = (time.time() - start_time) * 1000
+            await self._record_prompt_usage(ctx, llm_response, latency_ms, success)
+            
+            # 12. Reset state
+            self._reset_output_state()
     
     async def stream_answer(
         self,
@@ -191,9 +205,12 @@ class AzureBaseLLM(BaseLLM):
         """
         Get streaming response from Azure OpenAI.
         
+        If prompt_id is set in context and a prompt registry is configured,
+        usage metrics are automatically recorded after streaming completes.
+        
         Args:
             messages: List of message dicts
-            ctx: LLM context
+            ctx: LLM context (can include prompt_id for metrics tracking)
             output_config: Output configuration (optional)
             **kwargs: Additional parameters
             
@@ -201,47 +218,69 @@ class AzureBaseLLM(BaseLLM):
             LLMStreamChunk objects
         """
         start_time = time.time()
+        success = True
+        final_usage = None
         
-        # 1. Check output support
-        self._check_text_output_support()
-        
-        # 2. Setup output configuration
-        self._setup_output_config(output_config, kwargs)
-        
-        # 3. Validate
-        await self.validator.validate_messages(messages, self.metadata)
-        await self.validator.validate_parameters(kwargs, self.metadata)
-        self._validate_model_specific(messages, kwargs)
-        
-        # 4. Transform parameters
-        params = self._merge_parameters(kwargs)
-        params = self.transformer.transform(params, self.metadata)
-        params = self._transform_parameters(params)
-        
-        # 5. Prepare for structured output
-        if self._output_config and self._output_config.expects_structured_output:
-            params = self.structured_handler.prepare_request(params, self._output_config)
-        
-        # 6. Validate token limits
-        max_tokens = params.get(PARAM_MAX_COMPLETION_TOKENS) or params.get(PARAM_MAX_TOKENS, self.metadata.max_output_tokens)
-        await self.validator.validate_token_limits(messages, max_tokens, self.metadata)
-        
-        # 7. Build streaming payload
-        mapped_params = self._apply_parameter_mappings(params)
-        payload = self._build_azure_payload(messages, mapped_params)
-        payload = self._build_model_payload(payload)
-        payload[STREAM_PARAM_TRUE] = True
-        
-        # 8. Stream with structured output handling if needed
-        if self._output_config and self._output_config.expects_structured_output:
-            async for chunk in self._stream_with_structured_output(messages, payload, start_time):
-                yield chunk
-        else:
-            async for chunk in self._stream_azure_response(messages, payload, start_time):
-                yield chunk
-        
-        # 9. Reset state
-        self._reset_output_state()
+        try:
+            # 1. Check output support
+            self._check_text_output_support()
+            
+            # 2. Setup output configuration
+            self._setup_output_config(output_config, kwargs)
+            
+            # 3. Validate
+            await self.validator.validate_messages(messages, self.metadata)
+            await self.validator.validate_parameters(kwargs, self.metadata)
+            self._validate_model_specific(messages, kwargs)
+            
+            # 4. Transform parameters
+            params = self._merge_parameters(kwargs)
+            params = self.transformer.transform(params, self.metadata)
+            params = self._transform_parameters(params)
+            
+            # 5. Prepare for structured output
+            if self._output_config and self._output_config.expects_structured_output:
+                params = self.structured_handler.prepare_request(params, self._output_config)
+            
+            # 6. Validate token limits
+            max_tokens = params.get(PARAM_MAX_COMPLETION_TOKENS) or params.get(PARAM_MAX_TOKENS, self.metadata.max_output_tokens)
+            await self.validator.validate_token_limits(messages, max_tokens, self.metadata)
+            
+            # 7. Build streaming payload
+            mapped_params = self._apply_parameter_mappings(params)
+            payload = self._build_azure_payload(messages, mapped_params)
+            payload = self._build_model_payload(payload)
+            payload[STREAM_PARAM_TRUE] = True
+            
+            # 8. Stream with structured output handling if needed
+            if self._output_config and self._output_config.expects_structured_output:
+                async for chunk in self._stream_with_structured_output(messages, payload, start_time):
+                    if chunk.is_final and chunk.usage:
+                        final_usage = chunk.usage
+                    yield chunk
+            else:
+                async for chunk in self._stream_azure_response(messages, payload, start_time):
+                    if chunk.is_final and chunk.usage:
+                        final_usage = chunk.usage
+                    yield chunk
+                    
+        except Exception:
+            success = False
+            raise
+            
+        finally:
+            # 9. Record prompt usage if registry is set
+            latency_ms = (time.time() - start_time) * 1000
+            # Build a minimal response for metrics recording
+            if final_usage:
+                from ...spec.llm_result import LLMResponse
+                mock_response = LLMResponse(content="", usage=final_usage)
+                await self._record_prompt_usage(ctx, mock_response, latency_ms, success)
+            else:
+                await self._record_prompt_usage(ctx, None, latency_ms, success)
+            
+            # 10. Reset state
+            self._reset_output_state()
     
     # ============================================================================
     # HOOK METHODS - Override in model-specific implementations

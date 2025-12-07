@@ -5,9 +5,13 @@ All components are pluggable:
 - Storage: LocalFileStorage (default), or any IPromptStorage implementation
 - Validators: NoOpPromptValidator, BasicPromptValidator, or custom
 - Security: NoOpPromptSecurity, RoleBasedPromptSecurity, or custom
-- LLM Integration: PromptAwareLLM wrapper for automatic metrics tracking
+- BasePromptRegistry: Abstract base class for creating custom registries
+
+Note: LLM usage tracking is now handled directly in core/llms.
+      Use llm.set_prompt_registry(registry) and pass prompt_id in LLMContext.
 """
 
+from .base_registry import BasePromptRegistry
 from .storage import (
     LocalPromptRegistry,
     LocalFileStorage,
@@ -26,12 +30,9 @@ from .security import (
     PromptSecurityFactory,
 )
 
-from .llm_integration import (
-    PromptAwareLLM,
-    call_with_prompt,
-)
-
 __all__ = [
+    # Base
+    "BasePromptRegistry",
     # Storage
     "LocalPromptRegistry",
     "LocalFileStorage",
@@ -44,8 +45,5 @@ __all__ = [
     "NoOpPromptSecurity",
     "RoleBasedPromptSecurity",
     "PromptSecurityFactory",
-    # LLM Integration
-    "PromptAwareLLM",
-    "call_with_prompt",
 ]
 

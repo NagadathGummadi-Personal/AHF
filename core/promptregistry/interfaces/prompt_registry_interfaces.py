@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         RuntimeMetrics,
     )
     from ..enum import PromptEnvironment, PromptType
+    from core.llms.spec.llm_result import LLMUsage
 
 
 # ============================================================================
@@ -660,6 +661,24 @@ class IPromptRegistry(Protocol):
         """
         ...
     
+    async def record_usage_from_llm(
+        self,
+        prompt_id: str,
+        usage: Optional['LLMUsage'],
+        latency_ms: float,
+        success: bool = True
+    ) -> None:
+        """
+        Convenience method to record usage directly from an LLMUsage object.
+        
+        Args:
+            prompt_id: Prompt ID
+            usage: LLMUsage object from LLM response
+            latency_ms: Latency in milliseconds
+            success: Whether the call was successful
+        """
+        ...
+    
     async def delete_prompt(
         self,
         label: str,
@@ -673,6 +692,25 @@ class IPromptRegistry(Protocol):
         Args:
             label: Prompt label
             version: Optional version (deletes all if not specified)
+        """
+        ...
+    
+    async def search_prompts(
+        self,
+        query: str,
+        category: Optional[str] = None,
+        environment: Optional['PromptEnvironment'] = None
+    ) -> List['PromptEntry']:
+        """
+        Search prompts by content or label.
+        
+        Args:
+            query: Search query
+            category: Optional category filter
+            environment: Optional environment filter
+            
+        Returns:
+            List of matching PromptEntry objects
         """
         ...
     

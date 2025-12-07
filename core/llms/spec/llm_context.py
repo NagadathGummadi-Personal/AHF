@@ -77,6 +77,12 @@ class LLMContext(BaseModel):
         description="Distributed tracing ID"
     )
     
+    # Prompt tracking
+    prompt_id: Optional[str] = Field(
+        default=None,
+        description="Prompt ID for metrics tracking (from prompt registry)"
+    )
+    
     # Localization
     locale: str = Field(
         default=DEFAULT_LOCALE,

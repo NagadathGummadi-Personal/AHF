@@ -115,9 +115,6 @@ from .runtimes import (
     NoOpPromptSecurity,
     RoleBasedPromptSecurity,
     PromptSecurityFactory,
-    # LLM Integration
-    PromptAwareLLM,
-    call_with_prompt,
 )
 
 from .defaults import (
@@ -171,9 +168,6 @@ __all__ = [
     "NoOpPromptSecurity",
     "RoleBasedPromptSecurity",
     "PromptSecurityFactory",
-    # LLM Integration
-    "PromptAwareLLM",
-    "call_with_prompt",
     # Defaults
     "load_default_prompts",
     "get_default_prompt_labels",

@@ -6,7 +6,7 @@ All LLMs implement just 2 core methods: get_answer and stream_answer.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, AsyncIterator, Optional
+from typing import Dict, Any, List, AsyncIterator, Optional, TYPE_CHECKING
 from ...spec.llm_schema import ModelMetadata
 from ...spec.llm_result import (
     LLMResponse,
@@ -35,6 +35,9 @@ from ...constants import (
     ERROR_MSG_MISSING_ROLE,
     ERROR_MSG_MISSING_CONTENT,
 )
+
+if TYPE_CHECKING:
+    from core.promptregistry.interfaces.prompt_registry_interfaces import IPromptRegistry
 
 
 class BaseLLM(ABC):
@@ -67,6 +70,74 @@ class BaseLLM(ABC):
         """
         self.metadata = metadata
         self.connector = connector
+        self._prompt_registry: Optional['IPromptRegistry'] = None
+    
+    def set_prompt_registry(self, registry: 'IPromptRegistry') -> 'BaseLLM':
+        """
+        Set the prompt registry for automatic usage tracking.
+        
+        When set, LLM calls with a prompt_id in the context will automatically
+        record usage metrics (latency, tokens, cost) to the registry.
+        
+        Args:
+            registry: Prompt registry instance
+            
+        Returns:
+            Self for method chaining
+            
+        Example:
+            llm = LLMFactory.create_llm("azure-gpt-4.1-mini")
+            llm.set_prompt_registry(registry)
+            
+            # Now calls with prompt_id in context auto-record metrics
+            ctx = LLMContext(prompt_id=result.prompt_id)
+            response = await llm.get_answer(messages, ctx)
+        """
+        self._prompt_registry = registry
+        return self
+    
+    async def _record_prompt_usage(
+        self,
+        ctx: LLMContext,
+        response: Optional[LLMResponse],
+        latency_ms: float,
+        success: bool = True
+    ) -> None:
+        """
+        Record prompt usage metrics if registry is set and prompt_id is provided.
+        
+        Called automatically by implementations after get_answer/stream_answer.
+        
+        Args:
+            ctx: LLM context (may contain prompt_id)
+            response: LLM response (for token counts)
+            latency_ms: Call latency in milliseconds
+            success: Whether the call succeeded
+        """
+        if not self._prompt_registry or not ctx.prompt_id:
+            return
+        
+        try:
+            prompt_tokens = 0
+            completion_tokens = 0
+            cost = 0.0
+            
+            if response and response.usage:
+                prompt_tokens = response.usage.prompt_tokens or 0
+                completion_tokens = response.usage.completion_tokens or 0
+                cost = response.usage.cost_usd or 0.0
+            
+            await self._prompt_registry.record_usage(
+                ctx.prompt_id,
+                latency_ms=latency_ms,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                cost=cost,
+                success=success
+            )
+        except Exception:
+            # Don't fail the LLM call if metrics recording fails
+            pass
     
     def _check_text_output_support(self) -> None:
         """
