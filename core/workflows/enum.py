@@ -30,6 +30,11 @@ from .constants import (
     EDGE_TYPE_ERROR,
     EDGE_TYPE_TIMEOUT,
     EDGE_TYPE_FALLBACK,
+    # Edge condition types
+    EDGE_CONDITION_TYPE_EXPRESSION,
+    EDGE_CONDITION_TYPE_DYNAMIC,
+    EDGE_CONDITION_TYPE_LLM,
+    EDGE_CONDITION_TYPE_FUNCTION,
     # IO types
     IO_TYPE_TEXT,
     IO_TYPE_SPEECH,
@@ -90,6 +95,14 @@ from .constants import (
     # Condition join operators
     COND_JOIN_AND,
     COND_JOIN_OR,
+    # Pass-through extraction strategies
+    EXTRACT_STRATEGY_CONTEXT,
+    EXTRACT_STRATEGY_LLM,
+    EXTRACT_STRATEGY_ASK_USER,
+    # LLM evaluation modes
+    LLM_EVAL_MODE_BINARY,
+    LLM_EVAL_MODE_SCORE,
+    LLM_EVAL_MODE_CLASSIFICATION,
 )
 
 
@@ -262,3 +275,44 @@ class ConditionJoinOperator(str, Enum):
     """
     AND = COND_JOIN_AND
     OR = COND_JOIN_OR
+
+
+class EdgeConditionType(str, Enum):
+    """
+    Types of edge conditions.
+    
+    EXPRESSION: Static expression evaluation (e.g., field == value)
+    DYNAMIC: Dynamic variable evaluation at runtime
+    LLM: LLM-based semantic condition evaluation
+    FUNCTION: Custom function evaluation
+    """
+    EXPRESSION = EDGE_CONDITION_TYPE_EXPRESSION
+    DYNAMIC = EDGE_CONDITION_TYPE_DYNAMIC
+    LLM = EDGE_CONDITION_TYPE_LLM
+    FUNCTION = EDGE_CONDITION_TYPE_FUNCTION
+
+
+class PassThroughExtractionStrategy(str, Enum):
+    """
+    Strategy for extracting pass-through field values.
+    
+    CONTEXT: Look for the value in workflow context/variables
+    LLM: Use LLM to extract from conversation history
+    ASK_USER: Prompt the user to provide the value
+    """
+    CONTEXT = EXTRACT_STRATEGY_CONTEXT
+    LLM = EXTRACT_STRATEGY_LLM
+    ASK_USER = EXTRACT_STRATEGY_ASK_USER
+
+
+class LLMEvaluationMode(str, Enum):
+    """
+    Mode for LLM-based condition evaluation.
+    
+    BINARY: Simple yes/no evaluation (condition met or not)
+    SCORE: Score-based evaluation (0.0-1.0 confidence)
+    CLASSIFICATION: Classify into predefined categories
+    """
+    BINARY = LLM_EVAL_MODE_BINARY
+    SCORE = LLM_EVAL_MODE_SCORE
+    CLASSIFICATION = LLM_EVAL_MODE_CLASSIFICATION

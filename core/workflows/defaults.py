@@ -8,6 +8,7 @@ from .constants import (
     STATUS_DRAFT,
     NODE_TYPE_AGENT,
     EDGE_TYPE_DEFAULT,
+    EDGE_CONDITION_TYPE_EXPRESSION,
     IO_TYPE_TEXT,
     FORMAT_PLAIN,
     PROMPT_PRECEDENCE_MERGE,
@@ -17,6 +18,8 @@ from .constants import (
     DEFAULT_NODES_DIR,
     DEFAULT_EDGES_DIR,
     FILE_EXT_JSON,
+    EXTRACT_STRATEGY_CONTEXT,
+    LLM_EVAL_MODE_BINARY,
 )
 
 # =============================================================================
@@ -106,3 +109,19 @@ DEFAULT_EDGE_DISPLAY_NAME = "Untitled Edge"
 
 DEFAULT_VARIABLE_ASSIGNMENT_ENABLED = True
 DEFAULT_ON_ERROR_BEHAVIOR = "log"  # "log", "raise", "ignore"
+
+# =============================================================================
+# EDGE CONDITION DEFAULTS
+# =============================================================================
+
+DEFAULT_EDGE_CONDITION_TYPE = EDGE_CONDITION_TYPE_EXPRESSION
+DEFAULT_LLM_EVAL_MODE = LLM_EVAL_MODE_BINARY
+DEFAULT_LLM_SCORE_THRESHOLD = 0.7  # For score-based evaluation
+
+# =============================================================================
+# PASS-THROUGH FIELD DEFAULTS
+# =============================================================================
+
+DEFAULT_PASS_THROUGH_EXTRACTION_STRATEGY = EXTRACT_STRATEGY_CONTEXT
+DEFAULT_PASS_THROUGH_REQUIRED = False
+DEFAULT_PASS_THROUGH_ASK_ON_MISSING = True

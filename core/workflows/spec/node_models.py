@@ -297,16 +297,24 @@ class NodeSpec(BaseModel):
         return self.display_description or self.description
     
     def has_agent(self) -> bool:
-        """Check if node has an agent configured."""
+        """Check if node has an agent configured (via reference or instance)."""
         return self.agent_ref is not None or self.agent_instance is not None
     
     def has_tool(self) -> bool:
-        """Check if node has a tool configured."""
+        """Check if node has a tool configured (via reference or instance)."""
         return self.tool_ref is not None or self.tool_instance is not None
     
     def has_background_agents(self) -> bool:
         """Check if node has any enabled background agents."""
         return any(bg.enabled for bg in self.background_agents)
+    
+    def get_agent(self) -> Optional[Any]:
+        """Get the agent instance if available."""
+        return self.agent_instance
+    
+    def get_tool(self) -> Optional[Any]:
+        """Get the tool instance if available."""
+        return self.tool_instance
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

@@ -8,7 +8,7 @@ Version: 1.0.0
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from ..spec.node_models import (
     NodeSpec,
@@ -41,7 +41,20 @@ class NodeBuilder:
     Fluent builder for creating NodeSpec instances.
     
     Usage:
-        # Create a node with an agent
+        # First, build an agent using AgentBuilder
+        from core.agents import AgentBuilder
+        from core.llms import LLMFactory
+        
+        llm = LLMFactory.create_llm("gpt-4o", connector_config={...})
+        
+        greeting_agent = (AgentBuilder()
+            .with_name("greeting-agent")
+            .with_llm(llm)
+            .with_system_prompt("You are a friendly receptionist...")
+            .with_max_iterations(10)
+            .build())
+        
+        # Then create a node with that agent
         node = (NodeBuilder()
             .with_id("greeting-node")
             .with_name("Greeting Node")
@@ -49,16 +62,22 @@ class NodeBuilder:
             .with_agent(greeting_agent)
             .with_input_type(IOType.TEXT)
             .with_output_type(IOType.TEXT)
-            .with_user_prompt_config(allow_user_prompt=True)
             .build())
         
-        # Create a node with just a tool
+        # Or create a node with a tool
         node = (NodeBuilder()
             .with_id("lookup-node")
             .with_name("Database Lookup")
             .with_tool(db_tool)
             .with_input_type(IOType.JSON)
             .with_output_type(IOType.JSON)
+            .build())
+        
+        # Or reference a pre-registered agent by ID
+        node = (NodeBuilder()
+            .with_id("greeting-node")
+            .with_name("Greeting Node")
+            .with_agent_ref("registered-agent-id")
             .build())
     """
     
@@ -69,16 +88,20 @@ class NodeBuilder:
         self._description: str = ""
         self._node_type: NodeType = NodeType.AGENT
         
-        # Component references
+        # Component references (for persisted/external components)
         self._agent_ref: Optional[str] = None
-        self._agent_instance: Optional[Any] = None
         self._tool_ref: Optional[str] = None
-        self._tool_instance: Optional[Any] = None
         self._llm_ref: Optional[str] = None
-        self._llm_instance: Optional[Any] = None
         self._prompt_ref: Optional[str] = None
-        self._prompt_content: Optional[str] = None
         self._memory_ref: Optional[str] = None
+        
+        # Direct instances (for runtime)
+        self._agent_instance: Optional[Any] = None
+        self._tool_instance: Optional[Any] = None
+        self._llm_instance: Optional[Any] = None
+        
+        # Direct content
+        self._prompt_content: Optional[str] = None
         
         # IO specs
         self._input_spec: Optional[InputSpec] = None
@@ -183,14 +206,53 @@ class NodeBuilder:
         return self
     
     def with_prompt(self, content: str) -> NodeBuilder:
-        """Set prompt content directly."""
+        """Set prompt content directly (sets node type to PROMPT)."""
         self._prompt_content = content
         self._node_type = NodeType.PROMPT
+        return self
+    
+    def with_prompt_content(self, content: str) -> NodeBuilder:
+        """Set prompt content without changing node type (for agent prompts)."""
+        self._prompt_content = content
         return self
     
     def with_prompt_ref(self, prompt_ref: str) -> NodeBuilder:
         """Set prompt by reference ID."""
         self._prompt_ref = prompt_ref
+        return self
+    
+    # =========================================================================
+    # Convenience type methods
+    # =========================================================================
+    
+    def as_agent(self) -> NodeBuilder:
+        """Set node type to AGENT."""
+        self._node_type = NodeType.AGENT
+        return self
+    
+    def as_tool(self) -> NodeBuilder:
+        """Set node type to TOOL."""
+        self._node_type = NodeType.TOOL
+        return self
+    
+    def as_prompt(self) -> NodeBuilder:
+        """Set node type to PROMPT."""
+        self._node_type = NodeType.PROMPT
+        return self
+    
+    def as_start(self) -> NodeBuilder:
+        """Set node type to START."""
+        self._node_type = NodeType.START
+        return self
+    
+    def as_end(self) -> NodeBuilder:
+        """Set node type to END."""
+        self._node_type = NodeType.END
+        return self
+    
+    def as_decision(self) -> NodeBuilder:
+        """Set node type to DECISION."""
+        self._node_type = NodeType.DECISION
         return self
     
     def with_memory_ref(self, memory_ref: str) -> NodeBuilder:
@@ -257,8 +319,13 @@ class NodeBuilder:
         return self
     
     def with_tags(self, tags: List[str]) -> NodeBuilder:
-        """Set tags."""
+        """Set tags (replaces existing)."""
         self._tags = tags
+        return self
+    
+    def with_tag(self, tag: str) -> NodeBuilder:
+        """Add a single tag."""
+        self._tags.append(tag)
         return self
     
     def with_owner(self, owner: str) -> NodeBuilder:

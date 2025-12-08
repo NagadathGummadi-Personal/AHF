@@ -20,7 +20,14 @@ from .node_models import (
     NodeEntry,
 )
 from .edge_models import (
+    # Pass-through models
+    PassThroughField,
+    PassThroughConfig,
+    # LLM condition models
+    LLMConditionConfig,
+    # Edge condition models
     EdgeCondition,
+    EdgeConditionGroup,
     EdgeMetadata,
     EdgeConfig,
     EdgeSpec,
@@ -55,8 +62,14 @@ __all__ = [
     "NodeResult",
     "NodeVersion",
     "NodeEntry",
+    # Edge pass-through models
+    "PassThroughField",
+    "PassThroughConfig",
+    # Edge LLM condition models
+    "LLMConditionConfig",
     # Edge models
     "EdgeCondition",
+    "EdgeConditionGroup",
     "EdgeMetadata",
     "EdgeConfig",
     "EdgeSpec",

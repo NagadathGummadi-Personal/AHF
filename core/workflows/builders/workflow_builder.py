@@ -266,8 +266,13 @@ class WorkflowBuilder:
         return self
     
     def with_tags(self, tags: List[str]) -> WorkflowBuilder:
-        """Set tags."""
+        """Set tags (replaces existing)."""
         self._tags = tags
+        return self
+    
+    def with_tag(self, tag: str) -> WorkflowBuilder:
+        """Add a single tag."""
+        self._tags.append(tag)
         return self
     
     def with_owner(self, owner: str) -> WorkflowBuilder:

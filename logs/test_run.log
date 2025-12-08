@@ -1,95 +1,431 @@
-2025-12-07 23:51:55 - tests.llms.structured_output_realtime - INFO - Logging configured - writing to: logs/structured_output_realtime.log
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from creating-client-class.iot-data to creating-client-class.iot-data-plane
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from before-call.apigateway to before-call.api-gateway
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from request-created.machinelearning.Predict to request-created.machine-learning.Predict
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.autoscaling.CreateLaunchConfiguration to before-parameter-build.auto-scaling.CreateLaunchConfiguration
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.route53 to before-parameter-build.route-53
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from request-created.cloudsearchdomain.Search to request-created.cloudsearch-domain.Search
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from docs.*.autoscaling.CreateLaunchConfiguration.complete-section to docs.*.auto-scaling.CreateLaunchConfiguration.complete-section
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.logs.CreateExportTask to before-parameter-build.cloudwatch-logs.CreateExportTask
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from docs.*.logs.CreateExportTask.complete-section to docs.*.cloudwatch-logs.CreateExportTask.complete-section
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.cloudsearchdomain.Search to before-parameter-build.cloudsearch-domain.Search
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Changing event name from docs.*.cloudsearchdomain.Search.complete-section to docs.*.cloudsearch-domain.Search.complete-section
-2025-12-07 23:51:56 - botocore.utils - DEBUG - IMDS ENDPOINT: http://169.254.169.254/
-2025-12-07 23:51:56 - botocore.credentials - DEBUG - Looking for credentials via: env
-2025-12-07 23:51:56 - botocore.credentials - DEBUG - Looking for credentials via: assume-role
-2025-12-07 23:51:56 - botocore.credentials - DEBUG - Looking for credentials via: assume-role-with-web-identity
-2025-12-07 23:51:56 - botocore.credentials - DEBUG - Looking for credentials via: sso
-2025-12-07 23:51:56 - botocore.credentials - DEBUG - Looking for credentials via: shared-credentials-file
-2025-12-07 23:51:56 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\endpoints.json
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\sdk-default-configuration.json
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event choose-service-name: calling handler <function handle_service_name_alias at 0x0000022E9B090900>
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\s3\2006-03-01\service-2.json.gz
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\s3\2006-03-01\service-2.sdk-extras.json
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\s3\2006-03-01\endpoint-rule-set-1.json.gz
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\partitions.json
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event creating-client-class.s3: calling handler <function add_generate_presigned_post at 0x0000022E9B001C60>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event creating-client-class.s3: calling handler <function lazy_call.<locals>._handler at 0x0000022E9ABE9620>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event creating-client-class.s3: calling handler <function add_generate_presigned_url at 0x0000022E9B0019E0>
-2025-12-07 23:51:56 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: environment_service
-2025-12-07 23:51:56 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: environment_global
-2025-12-07 23:51:56 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: config_service
-2025-12-07 23:51:56 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: config_global
-2025-12-07 23:51:56 - botocore.configprovider - DEBUG - No configured endpoint found.
-2025-12-07 23:51:56 - botocore.endpoint - DEBUG - Setting s3 timeout as (60, 60)
-2025-12-07 23:51:56 - botocore.loaders - DEBUG - Loading JSON file: d:\Repos\AHF\.venv\Lib\site-packages\botocore\data\_retry.json
-2025-12-07 23:51:56 - botocore.client - DEBUG - Registering retry handlers for service: s3
-2025-12-07 23:51:56 - botocore.utils - DEBUG - Registering S3 region redirector handler
-2025-12-07 23:51:56 - botocore.utils - DEBUG - Registering S3Express Identity Resolver
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-parameter-build.s3.ListBuckets: calling handler <function validate_bucket_name at 0x0000022E9B0923E0>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-parameter-build.s3.ListBuckets: calling handler <function remove_bucket_from_url_paths_from_model at 0x0000022E9B0B8720>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-parameter-build.s3.ListBuckets: calling handler <bound method S3RegionRedirectorv2.annotate_request_context of <botocore.utils.S3RegionRedirectorv2 object at 0x0000022E9BD87910>>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-parameter-build.s3.ListBuckets: calling handler <bound method ClientCreator._inject_s3_input_parameters of <botocore.client.ClientCreator object at 0x0000022E9B98C6D0>>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-parameter-build.s3.ListBuckets: calling handler <function generate_idempotent_uuid at 0x0000022E9B092200>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-parameter-build.s3.ListBuckets: calling handler <function _handle_request_validation_mode_member at 0x0000022E9B0B8E00>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-endpoint-resolution.s3: calling handler <function customize_endpoint_resolver_builtins at 0x0000022E9B0B8900>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-endpoint-resolution.s3: calling handler <bound method S3RegionRedirectorv2.redirect_from_cache of <botocore.utils.S3RegionRedirectorv2 object at 0x0000022E9BD87910>>
-2025-12-07 23:51:56 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-west-2', 'UseFIPS': False, 'UseDualStack': False, 'ForcePathStyle': False, 'Accelerate': False, 'UseGlobalEndpoint': False, 'DisableMultiRegionAccessPoints': False, 'UseArnRegion': True}
-2025-12-07 23:51:56 - botocore.regions - DEBUG - Endpoint provider result: https://s3.us-west-2.amazonaws.com
-2025-12-07 23:51:56 - botocore.regions - DEBUG - Selecting from endpoint provider's list of auth schemes: "sigv4". User selected auth scheme is: "None"
-2025-12-07 23:51:56 - botocore.regions - DEBUG - Selected auth type "v4" as "v4" with signing context params: {'region': 'us-west-2', 'signing_name': 's3', 'disableDoubleEncoding': True}
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-call.s3.ListBuckets: calling handler <function add_expect_header at 0x0000022E9B0927A0>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-call.s3.ListBuckets: calling handler <bound method S3ExpressIdentityResolver.apply_signing_cache_key of <botocore.utils.S3ExpressIdentityResolver object at 0x0000022E9BDB1B10>>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-call.s3.ListBuckets: calling handler <function add_recursion_detection_header at 0x0000022E9B0909A0>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-call.s3.ListBuckets: calling handler <function inject_api_version_header_if_needed at 0x0000022E9B093CE0>
-2025-12-07 23:51:56 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ListBuckets) with params: {'url_path': '/', 'query_string': {}, 'method': 'GET', 'headers': {'User-Agent': 'Boto3/1.41.2 md/Botocore#1.41.2 ua/2.1 os/windows#10 md/arch#amd64 lang/python#3.11.12 md/pyimpl#CPython m/Z,n,D,b cfg/retry-mode#legacy Botocore/1.41.2'}, 'body': b'', 'url': 'https://s3.us-west-2.amazonaws.com/', 'context': {'client_region': 'us-west-2', 'client_config': <botocore.config.Config object at 0x0000022E9BC26050>, 'has_streaming_input': False, 'auth_type': 'v4', 'unsigned_payload': None, 'auth_options': ['aws.auth#sigv4'], 's3_redirect': {'redirected': False, 'bucket': None, 'params': {}}, 'input_params': {}, 'signing': {'region': 'us-west-2', 'signing_name': 's3', 'disableDoubleEncoding': True}, 'endpoint_properties': {'authSchemes': [{'disableDoubleEncoding': True, 'name': 'sigv4', 'signingName': 's3', 'signingRegion': 'us-west-2'}]}}}
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event request-created.s3.ListBuckets: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0x0000022E9BC27210>>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event choose-signer.s3.ListBuckets: calling handler <bound method ClientCreator._default_s3_presign_to_sigv2 of <botocore.client.ClientCreator object at 0x0000022E9B98C6D0>>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event choose-signer.s3.ListBuckets: calling handler <function set_operation_specific_signer at 0x0000022E9B091F80>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-sign.s3.ListBuckets: calling handler <function remove_arn_from_signing_path at 0x0000022E9B0B8860>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-sign.s3.ListBuckets: calling handler <function _set_extra_headers_for_unsigned_request at 0x0000022E9B0B8EA0>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event before-sign.s3.ListBuckets: calling handler <bound method S3ExpressIdentityResolver.resolve_s3express_identity of <botocore.utils.S3ExpressIdentityResolver object at 0x0000022E9BDB1B10>>
-2025-12-07 23:51:56 - botocore.auth - DEBUG - Calculating signature using v4 auth.
-2025-12-07 23:51:56 - botocore.auth - DEBUG - CanonicalRequest:
-GET
-/
+2025-12-08 09:44:21 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:21 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.208] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.213] [Elapsed: 0.005s] SUCCESS: Azure LLM created in 0.004s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.213] [Elapsed: 0.005s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.214] [Elapsed: 0.006s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.215] [Elapsed: 0.007s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - TEST: Workflow Creation
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.219] [Elapsed: 0.002s] Building agents...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.219] [Elapsed: 0.002s] Building Greeting Agent...
+2025-12-08 09:44:21 - core.agents.runtimes.agent_factory - DEBUG - AgentFactory initialized with 4 built-in types
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.220] [Elapsed: 0.003s] SUCCESS: Greeting Agent built in 0.000s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.220] [Elapsed: 0.003s] Agent Name: greeting-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.220] [Elapsed: 0.003s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.221] [Elapsed: 0.004s] Max Iterations: 5
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.221] [Elapsed: 0.004s] Building Booking Agent...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.221] [Elapsed: 0.004s] SUCCESS: Booking Agent built in 0.000s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.221] [Elapsed: 0.004s] Agent Name: booking-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.222] [Elapsed: 0.005s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.222] [Elapsed: 0.005s] Building Cancellation Agent...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.222] [Elapsed: 0.005s] SUCCESS: Cancellation Agent built in 0.000s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.223] [Elapsed: 0.006s] Agent Name: cancellation-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.223] [Elapsed: 0.006s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - Creating Salon Workflow
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.224] [Elapsed: 0.007s] Creating workflow nodes...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.224] [Elapsed: 0.007s] SUCCESS: Created 3 nodes: greeting-agent, booking-agent, cancellation-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.224] [Elapsed: 0.007s] Creating workflow edges...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.224] [Elapsed: 0.007s] SUCCESS: Created 2 edges: greeting-to-booking, booking-to-cancellation-llm
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.224] [Elapsed: 0.007s] Building workflow...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.225] [Elapsed: 0.009s] SUCCESS: Workflow built in 0.002s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.225] [Elapsed: 0.009s] Workflow ID: salon-booking-workflow
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.225] [Elapsed: 0.009s] Workflow Name: Salon Booking System
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.225] [Elapsed: 0.009s] Start Node: greeting-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.226] [Elapsed: 0.010s] Nodes: ['greeting-agent', 'booking-agent', 'cancellation-agent']
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.226] [Elapsed: 0.010s] Edges: ['greeting-to-booking', 'booking-to-cancellation-llm']
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.226] [Elapsed: 0.010s] SUCCESS: All workflow structure assertions passed!
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.256] [Elapsed: 0.048s] Closing LLM connector...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.256] [Elapsed: 0.048s] SUCCESS: LLM connector closed
+2025-12-08 09:44:21 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.285] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.292] [Elapsed: 0.007s] SUCCESS: Azure LLM created in 0.006s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.293] [Elapsed: 0.008s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.293] [Elapsed: 0.008s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.293] [Elapsed: 0.008s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - TEST: Nodes Have Agents
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.294] [Elapsed: 0.000s] Building Greeting Agent...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.295] [Elapsed: 0.001s] SUCCESS: Greeting Agent built in 0.000s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.295] [Elapsed: 0.001s] Agent Name: greeting-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.295] [Elapsed: 0.001s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.295] [Elapsed: 0.001s] Max Iterations: 5
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.295] [Elapsed: 0.001s] Checking node: greeting-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.295] [Elapsed: 0.001s] Node type: NodeType.AGENT
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.296] [Elapsed: 0.002s] Has agent: True
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.296] [Elapsed: 0.002s] SUCCESS: Node greeting-agent has agent: greeting-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.323] [Elapsed: 0.038s] Closing LLM connector...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.323] [Elapsed: 0.038s] SUCCESS: LLM connector closed
+2025-12-08 09:44:21 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.353] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.360] [Elapsed: 0.008s] SUCCESS: Azure LLM created in 0.007s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.360] [Elapsed: 0.008s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.360] [Elapsed: 0.008s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.360] [Elapsed: 0.008s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - TEST: Edge LLM Condition
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.362] [Elapsed: 0.000s] Checking edge: greeting-to-booking
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.362] [Elapsed: 0.000s] From: greeting-agent -> To: booking-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.362] [Elapsed: 0.000s] Has LLM conditions: True
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.363] [Elapsed: 0.001s] Condition type: EdgeConditionType.LLM
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.363] [Elapsed: 0.001s] Condition prompt: Check if the customer has expressed intent to book a service AND has specified w...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.363] [Elapsed: 0.001s] SUCCESS: Edge LLM condition configured correctly!
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.393] [Elapsed: 0.040s] Closing LLM connector...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.393] [Elapsed: 0.040s] SUCCESS: LLM connector closed
+2025-12-08 09:44:21 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.425] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.432] [Elapsed: 0.007s] SUCCESS: Azure LLM created in 0.007s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.433] [Elapsed: 0.008s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.433] [Elapsed: 0.008s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.434] [Elapsed: 0.009s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - TEST: Edge Pass-Through Fields
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.435] [Elapsed: 0.000s] Checking edge: greeting-to-booking
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] Has pass-through config: True
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] Pass-through field: service_name
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] Description: The specific salon service the customer wants to book (e.g., haircut, hair color, styling, treatment)
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] Required: True
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] Extraction strategy: PassThroughExtractionStrategy.LLM
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] Ask on missing: True
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.436] [Elapsed: 0.001s] SUCCESS: Pass-through fields configured correctly!
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.460] [Elapsed: 0.035s] Closing LLM connector...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.461] [Elapsed: 0.036s] SUCCESS: LLM connector closed
+2025-12-08 09:44:21 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.488] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.496] [Elapsed: 0.008s] SUCCESS: Azure LLM created in 0.008s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.497] [Elapsed: 0.009s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.497] [Elapsed: 0.009s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.497] [Elapsed: 0.009s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - Created agent context: user=test-user-salon, session=test-session-salon-001
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - TEST: Greeting Agent Response
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.499] [Elapsed: 0.001s] Building Greeting Agent...
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.499] [Elapsed: 0.001s] SUCCESS: Greeting Agent built in 0.000s
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.501] [Elapsed: 0.002s] Agent Name: greeting-agent
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.501] [Elapsed: 0.002s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.501] [Elapsed: 0.002s] Max Iterations: 5
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.501] [Elapsed: 0.002s] USER INPUT #1: Hello!
+2025-12-08 09:44:21 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:21.501] [Elapsed: 0.002s] LLM CALL START: Greeting Agent processing
+2025-12-08 09:44:21 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.637] [Elapsed: 2.139s] LLM CALL END: Greeting Agent processing (took 2.137s)
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.638] [Elapsed: 2.139s] AGENT RESPONSE (greeting-agent): Hi! Welcome to Glamour Salon. How can I help you today?
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO -     Usage: iterations=1 tool_calls=0 llm_calls=1 prompt_tokens=307 completion_tokens=16 total_tokens=323 duration_ms=2136 cost_usd=None
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.638] [Elapsed: 2.140s] SUCCESS: Greeting agent responded successfully!
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - TEST SUMMARY: 1 interactions in 2.140s
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.681] [Elapsed: 2.193s] Closing LLM connector...
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.683] [Elapsed: 2.195s] SUCCESS: LLM connector closed
+2025-12-08 09:44:23 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.730] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.741] [Elapsed: 0.010s] SUCCESS: Azure LLM created in 0.010s
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.741] [Elapsed: 0.010s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.741] [Elapsed: 0.010s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.741] [Elapsed: 0.010s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - Created agent context: user=test-user-salon, session=test-session-salon-001
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - TEST: Greeting Agent AI Question
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.743] [Elapsed: 0.000s] Building Greeting Agent...
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.743] [Elapsed: 0.000s] SUCCESS: Greeting Agent built in 0.000s
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.743] [Elapsed: 0.000s] Agent Name: greeting-agent
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.744] [Elapsed: 0.001s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.744] [Elapsed: 0.001s] Max Iterations: 5
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.744] [Elapsed: 0.001s] USER INPUT #1: Are you a real person or AI?
+2025-12-08 09:44:23 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:23.744] [Elapsed: 0.001s] LLM CALL START: Greeting Agent processing AI question
+2025-12-08 09:44:23 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.819] [Elapsed: 2.076s] LLM CALL END: Greeting Agent processing AI question (took 2.075s)
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.819] [Elapsed: 2.076s] AGENT RESPONSE (greeting-agent): Hi! Welcome to Glamour Salon. How can I help you today?
 
-host:s3.us-west-2.amazonaws.com
-x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-x-amz-date:20251207T182156Z
-
-host;x-amz-content-sha256;x-amz-date
-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-2025-12-07 23:51:56 - botocore.auth - DEBUG - StringToSign:
-AWS4-HMAC-SHA256
-20251207T182156Z
-20251207/us-west-2/s3/aws4_request
-52c75f879968fb2d5ce533672d4caa2a909b2e0aa22ffbc57d23d8bd9374dccc
-2025-12-07 23:51:56 - botocore.auth - DEBUG - Signature:
-79f17eba7cc28098e99c20c242dcf787c063b06966871f69f3586123ea765749
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event request-created.s3.ListBuckets: calling handler <bound method UserAgentString.rebuild_and_replace_user_agent_handler of <botocore.useragent.UserAgentString object at 0x0000022E9BC24210>>
-2025-12-07 23:51:56 - botocore.hooks - DEBUG - Event request-created.s3.ListBuckets: calling handler <function add_retry_headers at 0x0000022E9B0B8680>
-2025-12-07 23:51:56 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=GET, url=https://s3.us-west-2.amazonaws.com/, headers={'User-Agent': b'Boto3/1.41.2 md/Botocore#1.41.2 ua/2.1 os/windows#10 md/arch#amd64 lang/python#3.11.12 md/pyimpl#CPython m/Z,n,D,b cfg/retry-mode#legacy Botocore/1.41.2', 'X-Amz-Date': b'20251207T182156Z', 'X-Amz-Content-SHA256': b'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAUDZIDRXOG6JTS76I/20251207/us-west-2/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=79f17eba7cc28098e99c20c242dcf787c063b06966871f69f3586123ea765749', 'amz-sdk-invocation-id': b'e04d5975-6bbe-4a37-8b2c-b9417e4a32d1', 'amz-sdk-request': b'attempt=1'}>
-2025-12-07 23:51:56 - botocore.httpsession - DEBUG - Certificate path: d:\Repos\AHF\.venv\Lib\site-packages\botocore\cacert.pem
-2025-12-07 23:51:56 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): s3.us-west-2.amazonaws.com:443
-2025-12-07 23:51:57 - urllib3.connectionpool - DEBUG - https://s3.us-west-2.amazonaws.com:443 "GET / HTTP/1.1" 200 None
-2025-12-07 23:51:57 - botocore.hooks - DEBUG - Event before-parse.s3.ListBuckets: calling handler <function _handle_200_error at 0x0000022E9B0B8C20>
-2025-12-07 23:51:57 - botocore.hooks - DEBUG - Event before-parse.s3.ListBuckets: calling handler <function handle_expires_header at 0x0000022E9B0B8A40>
-2025-12-07 23:51:57 - botocore.parsers - DEBUG - Response headers: {'x-amz-id-2': 'NtIzuRtVAZ2s0I5YlLy56msoVoN4nfD/bnHELcECmI8GVDnwyFszrXnjTNzgo0RxERGWR6WW2MU82QPrvSdQXU92ITu1q4m2', 'x-amz-request-id': 'HRK3HQ3CQCS56SR3', 'Date': 'Sun, 07 Dec 2025 18:21:58 GMT', 'Content-Type': 'application/xml', 'Transfer-Encoding': 'chunked', 'Server': 'AmazonS3'}
-2025-12-07 23:51:57 - botocore.parsers - DEBUG - Response body:
-b'<?xml version="1.0" encoding="UTF-8"?>\n<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>402201f170c9bd752080c967e112086510371877c47374b8487933f84685e225</ID></Owner><Buckets><Bucket><Name>ahf-test-tools</Name><CreationDate>2025-12-07T16:38:58.000Z</CreationDate><BucketArn>arn:aws:s3:::ahf-test-tools</BucketArn></Bucket><Bucket><Name>ahf-tools</Name><CreationDate>2025-12-07T18:21:57.000Z</CreationDate><BucketArn>arn:aws:s3:::ahf-tools</BucketArn></Bucket></Buckets></ListAllMyBucketsResult>'
-2025-12-07 23:51:57 - botocore.hooks - DEBUG - Event needs-retry.s3.ListBuckets: calling handler <function _update_status_code at 0x0000022E9B0B8D60>
-2025-12-07 23:51:57 - botocore.hooks - DEBUG - Event needs-retry.s3.ListBuckets: calling handler <botocore.retryhandler.RetryHandler object at 0x0000022E9BDB1990>
-2025-12-07 23:51:57 - botocore.retryhandler - DEBUG - No retry needed.
-2025-12-07 23:51:57 - botocore.hooks - DEBUG - Event needs-retry.s3.ListBuckets: calling handler <bound method S3RegionRedirectorv2.redirect_from_error of <botocore.utils.S3RegionRedirectorv2 object at 0x0000022E9BD87910>>
+Yes, I'm an AI assistant helping at Glamour Salon. I can help you book appointments, answer questions about our services, and more! Is there something specific you'd like to know or book today?
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO -     Usage: iterations=1 tool_calls=0 llm_calls=1 prompt_tokens=313 completion_tokens=56 total_tokens=369 duration_ms=2075 cost_usd=None
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.820] [Elapsed: 2.077s] SUCCESS: Greeting agent answered AI question!
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - TEST SUMMARY: 1 interactions in 2.077s
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.853] [Elapsed: 2.123s] Closing LLM connector...
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.855] [Elapsed: 2.124s] SUCCESS: LLM connector closed
+2025-12-08 09:44:25 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.893] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.905] [Elapsed: 0.012s] SUCCESS: Azure LLM created in 0.012s
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.905] [Elapsed: 0.012s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.905] [Elapsed: 0.012s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.905] [Elapsed: 0.012s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - Created agent context: user=test-user-salon, session=test-session-salon-001
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - TEST: Greeting Agent Booking Intent
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.908] [Elapsed: 0.001s] Building Greeting Agent...
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.908] [Elapsed: 0.001s] SUCCESS: Greeting Agent built in 0.000s
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.908] [Elapsed: 0.001s] Agent Name: greeting-agent
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.908] [Elapsed: 0.001s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.908] [Elapsed: 0.002s] Max Iterations: 5
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.909] [Elapsed: 0.002s] USER INPUT #1: I'd like to book a haircut please
+2025-12-08 09:44:25 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:25.909] [Elapsed: 0.002s] LLM CALL START: Greeting Agent processing booking intent
+2025-12-08 09:44:25 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.732] [Elapsed: 1.825s] LLM CALL END: Greeting Agent processing booking intent (took 1.823s)
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.732] [Elapsed: 1.825s] AGENT RESPONSE (greeting-agent): Hi! Welcome to Glamour Salon. How can I help you today?
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO -     Usage: iterations=1 tool_calls=0 llm_calls=1 prompt_tokens=312 completion_tokens=16 total_tokens=328 duration_ms=1822 cost_usd=None
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.733] [Elapsed: 1.826s] SUCCESS: Greeting agent handled booking intent!
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - TEST SUMMARY: 1 interactions in 1.826s
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.759] [Elapsed: 1.865s] Closing LLM connector...
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.761] [Elapsed: 1.868s] SUCCESS: LLM connector closed
+2025-12-08 09:44:27 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.790] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.799] [Elapsed: 0.010s] SUCCESS: Azure LLM created in 0.009s
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.799] [Elapsed: 0.010s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.800] [Elapsed: 0.011s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.800] [Elapsed: 0.011s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - Created agent context: user=test-user-salon, session=test-session-salon-001
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - TEST: Booking Agent Add-on Offer
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.802] [Elapsed: 0.000s] Building Booking Agent...
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.802] [Elapsed: 0.000s] SUCCESS: Booking Agent built in 0.000s
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.803] [Elapsed: 0.001s] Agent Name: booking-agent
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.803] [Elapsed: 0.001s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.803] [Elapsed: 0.001s] USER INPUT #1: I want to book a haircut
+2025-12-08 09:44:27 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:27.803] [Elapsed: 0.001s] LLM CALL START: Booking Agent processing
+2025-12-08 09:44:27 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.729] [Elapsed: 1.927s] LLM CALL END: Booking Agent processing (took 1.926s)
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.731] [Elapsed: 1.928s] AGENT RESPONSE (booking-agent): Perfect! Let me help you book your haircut. Would you like to add a hair color service? We have a special 20% discount when combined with a haircut!
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO -     Usage: iterations=1 tool_calls=0 llm_calls=1 prompt_tokens=319 completion_tokens=35 total_tokens=354 duration_ms=1925 cost_usd=None
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.732] [Elapsed: 1.929s] SUCCESS: Booking agent offered add-on!
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - TEST SUMMARY: 1 interactions in 1.929s
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.763] [Elapsed: 1.973s] Closing LLM connector...
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.763] [Elapsed: 1.974s] SUCCESS: LLM connector closed
+2025-12-08 09:44:29 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.797] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.807] [Elapsed: 0.010s] SUCCESS: Azure LLM created in 0.009s
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.807] [Elapsed: 0.011s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.808] [Elapsed: 0.011s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.808] [Elapsed: 0.011s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - Created agent context: user=test-user-salon, session=test-session-salon-001
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - TEST: Cancellation Agent
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.810] [Elapsed: 0.001s] Building Cancellation Agent...
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.811] [Elapsed: 0.001s] SUCCESS: Cancellation Agent built in 0.000s
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.811] [Elapsed: 0.001s] Agent Name: cancellation-agent
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.811] [Elapsed: 0.001s] Agent Type: AgentType.SIMPLE
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.812] [Elapsed: 0.002s] USER INPUT #1: I need to cancel my appointment
+2025-12-08 09:44:29 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:29.812] [Elapsed: 0.002s] LLM CALL START: Cancellation Agent processing
+2025-12-08 09:44:29 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.800] [Elapsed: 1.990s] LLM CALL END: Cancellation Agent processing (took 1.988s)
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.800] [Elapsed: 1.990s] AGENT RESPONSE (cancellation-agent): I'm here to help you with your appointment changes. Could you please tell me which appointment you would like to cancel? You can provide the date or the service name.
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO -     Usage: iterations=1 tool_calls=0 llm_calls=1 prompt_tokens=172 completion_tokens=34 total_tokens=206 duration_ms=1988 cost_usd=None
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.801] [Elapsed: 1.992s] SUCCESS: Cancellation agent responded!
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - TEST SUMMARY: 1 interactions in 1.992s
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.821] [Elapsed: 2.023s] Closing LLM connector...
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.821] [Elapsed: 2.024s] SUCCESS: LLM connector closed
+2025-12-08 09:44:31 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - TEST: Expression Condition Evaluation
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.846] [Elapsed: 0.001s] Testing edge: booking-to-cancellation
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.846] [Elapsed: 0.001s] Condition field: variables.guest_intent
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.846] [Elapsed: 0.001s] Condition operator: ConditionOperator.IN
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.846] [Elapsed: 0.001s] Condition value: ['cancellation', 'reschedule', 'cancel', 'change_appointment']
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - Test 1: Matching Context
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.846] [Elapsed: 0.001s] Context: {'variables': {'guest_intent': 'cancellation'}}
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.846] [Elapsed: 0.001s] CONDITION CHECK (EXPRESSION): variables.guest_intent IN ['cancellation', 'reschedule', 'cancel', 'change_appointment'] -> ✅ MET
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - Test 2: Non-Matching Context
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.849] [Elapsed: 0.004s] Context: {'variables': {'guest_intent': 'booking'}}
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.849] [Elapsed: 0.004s] CONDITION CHECK (EXPRESSION): variables.guest_intent IN ['cancellation', 'reschedule', 'cancel', 'change_appointment'] -> ❌ NOT MET
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.849] [Elapsed: 0.004s] SUCCESS: Expression condition evaluation passed!
+2025-12-08 09:44:31 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.901] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.908] [Elapsed: 0.007s] SUCCESS: Azure LLM created in 0.006s
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.908] [Elapsed: 0.007s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.908] [Elapsed: 0.007s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.908] [Elapsed: 0.007s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - TEST: LLM Condition - Booking Intent Detection
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.911] [Elapsed: 0.001s] Edge: greeting-to-booking
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.911] [Elapsed: 0.001s] Condition type: EdgeConditionType.LLM
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.911] [Elapsed: 0.001s] Condition prompt: Check if the customer has expressed intent to book a service AND has specified which service they wa...
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - Conversation Context
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.912] [Elapsed: 0.002s] 👤 USER: Hi there!
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.912] [Elapsed: 0.002s] 🤖 ASSISTANT: Hi! Welcome to Glamour Salon. How can I help you today?
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.912] [Elapsed: 0.002s] 👤 USER: I'd like to book a haircut please.
+2025-12-08 09:44:31 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:31.912] [Elapsed: 0.002s] LLM CALL START: LLM Condition Evaluation - Booking Intent
+2025-12-08 09:44:31 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.868] [Elapsed: 1.958s] LLM CALL END: LLM Condition Evaluation - Booking Intent (took 1.955s)
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO -     Result: True
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.868] [Elapsed: 1.958s] CONDITION CHECK (LLM): booking intent + service name present -> ✅ MET
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.868] [Elapsed: 1.958s] SUCCESS: LLM condition evaluation completed! Result: True
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.892] [Elapsed: 1.991s] Closing LLM connector...
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.893] [Elapsed: 1.992s] SUCCESS: LLM connector closed
+2025-12-08 09:44:33 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.925] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.935] [Elapsed: 0.010s] SUCCESS: Azure LLM created in 0.009s
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.936] [Elapsed: 0.011s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.936] [Elapsed: 0.011s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.936] [Elapsed: 0.011s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - TEST: LLM Condition - No Booking Intent
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - Conversation Context
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.939] [Elapsed: 0.002s] 👤 USER: What are your hours?
+2025-12-08 09:44:33 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:33.939] [Elapsed: 0.002s] LLM CALL START: LLM Condition Evaluation - General Question
+2025-12-08 09:44:33 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.061] [Elapsed: 2.124s] LLM CALL END: LLM Condition Evaluation - General Question (took 2.122s)
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO -     Result: False
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.061] [Elapsed: 2.124s] CONDITION CHECK (LLM): booking intent + service name present -> ❌ NOT MET
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.063] [Elapsed: 2.125s] SUCCESS: LLM correctly did not detect booking intent!
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.095] [Elapsed: 2.170s] Closing LLM connector...
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.096] [Elapsed: 2.171s] SUCCESS: LLM connector closed
+2025-12-08 09:44:36 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.125] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.137] [Elapsed: 0.012s] SUCCESS: Azure LLM created in 0.012s
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.138] [Elapsed: 0.013s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.138] [Elapsed: 0.013s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.138] [Elapsed: 0.013s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - TEST: LLM Condition - Cancellation Intent Detection
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.139] [Elapsed: 0.001s] Edge: booking-to-cancellation-llm
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.139] [Elapsed: 0.001s] Condition prompt: Check if the customer wants to cancel, reschedule, or modify an EXISTING appointment. This includes ...
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - Conversation Context
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.139] [Elapsed: 0.001s] 👤 USER: Actually, I need to cancel my existing appointment first.
+2025-12-08 09:44:36 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:36.139] [Elapsed: 0.001s] LLM CALL START: LLM Condition Evaluation - Cancellation Intent
+2025-12-08 09:44:36 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:37.921] [Elapsed: 1.783s] LLM CALL END: LLM Condition Evaluation - Cancellation Intent (took 1.782s)
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO -     Result: True
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:37.921] [Elapsed: 1.783s] CONDITION CHECK (LLM): cancellation/reschedule intent -> ✅ MET
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:37.922] [Elapsed: 1.784s] SUCCESS: LLM correctly detected cancellation intent!
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:37.954] [Elapsed: 1.829s] Closing LLM connector...
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:37.955] [Elapsed: 1.830s] SUCCESS: LLM connector closed
+2025-12-08 09:44:37 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:37 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:37.997] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.005] [Elapsed: 0.008s] SUCCESS: Azure LLM created in 0.007s
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.005] [Elapsed: 0.008s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.005] [Elapsed: 0.008s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.005] [Elapsed: 0.008s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - TEST: Pass-Through Extraction - Service Name
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.007] [Elapsed: 0.001s] Edge: greeting-to-booking
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.008] [Elapsed: 0.002s] Pass-through fields: ['service_name']
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - Conversation Context
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.008] [Elapsed: 0.002s] 👤 USER: I'd like to book a haircut please.
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.008] [Elapsed: 0.002s] 🤖 ASSISTANT: Great! I'd be happy to help you book a haircut.
+2025-12-08 09:44:38 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:38.009] [Elapsed: 0.003s] LLM CALL START: Pass-Through Field Extraction
+2025-12-08 09:44:38 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.752] [Elapsed: 1.746s] LLM CALL END: Pass-Through Field Extraction (took 1.743s)
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - Extracted Fields
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.753] [Elapsed: 1.747s] PASS-THROUGH: service_name=haircut (strategy=LLM)
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.753] [Elapsed: 1.747s] SUCCESS: Extracted service_name: haircut
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.785] [Elapsed: 1.788s] Closing LLM connector...
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.785] [Elapsed: 1.788s] SUCCESS: LLM connector closed
+2025-12-08 09:44:39 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.816] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.823] [Elapsed: 0.008s] SUCCESS: Azure LLM created in 0.007s
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.823] [Elapsed: 0.008s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.823] [Elapsed: 0.008s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.823] [Elapsed: 0.008s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - TEST: Pass-Through Extraction - Hair Color Service
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - Conversation Context
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.827] [Elapsed: 0.001s] 👤 USER: I want to get my hair colored.
+2025-12-08 09:44:39 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:39.827] [Elapsed: 0.001s] LLM CALL START: Pass-Through Field Extraction
+2025-12-08 09:44:39 - llm.transformer.azure_gpt4 - DEBUG - Transformed max_tokens to max_completion_tokens [value=4096]
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.592] [Elapsed: 1.766s] LLM CALL END: Pass-Through Field Extraction (took 1.765s)
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Extracted Fields
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.593] [Elapsed: 1.767s] PASS-THROUGH: service_name=hair colored (strategy=LLM)
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.593] [Elapsed: 1.767s] SUCCESS: Extracted service_name: hair colored
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.633] [Elapsed: 1.817s] Closing LLM connector...
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.634] [Elapsed: 1.818s] SUCCESS: LLM connector closed
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - TEST: Condition Group - AND Logic
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.667] [Elapsed: 0.001s] Condition 1: intent EQUALS 'booking'
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.667] [Elapsed: 0.001s] Condition 2: has_service EQUALS True
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.667] [Elapsed: 0.001s] Join operator: AND
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Test 1: Both conditions met
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.668] [Elapsed: 0.002s] Context: {'intent': 'booking', 'has_service': True}
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.668] [Elapsed: 0.002s] CONDITION CHECK (AND GROUP): both conditions met -> ✅ MET
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Test 2: Only one condition met
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.669] [Elapsed: 0.003s] Context: {'intent': 'booking', 'has_service': False}
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.669] [Elapsed: 0.003s] CONDITION CHECK (AND GROUP): only one condition met -> ❌ NOT MET
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.670] [Elapsed: 0.004s] SUCCESS: AND group logic working correctly!
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - TEST: Condition Group - OR Logic
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.726] [Elapsed: 0.001s] Condition 1: intent EQUALS 'cancellation'
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.726] [Elapsed: 0.001s] Condition 2: intent EQUALS 'reschedule'
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.726] [Elapsed: 0.001s] Join operator: OR
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Test 1: First condition met
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.727] [Elapsed: 0.002s] CONDITION CHECK (OR GROUP): intent=cancellation -> ✅ MET
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Test 2: Second condition met
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.728] [Elapsed: 0.003s] CONDITION CHECK (OR GROUP): intent=reschedule -> ✅ MET
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Test 3: No condition met
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.728] [Elapsed: 0.003s] CONDITION CHECK (OR GROUP): intent=booking (neither) -> ❌ NOT MET
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.729] [Elapsed: 0.004s] SUCCESS: OR group logic working correctly!
+2025-12-08 09:44:41 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.788] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.797] [Elapsed: 0.010s] SUCCESS: Azure LLM created in 0.009s
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.798] [Elapsed: 0.010s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.798] [Elapsed: 0.010s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.798] [Elapsed: 0.010s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - TEST: Transfer Rules Generation
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.800] [Elapsed: 0.000s] Edge: greeting-to-booking
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.801] [Elapsed: 0.002s] From: greeting-agent -> To: booking-agent
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Generated Transfer Rules
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.801] [Elapsed: 0.002s] Rule 1: Transfer to 'booking-agent' when: Check if the customer has expressed intent to book a service AND has specified which service they want (e.g., haircut, hair color, styling). The condition is met only when BOTH booking intent AND service name are present.
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.801] [Elapsed: 0.002s] SUCCESS: Generated 1 transfer rule(s)!
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.826] [Elapsed: 0.038s] Closing LLM connector...
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.827] [Elapsed: 0.039s] SUCCESS: LLM connector closed
+2025-12-08 09:44:41 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.855] [Elapsed: 0.000s] Creating Azure LLM instance...
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.865] [Elapsed: 0.010s] SUCCESS: Azure LLM created in 0.009s
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.866] [Elapsed: 0.011s] Model: azure-gpt-4.1-mini
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.866] [Elapsed: 0.011s] Endpoint: https://zeenie-sweden.openai.azure.com/
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.866] [Elapsed: 0.011s] Deployment: gpt-4.1-mini
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - TEST: Transfer Rules Prompt Generation
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ============================================================
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - Generated Prompt Section
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - ----------------------------------------
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.869] [Elapsed: 0.002s] Prompt length: 462 characters
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.869] [Elapsed: 0.002s] SUCCESS: Transfer rules prompt generated successfully!
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.894] [Elapsed: 0.039s] Closing LLM connector...
+2025-12-08 09:44:41 - tests.workflows.salon_workflow - INFO - [2025-12-08 09:44:41.894] [Elapsed: 0.039s] SUCCESS: LLM connector closed

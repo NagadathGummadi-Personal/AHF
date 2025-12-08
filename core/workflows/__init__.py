@@ -70,6 +70,8 @@ from .enum import (
     NodeType,
     # Edge types
     EdgeType,
+    # Edge condition types
+    EdgeConditionType,
     # IO types
     IOType,
     IOFormat,
@@ -81,6 +83,10 @@ from .enum import (
     # Conditions
     ConditionOperator,
     ConditionJoinOperator,
+    # Pass-through extraction
+    PassThroughExtractionStrategy,
+    # LLM evaluation
+    LLMEvaluationMode,
 )
 
 # =============================================================================
@@ -101,8 +107,14 @@ from .spec import (
     NodeResult,
     NodeVersion,
     NodeEntry,
+    # Edge pass-through models
+    PassThroughField,
+    PassThroughConfig,
+    # Edge LLM condition models
+    LLMConditionConfig,
     # Edge models
     EdgeCondition,
+    EdgeConditionGroup,
     EdgeMetadata,
     EdgeConfig,
     EdgeSpec,
@@ -166,6 +178,7 @@ __all__ = [
     "ExecutionState",
     "NodeType",
     "EdgeType",
+    "EdgeConditionType",
     "IOType",
     "IOFormat",
     "PromptPrecedence",
@@ -173,6 +186,8 @@ __all__ = [
     "BackgroundAgentMode",
     "ConditionOperator",
     "ConditionJoinOperator",
+    "PassThroughExtractionStrategy",
+    "LLMEvaluationMode",
     # IO Types
     "IOTypeSpec",
     "InputSpec",
@@ -186,8 +201,14 @@ __all__ = [
     "NodeResult",
     "NodeVersion",
     "NodeEntry",
+    # Edge pass-through models
+    "PassThroughField",
+    "PassThroughConfig",
+    # Edge LLM condition models
+    "LLMConditionConfig",
     # Edge models
     "EdgeCondition",
+    "EdgeConditionGroup",
     "EdgeMetadata",
     "EdgeConfig",
     "EdgeSpec",

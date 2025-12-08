@@ -10,6 +10,7 @@ class ToolsProvider extends ChangeNotifier {
   String? _error;
   String _searchQuery = '';
   ToolType? _filterType;
+  String? _authToken;
 
   // API Base URL - configure based on environment
   static const String _baseUrl = 'http://localhost:8000/api/v1';
@@ -40,6 +41,17 @@ class ToolsProvider extends ChangeNotifier {
 
   ToolsProvider() {
     // Lazy loading: Don't fetch immediately
+  }
+
+  void updateAuthToken(String? token) {
+    _authToken = token;
+  }
+
+  Map<String, String> _headers({bool jsonContent = false}) {
+    return {
+      if (jsonContent) 'Content-Type': 'application/json',
+      if (_authToken != null && _authToken!.isNotEmpty) 'Authorization': 'Bearer $_authToken',
+    };
   }
 
   void setSearchQuery(String query) {
@@ -83,7 +95,10 @@ class ToolsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/tools'));
+      final response = await http.get(
+        Uri.parse('$_baseUrl/tools'),
+        headers: _headers(),
+      );
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -111,7 +126,10 @@ class ToolsProvider extends ChangeNotifier {
       if (version != null) {
         url += '?version=$version';
       }
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _headers(),
+      );
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -127,7 +145,7 @@ class ToolsProvider extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/tools'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers(jsonContent: true),
         body: json.encode(tool.toJson()),
       );
       
@@ -149,7 +167,7 @@ class ToolsProvider extends ChangeNotifier {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/tools/${tool.id}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers(jsonContent: true),
         body: json.encode(tool.toJson()),
       );
       
@@ -169,7 +187,10 @@ class ToolsProvider extends ChangeNotifier {
 
   Future<Map<String, dynamic>> deleteTool(String id) async {
     try {
-      final response = await http.delete(Uri.parse('$_baseUrl/tools/$id'));
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/tools/$id'),
+        headers: _headers(),
+      );
       
       if (response.statusCode == 200) {
         if (_selectedTool?.id == id) {
@@ -191,7 +212,7 @@ class ToolsProvider extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/tools/$id/submit-review'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers(jsonContent: true),
         body: json.encode({'notes': notes}),
       );
       
@@ -229,33 +250,6 @@ class ToolsProvider extends ChangeNotifier {
 
   // Generate Python code template for function tools
   String generateFunctionTemplate(String functionName, List<ToolParameter> parameters) {
-    final paramDefs = parameters.map((p) {
-      String typeHint = 'Any';
-      switch (p.type.toLowerCase()) {
-        case 'string':
-          typeHint = 'str';
-          break;
-        case 'number':
-        case 'integer':
-          typeHint = 'int';
-          break;
-        case 'float':
-          typeHint = 'float';
-          break;
-        case 'boolean':
-          typeHint = 'bool';
-          break;
-        case 'array':
-          typeHint = 'List[Any]';
-          break;
-        case 'object':
-          typeHint = 'Dict[str, Any]';
-          break;
-      }
-      return '${p.name}: $typeHint';
-    }).join(', ');
-    
-    final paramNames = parameters.map((p) => p.name).join(', ');
     final docParams = parameters.map((p) => 
       '        ${p.name}: ${p.description}'
     ).join('\n');

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/auth_provider.dart';
 import 'providers/tools_provider.dart';
+import 'screens/login_screen.dart';
 import 'screens/tools_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -17,13 +19,71 @@ class AHFApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ToolsProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, ToolsProvider>(
+          create: (_) => ToolsProvider(),
+          update: (_, auth, tools) {
+            tools ??= ToolsProvider();
+            tools.updateAuthToken(auth.accessToken);
+            return tools;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'AHF',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
-        home: const MainLayout(),
+        home: const AuthGate(),
+      ),
+    );
+  }
+}
+
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _initTriggered = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initTriggered) {
+      _initTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<AuthProvider>().initialize();
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        if (!auth.isInitialized || auth.isBusy) {
+          return _buildLoading();
+        }
+
+        if (!auth.isAuthenticated) {
+          return const LoginScreen();
+        }
+
+        return const MainLayout();
+      },
+    );
+  }
+
+  Widget _buildLoading() {
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      body: const Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryColor),
       ),
     );
   }
@@ -72,6 +132,7 @@ class _MainLayoutState extends State<MainLayout> {
                     itemBuilder: (context, index) => _buildNavItem(_navItems[index], index),
                   ),
                 ),
+                _buildUserSection(),
                 _buildCollapseButton(),
               ],
             ),
@@ -168,6 +229,90 @@ class _MainLayoutState extends State<MainLayout> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildUserSection() {
+    final auth = context.watch<AuthProvider>();
+    final displayName = auth.displayName ?? 'Signed in';
+    final email = auth.email ?? '';
+    final initials = displayName
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0])
+        .take(2)
+        .join()
+        .toUpperCase();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: _isSidebarCollapsed ? 8 : 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
+            child: Text(
+              initials.isNotEmpty ? initials : 'U',
+              style: GoogleFonts.inter(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (!_isSidebarCollapsed) ...[
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: GoogleFonts.inter(
+                      color: AppTheme.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (email.isNotEmpty)
+                    Text(
+                      email,
+                      style: GoogleFonts.inter(
+                        color: AppTheme.textTertiary,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: auth.isBusy ? null : () => auth.signOut(),
+              tooltip: 'Sign out',
+              icon: const Icon(Icons.logout, size: 18, color: AppTheme.textTertiary),
+            ),
+          ] else ...[
+            IconButton(
+              onPressed: auth.isBusy ? null : () => auth.signOut(),
+              tooltip: 'Sign out',
+              icon: const Icon(Icons.logout, size: 18, color: AppTheme.textTertiary),
+            ),
+          ],
+        ],
       ),
     );
   }
