@@ -5,7 +5,7 @@ Allows registering custom LLM implementations for models, enabling
 users to define their own execution strategies on the fly.
 """
 
-from typing import Dict, Any, Callable, Optional, Type
+from typing import Dict, Any, Callable, Optional
 from ..interfaces.llm_interfaces import ILLM, IConnector
 from ..spec.llm_schema import ModelMetadata
 from ..exceptions import ConfigurationError

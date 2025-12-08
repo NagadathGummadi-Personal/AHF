@@ -24,7 +24,7 @@ Usage:
 """
 
 import json
-from typing import Dict, Any, Union, Type
+from typing import Dict, Any, Type
 
 from ..spec.tool_types import (
     ToolSpec,

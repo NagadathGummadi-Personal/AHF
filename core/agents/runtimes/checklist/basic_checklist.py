@@ -5,10 +5,9 @@ Provides a checklist implementation using the Checklist model.
 """
 
 from typing import Any, Dict, List, Optional
-import json
 
 from ...interfaces.agent_interfaces import IAgentChecklist
-from ...spec.checklist_models import Checklist, ChecklistItem
+from ...spec.checklist_models import Checklist
 from ...enum import ChecklistStatus
 
 

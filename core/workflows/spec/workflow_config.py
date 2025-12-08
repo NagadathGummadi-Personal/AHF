@@ -8,7 +8,7 @@ Version: 1.0.0
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List, Optional
 
 from pydantic import BaseModel, Field
 

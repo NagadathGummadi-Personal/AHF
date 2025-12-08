@@ -17,7 +17,7 @@ that has been added to the LoggerAdaptor, including:
 import time
 import random
 from utils.logging.LoggerAdaptor import LoggerAdaptor
-from utils.logging.DurationLogger import durationlogger, log_duration, time_function, configure_duration_logger
+from utils.logging.DurationLogger import durationlogger, log_duration, configure_duration_logger
 
 
 def demo_basic_duration_logging():

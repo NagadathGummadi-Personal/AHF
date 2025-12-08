@@ -9,16 +9,14 @@ Version: 1.0.0
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ..interfaces.workflow_interfaces import IWorkflowRegistry, IWorkflowStorage
-from ..spec.node_models import NodeSpec, NodeMetadata, NodeVersion, NodeEntry
-from ..spec.edge_models import EdgeSpec, EdgeMetadata, EdgeVersion, EdgeEntry
+from ..spec.node_models import NodeSpec, NodeVersion, NodeEntry
+from ..spec.edge_models import EdgeSpec, EdgeVersion, EdgeEntry
 from ..spec.workflow_models import (
     WorkflowSpec,
-    WorkflowMetadata,
     WorkflowVersion,
     WorkflowEntry,
 )

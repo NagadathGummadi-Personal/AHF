@@ -5,7 +5,7 @@ Provides common logic for all prompt registry implementations.
 Derived classes only need to implement storage-specific initialization.
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Dict, List, Optional, Set, Any
 
 from ..interfaces.prompt_registry_interfaces import (

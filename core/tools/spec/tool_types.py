@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -25,9 +25,6 @@ from .tool_config import (
     ExecutionConfig,
     DynamicVariableConfig,
 )
-
-if TYPE_CHECKING:
-    from ..runtimes.idempotency.idempotency_key_generator import IIdempotencyKeyGenerator
 
 class ToolSpec(BaseModel):
     """

@@ -8,7 +8,6 @@ from typing import Dict, Type
 
 from ..interfaces.prompt_registry_interfaces import IPromptRegistry
 from .storage import LocalPromptRegistry
-from ..constants import DEFAULT_STORAGE_PATH
 
 
 class PromptRegistryFactory:

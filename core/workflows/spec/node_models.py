@@ -10,7 +10,7 @@ Version: 1.0.0
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -43,11 +43,6 @@ from ..constants import (
 )
 from .io_types import InputSpec, OutputSpec
 from .workflow_config import NodeDynamicVariableConfig
-
-if TYPE_CHECKING:
-    from core.agents import IAgent
-    from core.tools import ToolSpec
-    from core.llms import ILLM
 
 
 class BackgroundAgentConfig(BaseModel):

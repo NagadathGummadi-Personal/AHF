@@ -7,7 +7,7 @@ Uses the prompt registry for prompt management with fallback to built-in default
 
 import json
 import re
-from typing import Any, Optional, List, Dict, AsyncIterator
+from typing import Any, Optional, Dict, AsyncIterator
 
 from .base_agent import BaseAgent
 from ..spec.agent_context import AgentContext
@@ -17,7 +17,6 @@ from ..constants import (
     REACT_THOUGHT,
     REACT_ACTION,
     REACT_ACTION_INPUT,
-    REACT_OBSERVATION,
     REACT_FINAL_ANSWER,
     SCRATCHPAD_THOUGHT_PREFIX,
     SCRATCHPAD_ACTION_PREFIX,

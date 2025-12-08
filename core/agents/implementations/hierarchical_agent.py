@@ -5,7 +5,7 @@ A manager agent that delegates tasks to worker agents.
 Uses the prompt registry for prompt management with fallback to built-in defaults.
 """
 
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, Dict
 
 from .base_agent import BaseAgent
 from ..spec.agent_context import AgentContext

@@ -38,7 +38,6 @@ from ..exceptions import AgentBuildError
 
 if TYPE_CHECKING:
     from ..interfaces import IAgent
-    from ..spec import AgentSpec
 
 logger = logging.getLogger(__name__)
 

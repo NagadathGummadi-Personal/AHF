@@ -5,7 +5,7 @@ This module defines the AgentSpec model that describes an agent's
 configuration, capabilities, and constraints.
 """
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 import uuid
 
@@ -13,13 +13,8 @@ from ..enum import AgentType, AgentInputType, AgentOutputType, AgentOutputFormat
 from ..constants import (
     DEFAULT_MAX_ITERATIONS,
     DEFAULT_TIMEOUT_SECONDS,
-    DEFAULT_AGENT_TYPE,
     ARBITRARY_TYPES_ALLOWED,
 )
-
-if TYPE_CHECKING:
-    from ...llms.interfaces.llm_interfaces import ILLM
-    from ...tools.interfaces.tool_interfaces import IToolExecutor
 
 
 class AgentSpec(BaseModel):

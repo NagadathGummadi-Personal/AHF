@@ -165,7 +165,7 @@ def create_continuation_prompt(
             new_message=message,
             **kwargs,
         )
-    except KeyError as e:
+    except KeyError:
         # Fallback if template has unexpected variables
         prompt = (
             f"[Previous partial response: {stashed}]\n\n"

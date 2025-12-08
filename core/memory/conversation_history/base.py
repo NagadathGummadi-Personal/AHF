@@ -8,14 +8,10 @@ Version: 1.1.0
 """
 
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ..state.models import Message
-from utils.serialization import (
-    SerializableMixin,
-    SerializationFormat,
-)
+from utils.serialization import SerializableMixin
 
 
 class BaseConversationHistory(ABC, SerializableMixin):

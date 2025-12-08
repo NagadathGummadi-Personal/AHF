@@ -12,8 +12,7 @@ Pluggable Components:
 """
 
 from __future__ import annotations
-from typing import Any, AsyncIterator, Dict, List, Protocol, runtime_checkable, Optional, Type, Union, TYPE_CHECKING
-from pydantic import BaseModel
+from typing import Any, AsyncIterator, Dict, List, Protocol, runtime_checkable, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..spec.llm_result import LLMResponse, LLMStreamChunk

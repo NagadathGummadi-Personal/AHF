@@ -25,13 +25,11 @@ from typing import (
     Protocol,
     runtime_checkable,
     TYPE_CHECKING,
-    Union,
 )
 
 if TYPE_CHECKING:
     from ..spec.agent_result import AgentResult, AgentStreamChunk
     from ..spec.agent_context import AgentContext
-    from ..spec.agent_spec import AgentSpec
     from ..enum import AgentInputType, AgentOutputType
 
 

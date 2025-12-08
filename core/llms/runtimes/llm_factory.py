@@ -5,7 +5,7 @@ This module provides a unified factory for creating LLM instances
 based on model metadata and provider configuration.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from ..providers.base.implementation import BaseLLM
 from .model_registry import get_model_registry
 from ..providers.azure.connector import AzureConnector

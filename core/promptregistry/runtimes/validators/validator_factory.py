@@ -4,7 +4,7 @@ Prompt Validator Factory.
 Factory for creating prompt validator implementations.
 """
 
-from typing import Dict, Type, List, Optional
+from typing import Dict, Type, List
 
 from ...interfaces.prompt_registry_interfaces import IPromptValidator
 from .noop_validator import NoOpPromptValidator

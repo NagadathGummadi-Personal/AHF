@@ -7,23 +7,20 @@ Allows custom implementations to be registered and instantiated via the factory.
 Version: 2.0.0
 """
 
-from typing import Any, Dict, Optional, Type, Callable
+from typing import Any, Dict, Optional, Type
 from enum import Enum
 
 from .conversation_history import (
     BaseConversationHistory,
     DefaultConversationHistory,
-    ConversationHistory,
 )
 from .state_tracker import (
     BaseStateTracker,
     DefaultStateTracker,
-    InMemoryStateTracker,
 )
 from .working_memory import (
     BaseWorkingMemory,
     DefaultWorkingMemory,
-    WorkingMemory,
 )
 
 

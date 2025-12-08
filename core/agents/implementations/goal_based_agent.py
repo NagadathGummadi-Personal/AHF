@@ -267,7 +267,6 @@ Final Answer:'''
     ) -> str:
         """Execute a single task."""
         task_desc = task.get('description', '')
-        tool_hint = task.get('metadata', {}).get('tool', 'none')
         
         # Build context from scratchpad
         context = ""
@@ -308,7 +307,7 @@ Final Answer:'''
                     try:
                         import json
                         action_input = json.loads(input_match.group(1).strip())
-                    except:
+                    except Exception:
                         action_input = {"input": input_match.group(1).strip()}
                 
                 result = await self._execute_tool(action_name, action_input, ctx)

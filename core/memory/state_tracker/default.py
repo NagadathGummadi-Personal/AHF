@@ -7,9 +7,8 @@ Version: 1.0.0
 """
 
 from typing import Any, Dict, List, Optional
-from collections import OrderedDict
 
-from ..state.models import Checkpoint, CheckpointMetadata, StateSnapshot, Message
+from ..state.models import Checkpoint, CheckpointMetadata, StateSnapshot
 from .base import BaseStateTracker
 
 

@@ -47,9 +47,8 @@ from __future__ import annotations
 
 # Standard library
 import time
-import asyncio
 from abc import abstractmethod
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict
 
 # Local imports
 from ..base_executor import BaseToolExecutor

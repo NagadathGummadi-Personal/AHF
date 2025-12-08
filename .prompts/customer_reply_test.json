@@ -66,11 +66,10 @@
         "human_eval_score": null,
         "performance_metrics": {},
         "runtime_metrics": {
-          "usage_count": 16,
+          "usage_count": 17,
           "error_count": 0,
           "success_rate": 1.0,
           "latency_samples": [
-            60.88995933532715,
             57.03234672546387,
             63.58742713928223,
             52.72507667541504,
@@ -79,7 +78,8 @@
             65.03558158874512,
             53.171634674072266,
             59.384822845458984,
-            51.865577697753906
+            51.865577697753906,
+            53.05314064025879
           ],
           "total_tokens_samples": [
             50,
@@ -106,27 +106,27 @@
             0.0005
           ],
           "total_runtime_metrics": {
-            "usage_count": 16,
+            "usage_count": 17,
             "error_count": 0,
-            "latency_ms": 229.45761680603027,
-            "prompt_tokens": 512,
-            "completion_tokens": 288,
-            "total_tokens": 800,
-            "cost": 0.008000000000000004
+            "latency_ms": 282.51075744628906,
+            "prompt_tokens": 544,
+            "completion_tokens": 306,
+            "total_tokens": 850,
+            "cost": 0.008500000000000004
           },
           "average_runtime_metrics": {
-            "latency_ms": 14.341101050376892,
+            "latency_ms": 16.61827984978171,
             "tokens": 50.0,
             "cost": 0.0005000000000000002,
             "success_rate": 1.0
           },
           "last_runtime_metrics": {
-            "latency_ms": 51.865577697753906,
+            "latency_ms": 53.05314064025879,
             "prompt_tokens": 32,
             "completion_tokens": 18,
             "total_tokens": 50,
             "cost": 0.0005,
-            "used_at": "2025-12-07T08:36:34.966986"
+            "used_at": "2025-12-08T19:34:50.445572"
           },
           "percentile_runtime_metrics": {
             "p95_latency_ms": 65.03558158874512,
@@ -141,7 +141,7 @@
         "description": "Staging prompt for customer replies",
         "author": null,
         "created_at": "2025-12-07T08:21:34.145339",
-        "updated_at": "2025-12-07T08:36:34.967988",
+        "updated_at": "2025-12-08T19:34:50.445572",
         "is_immutable": true,
         "extras": {}
       },

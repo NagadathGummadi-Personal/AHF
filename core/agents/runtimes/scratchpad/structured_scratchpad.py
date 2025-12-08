@@ -12,7 +12,6 @@ from ...interfaces.agent_interfaces import IAgentScratchpad
 from ...constants import (
     REACT_THOUGHT,
     REACT_ACTION,
-    REACT_ACTION_INPUT,
     REACT_OBSERVATION,
 )
 

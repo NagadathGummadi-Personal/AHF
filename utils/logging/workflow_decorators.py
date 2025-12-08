@@ -274,7 +274,7 @@ def collect_workflow_metrics(
                 component_type='workflow',
                 component_id=_workflow_id,
                 workflow_id=_workflow_id,
-            ) as metrics:
+            ):
                 result = func(*args, **kwargs)
                 return result
         

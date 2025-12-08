@@ -7,43 +7,15 @@ with full observability and control.
 
 # Standard library
 import json
-import time
 import asyncio
 from typing import Any, Dict, Optional
 from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
 from urllib.request import Request, urlopen
 
-# Local imports
-from ..base_executor import BaseToolExecutor
 from .base_http_executor import BaseHttpExecutor
 from ....spec.tool_types import HttpToolSpec
 from ....spec.tool_context import ToolContext
-from ....spec.tool_result import ToolResult
-from ....constants import (
-    LOG_HTTP_STARTING,
-    LOG_HTTP_COMPLETED,
-    LOG_HTTP_FAILED,
-    LOG_VALIDATING,
-    LOG_VALIDATION_PASSED,
-    LOG_VALIDATION_SKIPPED,
-    LOG_AUTH_CHECK,
-    LOG_AUTH_PASSED,
-    LOG_AUTH_SKIPPED,
-    LOG_EGRESS_CHECK,
-    LOG_EGRESS_PASSED,
-    LOG_EGRESS_SKIPPED,
-    LOG_IDEMPOTENCY_CACHE_HIT,
-    UTF_8,
-    IDEMPOTENCY_CACHE_PREFIX,
-    TOOL_EXECUTION_TIME,
-    TOOL_EXECUTIONS,
-    STATUS,
-    SUCCESS,
-    TOOL,
-    ERROR,
-    HTTP,
-)
-from ....defaults import DEFAULT_HTTP_CONTEXT_DATA, HTTP_DEFAULT_ERROR_STATUS_WARNING
+from ....constants import UTF_8, HTTP
 from utils.logging.LoggerAdaptor import LoggerAdaptor
 
 

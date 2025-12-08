@@ -5,7 +5,6 @@ This module provides default prompts for agents and other system components.
 """
 
 import json
-import os
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -58,7 +57,7 @@ async def initialize_default_prompts(registry: Any) -> None:
             existing = await registry.list_prompts()
             if label in existing:
                 continue
-        except:
+        except Exception:
             pass
         
         # Create each version

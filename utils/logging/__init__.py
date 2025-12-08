@@ -34,7 +34,6 @@ from .Enum import (
     RedactionPattern,
 )
 from .workflow_decorators import (
-    WorkflowMetrics,
     metrics_context,
     collect_workflow_metrics,
     collect_node_metrics,

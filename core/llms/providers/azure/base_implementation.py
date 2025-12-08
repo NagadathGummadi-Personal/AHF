@@ -15,34 +15,29 @@ Model-specific implementations can override components or hook methods.
 
 import json
 import time
-from typing import Dict, Any, List, AsyncIterator, Optional, Type
-from pydantic import BaseModel
+from typing import Any, Dict, List, AsyncIterator, Optional
+
 from ..base.implementation import BaseLLM
 from ...spec.llm_result import LLMResponse, LLMStreamChunk, LLMUsage
 from ...spec.llm_context import LLMContext
-from ...spec.llm_output_config import OutputConfig, ResponseMode, ParseResult
-from ...exceptions import InvalidResponseError
-from ...enum import FinishReason      
+from ...spec.llm_output_config import OutputConfig, ResponseMode
+from ...enum import FinishReason
 from ...interfaces.llm_interfaces import (
     ILLMValidator,
     IParameterTransformer,
     IResponseParser,
     IStructuredOutputHandler,
 )
-from ...runtimes.validators import LLMValidatorFactory, BasicLLMValidator
-from ...runtimes.transformers import TransformerFactory, NoOpTransformer
-from ...runtimes.parsers import ParserFactory, AzureResponseParser
-from ...runtimes.handlers import StructuredHandlerFactory, BasicStructuredHandler
+from ...runtimes.validators import LLMValidatorFactory
+from ...runtimes.transformers import TransformerFactory
+from ...runtimes.parsers import AzureResponseParser
+from ...runtimes.handlers import StructuredHandlerFactory
 from ...constants import (
     OPENAI_FIELD_MESSAGES,
-    RESPONSE_FIELD_CHOICES,
-    STREAM_FIELD_DELTA,
-    STREAM_FIELD_CONTENT,
     STREAM_DATA_PREFIX,
     STREAM_DATA_PREFIX_LENGTH,
     STREAM_DONE_TOKEN,
     STREAM_PARAM_TRUE,
-    RESPONSE_FIELD_FINISH_REASON,
     PARAM_MAX_TOKENS,
     PARAM_MAX_COMPLETION_TOKENS,
 )
@@ -100,7 +95,7 @@ class AzureBaseLLM(BaseLLM):
             structured_handler: Custom handler (default: BasicStructuredHandler)
         """
         super().__init__(metadata=metadata, connector=connector)
-        self.logger = LoggerAdaptor.get_logger(f"llm.azure-base")
+        self.logger = LoggerAdaptor.get_logger("llm.azure-base")
         
         # Initialize pluggable components with defaults
         self.validator = validator or LLMValidatorFactory.get_validator("basic")

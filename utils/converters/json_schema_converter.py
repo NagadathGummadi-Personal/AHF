@@ -135,7 +135,7 @@ def validate_json_response(
     try:
         json_data = json.loads(response_content)
         return model_class(**json_data)
-    except (json.JSONDecodeError, ValidationError) as e:
+    except (json.JSONDecodeError, ValidationError):
         if raise_on_error:
             raise
         return None
@@ -170,7 +170,7 @@ def validate_json_dict(
                 raise ValueError(f"Expected JSON object, got {type(result).__name__}")
             return None
         return result
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         if raise_on_error:
             raise
         return None
@@ -231,7 +231,7 @@ def parse_structured_response(
         # Validate against Pydantic model
         try:
             return model_class(**json_data)
-        except ValidationError as e:
+        except ValidationError:
             if not partial:
                 raise
             return None

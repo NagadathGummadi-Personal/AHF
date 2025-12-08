@@ -4,7 +4,7 @@ Agent Builder.
 Provides a fluent interface for building agent instances with all dependencies.
 """
 
-from typing import Any, Dict, List, Optional, Type, Callable, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 
 from ..enum import AgentType, AgentInputType, AgentOutputType, AgentOutputFormat
 from ..spec.agent_spec import AgentSpec
