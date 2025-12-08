@@ -8,7 +8,7 @@ Version: 1.0.0
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 
 from ..spec.node_models import (
     NodeSpec,
@@ -30,10 +30,10 @@ from ..enum import (
 )
 from ..defaults import DEFAULT_NODE_VERSION
 
-if TYPE_CHECKING:
-    from core.agents import IAgent
-    from core.tools import ToolSpec
-    from core.llms import ILLM
+# Type hints for documentation purposes
+# from core.agents import IAgent
+# from core.tools import ToolSpec
+# from core.llms import ILLM
 
 
 class NodeBuilder:
@@ -136,7 +136,7 @@ class NodeBuilder:
         
         # Additional properties
         self._properties: Dict[str, Any] = {}
-    
+
     def with_id(self, node_id: str) -> NodeBuilder:
         """Set the node ID."""
         self._id = node_id

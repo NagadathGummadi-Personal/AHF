@@ -117,7 +117,7 @@ class EdgeBuilder:
         
         # Additional properties
         self._properties: Dict[str, Any] = {}
-    
+
     def with_id(self, edge_id: str) -> EdgeBuilder:
         """Set the edge ID."""
         self._id = edge_id

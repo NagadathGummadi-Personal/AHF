@@ -83,5 +83,22 @@
     "warn_threshold_seconds": 10.0,
     "error_threshold_seconds": 60.0
   },
+  "workflow_logging": {
+    "enabled": true,
+    "log_user_messages": false,
+    "log_agent_responses": false,
+    "log_usage_metrics": true,
+    "log_condition_evaluations": false,
+    "log_pass_through_extractions": false,
+    "truncate_messages_at": 200,
+    "include_trace_id": true,
+    "async_logging": true,
+    "messages": {
+      "tokens": "Consumed Input tokens {input_tokens}, Output tokens {output_tokens}, Total {total_tokens}",
+      "duration": "{component} '{name}' completed in {duration_ms:.2f}ms",
+      "cost": "Cost: ${cost_usd:.6f}",
+      "error": "{component} '{name}' failed: {error}"
+    }
+  },
   "notes": "Production environment configuration with full INFO-level logging enabled. Features: delayed logging enabled for high throughput, INFO level logging for comprehensive observability, comprehensive redaction patterns for data protection, JSON backend for structured logging, rotating file handlers for log management"
 } 

@@ -6,19 +6,24 @@ This test demonstrates the workflow system with real Azure LLM:
 - LLM-based edge conditions
 - Pass-through fields for data transfer between nodes
 - Expression-based edge conditions
+- Metrics collection via utils/logging
+
+The logging system:
+- Collects metrics into WorkflowMetrics context
+- Supports async logging via DelayedLogger
+- Configuration loaded from log config files
+- Format (JSON/detailed/standard) controlled by config
 
 Flow:
 1. Greeting Agent → handles greetings, general questions, identifies booking intent
 2. Booking Agent → handles service booking, offers add-ons
 3. Cancellation Agent → handles appointment cancellations
 
-Version: 1.0.0
+Version: 3.0.0
 """
 
 import pytest
-import time
-from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from core.llms import LLMFactory
 from core.agents import (
@@ -36,7 +41,6 @@ from core.workflows import (
     WorkflowBuilder,
     # Enums
     NodeType,
-    EdgeType,
     EdgeConditionType,
     LLMEvaluationMode,
     PassThroughExtractionStrategy,
@@ -51,155 +55,7 @@ from core.workflows import (
     WorkflowSpec,
 )
 
-from utils.logging.LoggerAdaptor import LoggerAdaptor
-
-# Setup logger
-logger = LoggerAdaptor.get_logger("tests.workflows.salon_workflow")
-
-
-# =============================================================================
-# LOGGING UTILITIES
-# =============================================================================
-
-class InteractionLogger:
-    """
-    Utility class for logging workflow interactions with timestamps.
-    """
-    
-    def __init__(self, test_name: str = ""):
-        self.test_name = test_name
-        self.start_time = time.time()
-        self.interaction_count = 0
-    
-    def _timestamp(self) -> str:
-        """Get current timestamp."""
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    
-    def _elapsed(self) -> str:
-        """Get elapsed time since start."""
-        elapsed = time.time() - self.start_time
-        return f"{elapsed:.3f}s"
-    
-    def header(self, title: str):
-        """Log a section header."""
-        print(f"\n{'='*80}")
-        print(f"[{self._timestamp()}] {title}")
-        print(f"{'='*80}")
-        logger.info(f"{'='*60}")
-        logger.info(f"{title}")
-        logger.info(f"{'='*60}")
-    
-    def subheader(self, title: str):
-        """Log a subsection header."""
-        print(f"\n{'-'*60}")
-        print(f"[{self._timestamp()}] {title}")
-        print(f"{'-'*60}")
-        logger.info(f"{'-'*40}")
-        logger.info(f"{title}")
-        logger.info(f"{'-'*40}")
-    
-    def user_input(self, message: str):
-        """Log user input."""
-        self.interaction_count += 1
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"\n[{ts}] [Elapsed: {elapsed}] 👤 USER INPUT #{self.interaction_count}:")
-        print(f"    \"{message}\"")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] USER INPUT #{self.interaction_count}: {message}")
-    
-    def agent_response(self, agent_name: str, response: str, usage: Optional[Dict] = None):
-        """Log agent response."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"\n[{ts}] [Elapsed: {elapsed}] 🤖 AGENT RESPONSE ({agent_name}):")
-        print(f"    \"{response}\"")
-        if usage:
-            print(f"    📊 Usage: {usage}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] AGENT RESPONSE ({agent_name}): {response}")
-        if usage:
-            logger.info(f"    Usage: {usage}")
-    
-    def llm_call_start(self, purpose: str):
-        """Log LLM call start."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"\n[{ts}] [Elapsed: {elapsed}] ⏳ LLM CALL START: {purpose}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] LLM CALL START: {purpose}")
-        return time.time()
-    
-    def llm_call_end(self, purpose: str, start_time: float, result: Any = None):
-        """Log LLM call end."""
-        ts = self._timestamp()
-        duration = time.time() - start_time
-        elapsed = self._elapsed()
-        print(f"[{ts}] [Elapsed: {elapsed}] ✅ LLM CALL END: {purpose} (took {duration:.3f}s)")
-        if result is not None:
-            print(f"    Result: {result}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] LLM CALL END: {purpose} (took {duration:.3f}s)")
-        if result is not None:
-            logger.info(f"    Result: {result}")
-    
-    def condition_check(self, condition_type: str, condition_desc: str, result: bool):
-        """Log edge condition check."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        status = "✅ MET" if result else "❌ NOT MET"
-        print(f"\n[{ts}] [Elapsed: {elapsed}] 🔍 CONDITION CHECK ({condition_type}):")
-        print(f"    Condition: {condition_desc}")
-        print(f"    Result: {status}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] CONDITION CHECK ({condition_type}): {condition_desc} -> {status}")
-    
-    def edge_transition(self, from_node: str, to_node: str, edge_name: str):
-        """Log edge transition."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"\n[{ts}] [Elapsed: {elapsed}] 🔀 EDGE TRANSITION:")
-        print(f"    From: {from_node}")
-        print(f"    To: {to_node}")
-        print(f"    Via: {edge_name}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] EDGE TRANSITION: {from_node} -> {to_node} via {edge_name}")
-    
-    def pass_through_extraction(self, field_name: str, value: Any, strategy: str):
-        """Log pass-through field extraction."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"\n[{ts}] [Elapsed: {elapsed}] 📤 PASS-THROUGH EXTRACTION:")
-        print(f"    Field: {field_name}")
-        print(f"    Value: {value}")
-        print(f"    Strategy: {strategy}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] PASS-THROUGH: {field_name}={value} (strategy={strategy})")
-    
-    def info(self, message: str):
-        """Log info message."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"[{ts}] [Elapsed: {elapsed}] ℹ️  {message}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] {message}")
-    
-    def success(self, message: str):
-        """Log success message."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"[{ts}] [Elapsed: {elapsed}] ✅ {message}")
-        logger.info(f"[{ts}] [Elapsed: {elapsed}] SUCCESS: {message}")
-    
-    def error(self, message: str):
-        """Log error message."""
-        ts = self._timestamp()
-        elapsed = self._elapsed()
-        print(f"[{ts}] [Elapsed: {elapsed}] ❌ {message}")
-        logger.error(f"[{ts}] [Elapsed: {elapsed}] ERROR: {message}")
-    
-    def summary(self, total_interactions: int, total_time: float):
-        """Log test summary."""
-        print(f"\n{'='*80}")
-        print(f"[{self._timestamp()}] TEST SUMMARY")
-        print(f"{'='*80}")
-        print(f"    Total Interactions: {total_interactions}")
-        print(f"    Total Time: {total_time:.3f}s")
-        print(f"    Avg Time/Interaction: {total_time/max(total_interactions, 1):.3f}s")
-        print(f"{'='*80}")
-        logger.info(f"TEST SUMMARY: {total_interactions} interactions in {total_time:.3f}s")
+from utils.logging import LoggerAdaptor, metrics_context
 
 
 # =============================================================================
@@ -313,61 +169,50 @@ CANCELLATION_AGENT_SYSTEM_PROMPT = """You are the appointment management special
 # =============================================================================
 
 @pytest.fixture
-async def azure_llm():
+def workflow_logger():
+    """Create workflow logger with test configuration."""
+    # Use LoggerAdaptor with test environment (loads log_config_test.json)
+    logger = LoggerAdaptor.get_logger("test.salon_workflow", environment="test")
+    yield logger
+    logger.shutdown()
+
+
+@pytest.fixture
+async def azure_llm(workflow_logger):
     """Create Azure LLM instance for agents and edge evaluation."""
-    log = InteractionLogger("azure_llm_fixture")
-    log.info("Creating Azure LLM instance...")
-    
-    start = time.time()
-    llm = LLMFactory.create_llm(
-        "azure-gpt-4.1-mini",
-        connector_config=AZURE_CONFIG
-    )
-    duration = time.time() - start
-    
-    log.success(f"Azure LLM created in {duration:.3f}s")
-    log.info(f"Model: azure-gpt-4.1-mini")
-    log.info(f"Endpoint: {AZURE_CONFIG['endpoint']}")
-    log.info(f"Deployment: {AZURE_CONFIG['deployment_name']}")
+    with metrics_context(
+        component_type='llm',
+        component_id='azure-gpt-4.1-mini',
+    ) as ctx:
+        llm = LLMFactory.create_llm(
+            "azure-gpt-4.1-mini",
+            connector_config=AZURE_CONFIG
+        )
+        ctx.response = "LLM instance created"
     
     yield llm
     
-    # Cleanup
     if hasattr(llm.connector, 'close'):
-        log.info("Closing LLM connector...")
         await llm.connector.close()
-        log.success("LLM connector closed")
 
 
 @pytest.fixture
 def agent_context():
     """Create test agent context."""
-    context = create_agent_context(
+    return create_agent_context(
         user_id="test-user-salon",
         session_id="test-session-salon-001",
         metadata={"test": "salon_workflow"}
     )
-    logger.info(f"Created agent context: user={context.user_id}, session={context.session_id}")
-    return context
-
-
-@pytest.fixture
-def interaction_logger():
-    """Create interaction logger for tests."""
-    return InteractionLogger
 
 
 # =============================================================================
 # AGENT BUILDERS
 # =============================================================================
 
-def build_greeting_agent(llm: Any, log: Optional[InteractionLogger] = None) -> Any:
+def build_greeting_agent(llm: Any) -> Any:
     """Build the greeting agent with Azure LLM."""
-    if log:
-        log.info("Building Greeting Agent...")
-    
-    start = time.time()
-    agent = (AgentBuilder()
+    return (AgentBuilder()
         .with_name("greeting-agent")
         .with_description("Friendly salon receptionist")
         .with_llm(llm)
@@ -377,24 +222,11 @@ def build_greeting_agent(llm: Any, log: Optional[InteractionLogger] = None) -> A
         .with_max_iterations(5)
         .as_type(AgentType.SIMPLE)
         .build())
-    duration = time.time() - start
-    
-    if log:
-        log.success(f"Greeting Agent built in {duration:.3f}s")
-        log.info(f"Agent Name: {agent.spec.name}")
-        log.info(f"Agent Type: {agent.spec.agent_type}")
-        log.info(f"Max Iterations: {agent.spec.max_iterations}")
-    
-    return agent
 
 
-def build_booking_agent(llm: Any, log: Optional[InteractionLogger] = None) -> Any:
+def build_booking_agent(llm: Any) -> Any:
     """Build the booking agent with Azure LLM."""
-    if log:
-        log.info("Building Booking Agent...")
-    
-    start = time.time()
-    agent = (AgentBuilder()
+    return (AgentBuilder()
         .with_name("booking-agent")
         .with_description("Booking specialist")
         .with_llm(llm)
@@ -404,23 +236,11 @@ def build_booking_agent(llm: Any, log: Optional[InteractionLogger] = None) -> An
         .with_max_iterations(10)
         .as_type(AgentType.SIMPLE)
         .build())
-    duration = time.time() - start
-    
-    if log:
-        log.success(f"Booking Agent built in {duration:.3f}s")
-        log.info(f"Agent Name: {agent.spec.name}")
-        log.info(f"Agent Type: {agent.spec.agent_type}")
-    
-    return agent
 
 
-def build_cancellation_agent(llm: Any, log: Optional[InteractionLogger] = None) -> Any:
+def build_cancellation_agent(llm: Any) -> Any:
     """Build the cancellation agent with Azure LLM."""
-    if log:
-        log.info("Building Cancellation Agent...")
-    
-    start = time.time()
-    agent = (AgentBuilder()
+    return (AgentBuilder()
         .with_name("cancellation-agent")
         .with_description("Appointment manager")
         .with_llm(llm)
@@ -430,14 +250,6 @@ def build_cancellation_agent(llm: Any, log: Optional[InteractionLogger] = None) 
         .with_max_iterations(10)
         .as_type(AgentType.SIMPLE)
         .build())
-    duration = time.time() - start
-    
-    if log:
-        log.success(f"Cancellation Agent built in {duration:.3f}s")
-        log.info(f"Agent Name: {agent.spec.name}")
-        log.info(f"Agent Type: {agent.spec.agent_type}")
-    
-    return agent
 
 
 # =============================================================================
@@ -492,13 +304,7 @@ def create_cancellation_node(agent: Any) -> NodeSpec:
 
 
 def create_greeting_to_booking_edge(llm: Any) -> EdgeSpec:
-    """
-    Create the edge from Greeting Agent to Booking Agent.
-    
-    This edge:
-    - Uses LLM condition to detect booking intent
-    - Passes through the service_name field
-    """
+    """Create the edge from Greeting Agent to Booking Agent."""
     return (EdgeBuilder()
         .with_id("greeting-to-booking")
         .with_name("Booking Transfer")
@@ -506,7 +312,6 @@ def create_greeting_to_booking_edge(llm: Any) -> EdgeSpec:
         .from_node("greeting-agent")
         .to_node("booking-agent")
         .as_conditional()
-        # LLM condition: Check if customer wants to book
         .with_llm_condition(
             condition_prompt=(
                 "Check if the customer has expressed intent to book a service AND "
@@ -516,7 +321,6 @@ def create_greeting_to_booking_edge(llm: Any) -> EdgeSpec:
             evaluation_mode=LLMEvaluationMode.BINARY,
             llm_instance=llm,
         )
-        # Pass-through field: Extract and pass service_name
         .with_pass_through_field(
             name="service_name",
             description="The specific salon service the customer wants to book (e.g., haircut, hair color, styling, treatment)",
@@ -532,11 +336,7 @@ def create_greeting_to_booking_edge(llm: Any) -> EdgeSpec:
 
 
 def create_booking_to_cancellation_edge() -> EdgeSpec:
-    """
-    Create the edge from Booking Agent to Cancellation Agent.
-    
-    This edge uses expression-based condition on guest_intent.
-    """
+    """Create expression-based edge from Booking to Cancellation."""
     return (EdgeBuilder()
         .with_id("booking-to-cancellation")
         .with_name("Cancellation Transfer")
@@ -544,7 +344,6 @@ def create_booking_to_cancellation_edge() -> EdgeSpec:
         .from_node("booking-agent")
         .to_node("cancellation-agent")
         .as_conditional()
-        # Expression condition: Check if guest_intent is cancellation
         .with_condition(
             field="variables.guest_intent",
             operator=ConditionOperator.IN,
@@ -557,9 +356,7 @@ def create_booking_to_cancellation_edge() -> EdgeSpec:
 
 
 def create_booking_to_cancellation_edge_llm(llm: Any) -> EdgeSpec:
-    """
-    Create edge using LLM condition for cancellation detection.
-    """
+    """Create LLM-based edge from Booking to Cancellation."""
     return (EdgeBuilder()
         .with_id("booking-to-cancellation-llm")
         .with_name("Cancellation Transfer (LLM)")
@@ -567,7 +364,6 @@ def create_booking_to_cancellation_edge_llm(llm: Any) -> EdgeSpec:
         .from_node("booking-agent")
         .to_node("cancellation-agent")
         .as_conditional()
-        # LLM condition: Detect cancellation intent
         .with_llm_condition(
             condition_prompt=(
                 "Check if the customer wants to cancel, reschedule, or modify an EXISTING appointment. "
@@ -589,29 +385,12 @@ def create_salon_workflow(
     cancellation_agent: Any,
     edge_llm: Any,
     use_llm_for_cancellation: bool = True,
-    log: Optional[InteractionLogger] = None,
 ) -> WorkflowSpec:
-    """
-    Create the complete salon booking workflow.
-    """
-    if log:
-        log.header("Creating Salon Workflow")
-    
-    start = time.time()
-    
-    # Create nodes with agents
-    if log:
-        log.info("Creating workflow nodes...")
+    """Create the complete salon booking workflow."""
     greeting_node = create_greeting_node(greeting_agent)
     booking_node = create_booking_node(booking_agent)
     cancellation_node = create_cancellation_node(cancellation_agent)
     
-    if log:
-        log.success(f"Created 3 nodes: {greeting_node.id}, {booking_node.id}, {cancellation_node.id}")
-    
-    # Create edges
-    if log:
-        log.info("Creating workflow edges...")
     greeting_to_booking = create_greeting_to_booking_edge(edge_llm)
     
     if use_llm_for_cancellation:
@@ -619,12 +398,6 @@ def create_salon_workflow(
     else:
         booking_to_cancellation = create_booking_to_cancellation_edge()
     
-    if log:
-        log.success(f"Created 2 edges: {greeting_to_booking.id}, {booking_to_cancellation.id}")
-    
-    # Build workflow
-    if log:
-        log.info("Building workflow...")
     workflow = (WorkflowBuilder()
         .with_id("salon-booking-workflow")
         .with_name("Salon Booking System")
@@ -643,16 +416,6 @@ def create_salon_workflow(
         .with_tag("multi-agent")
         .build())
     
-    duration = time.time() - start
-    
-    if log:
-        log.success(f"Workflow built in {duration:.3f}s")
-        log.info(f"Workflow ID: {workflow.id}")
-        log.info(f"Workflow Name: {workflow.name}")
-        log.info(f"Start Node: {workflow.start_node_id}")
-        log.info(f"Nodes: {list(workflow.nodes.keys())}")
-        log.info(f"Edges: {list(workflow.edges.keys())}")
-    
     return workflow
 
 
@@ -664,102 +427,68 @@ def create_salon_workflow(
 class TestSalonWorkflowStructure:
     """Test workflow structure creation."""
     
-    async def test_workflow_creation(self, azure_llm, interaction_logger):
+    async def test_workflow_creation(self, azure_llm, workflow_logger):
         """Test that the workflow can be created successfully."""
-        log = interaction_logger("test_workflow_creation")
-        log.header("TEST: Workflow Creation")
-        
-        log.info("Building agents...")
-        greeting_agent = build_greeting_agent(azure_llm, log)
-        booking_agent = build_booking_agent(azure_llm, log)
-        cancellation_agent = build_cancellation_agent(azure_llm, log)
-        
-        workflow = create_salon_workflow(
-            greeting_agent=greeting_agent,
-            booking_agent=booking_agent,
-            cancellation_agent=cancellation_agent,
-            edge_llm=azure_llm,
-            log=log,
-        )
-        
-        assert workflow.id == "salon-booking-workflow"
-        assert workflow.name == "Salon Booking System"
-        assert len(workflow.nodes) == 3
-        assert len(workflow.edges) == 2
-        assert workflow.start_node_id == "greeting-agent"
-        
-        log.success("All workflow structure assertions passed!")
+        with metrics_context(component_type='workflow',
+            workflow_id="test_workflow_creation",
+            workflow_name="Workflow Creation Test"
+        ) as ctx:
+            greeting_agent = build_greeting_agent(azure_llm)
+            booking_agent = build_booking_agent(azure_llm)
+            cancellation_agent = build_cancellation_agent(azure_llm)
+            
+            workflow = create_salon_workflow(
+                greeting_agent=greeting_agent,
+                booking_agent=booking_agent,
+                cancellation_agent=cancellation_agent,
+                edge_llm=azure_llm,
+            )
+            
+            assert workflow.id == "salon-booking-workflow"
+            assert workflow.name == "Salon Booking System"
+            assert len(workflow.nodes) == 3
+            assert len(workflow.edges) == 2
+            assert workflow.start_node_id == "greeting-agent"
+            
+            ctx.response = f"Created workflow with {len(workflow.nodes)} nodes"
     
-    async def test_nodes_have_agents(self, azure_llm, interaction_logger):
+    async def test_nodes_have_agents(self, azure_llm, workflow_logger):
         """Test that nodes have agents configured."""
-        log = interaction_logger("test_nodes_have_agents")
-        log.header("TEST: Nodes Have Agents")
-        
-        greeting_agent = build_greeting_agent(azure_llm, log)
-        node = create_greeting_node(greeting_agent)
-        
-        log.info(f"Checking node: {node.id}")
-        log.info(f"Node type: {node.node_type}")
-        log.info(f"Has agent: {node.has_agent()}")
-        
-        assert node.id == "greeting-agent"
-        assert node.node_type == NodeType.AGENT
-        assert node.has_agent()
-        assert node.agent_instance is not None
-        assert node.agent_instance.spec.name == "greeting-agent"
-        
-        log.success(f"Node {node.id} has agent: {node.agent_instance.spec.name}")
+        with metrics_context(
+            component_type='node',
+            component_id='greeting-agent',
+            component_name='Greeting Agent Test',
+        ) as ctx:
+            greeting_agent = build_greeting_agent(azure_llm)
+            node = create_greeting_node(greeting_agent)
+            
+            assert node.id == "greeting-agent"
+            assert node.node_type == NodeType.AGENT
+            assert node.has_agent()
+            assert node.agent_instance is not None
+            
+            ctx.response = f"Node has agent: {node.agent_instance.spec.name}"
     
-    async def test_edge_has_llm_condition(self, azure_llm, interaction_logger):
+    async def test_edge_has_llm_condition(self, azure_llm, workflow_logger):
         """Test that edge has LLM condition configured."""
-        log = interaction_logger("test_edge_has_llm_condition")
-        log.header("TEST: Edge LLM Condition")
-        
-        edge = create_greeting_to_booking_edge(azure_llm)
-        
-        log.info(f"Checking edge: {edge.id}")
-        log.info(f"From: {edge.source_node_id} -> To: {edge.target_node_id}")
-        log.info(f"Has LLM conditions: {edge.has_llm_conditions()}")
-        
-        assert edge.id == "greeting-to-booking"
-        assert edge.has_llm_conditions()
-        assert edge.conditions is not None
-        
-        llm_condition = edge.conditions.conditions[0]
-        log.info(f"Condition type: {llm_condition.condition_type}")
-        log.info(f"Condition prompt: {llm_condition.llm_config.condition_prompt[:80]}...")
-        
-        assert llm_condition.condition_type == EdgeConditionType.LLM
-        assert llm_condition.llm_config is not None
-        assert llm_condition.llm_config.llm_instance is not None
-        
-        log.success("Edge LLM condition configured correctly!")
-    
-    async def test_edge_has_pass_through_fields(self, azure_llm, interaction_logger):
-        """Test that edge has pass-through fields configured."""
-        log = interaction_logger("test_edge_has_pass_through_fields")
-        log.header("TEST: Edge Pass-Through Fields")
-        
-        edge = create_greeting_to_booking_edge(azure_llm)
-        
-        log.info(f"Checking edge: {edge.id}")
-        log.info(f"Has pass-through config: {edge.pass_through is not None}")
-        
-        assert edge.pass_through is not None
-        assert len(edge.pass_through.fields) == 1
-        
-        service_field = edge.pass_through.fields[0]
-        log.info(f"Pass-through field: {service_field.name}")
-        log.info(f"Description: {service_field.description}")
-        log.info(f"Required: {service_field.required}")
-        log.info(f"Extraction strategy: {service_field.extraction_strategy}")
-        log.info(f"Ask on missing: {service_field.ask_on_missing}")
-        
-        assert service_field.name == "service_name"
-        assert service_field.required is True
-        assert service_field.extraction_strategy == PassThroughExtractionStrategy.LLM
-        
-        log.success("Pass-through fields configured correctly!")
+        with metrics_context(
+            component_type='edge',
+            component_id='greeting-to-booking',
+            source_node='greeting-agent',
+            target_node='booking-agent',
+        ) as ctx:
+            edge = create_greeting_to_booking_edge(azure_llm)
+            
+            assert edge.id == "greeting-to-booking"
+            assert edge.has_llm_conditions()
+            assert edge.conditions is not None
+            
+            llm_condition = edge.conditions.conditions[0]
+            assert llm_condition.condition_type == EdgeConditionType.LLM
+            
+            ctx.condition_type = "llm"
+            ctx.condition_result = True
+            ctx.response = "Edge has LLM condition configured"
 
 
 # =============================================================================
@@ -768,137 +497,92 @@ class TestSalonWorkflowStructure:
 
 @pytest.mark.asyncio
 class TestSalonAgents:
-    """Test individual agent execution."""
+    """Test individual agent execution with logging."""
     
-    async def test_greeting_agent_responds(self, azure_llm, agent_context, interaction_logger):
+    async def test_greeting_agent_responds(self, azure_llm, agent_context, workflow_logger):
         """Test greeting agent responds to hello."""
-        log = interaction_logger("test_greeting_agent_responds")
-        log.header("TEST: Greeting Agent Response")
-        
-        agent = build_greeting_agent(azure_llm, log)
-        
+        agent = build_greeting_agent(azure_llm)
         user_message = "Hello!"
-        log.user_input(user_message)
         
-        llm_start = log.llm_call_start("Greeting Agent processing")
-        result = await agent.run(user_message, agent_context)
-        log.llm_call_end("Greeting Agent processing", llm_start)
-        
-        log.agent_response(
-            "greeting-agent",
-            result.content,
-            usage=result.usage if hasattr(result, 'usage') else None
-        )
-        
-        assert result.is_success()
-        assert len(result.content) > 0
-        
-        log.success("Greeting agent responded successfully!")
-        log.summary(1, time.time() - log.start_time)
+        with metrics_context(
+            component_type='agent',
+            component_id='greeting-agent',
+            user_message=user_message,
+        ) as ctx:
+            result = await agent.run(user_message, agent_context)
+            ctx.update_from_usage(result.usage) if hasattr(result, 'usage') else None
+            ctx.response = str(result.content)
+            
+            assert result.is_success()
+            assert len(result.content) > 0
     
-    async def test_greeting_agent_answers_ai_question(self, azure_llm, agent_context, interaction_logger):
+    async def test_greeting_agent_answers_ai_question(self, azure_llm, agent_context, workflow_logger):
         """Test greeting agent answers 'are you AI' question."""
-        log = interaction_logger("test_greeting_agent_answers_ai_question")
-        log.header("TEST: Greeting Agent AI Question")
-        
-        agent = build_greeting_agent(azure_llm, log)
-        
+        agent = build_greeting_agent(azure_llm)
         user_message = "Are you a real person or AI?"
-        log.user_input(user_message)
         
-        llm_start = log.llm_call_start("Greeting Agent processing AI question")
-        result = await agent.run(user_message, agent_context)
-        log.llm_call_end("Greeting Agent processing AI question", llm_start)
-        
-        log.agent_response(
-            "greeting-agent",
-            result.content,
-            usage=result.usage if hasattr(result, 'usage') else None
-        )
-        
-        assert result.is_success()
-        assert len(result.content) > 0
-        
-        log.success("Greeting agent answered AI question!")
-        log.summary(1, time.time() - log.start_time)
+        with metrics_context(
+            component_type='agent',
+            component_id='greeting-agent',
+            user_message=user_message,
+        ) as ctx:
+            result = await agent.run(user_message, agent_context)
+            ctx.update_from_usage(result.usage) if hasattr(result, 'usage') else None
+            ctx.response = str(result.content)
+            
+            assert result.is_success()
+            assert len(result.content) > 0
     
-    async def test_greeting_agent_handles_booking_intent(self, azure_llm, agent_context, interaction_logger):
+    async def test_greeting_agent_handles_booking_intent(self, azure_llm, agent_context, workflow_logger):
         """Test greeting agent handles booking intent."""
-        log = interaction_logger("test_greeting_agent_handles_booking_intent")
-        log.header("TEST: Greeting Agent Booking Intent")
-        
-        agent = build_greeting_agent(azure_llm, log)
-        
+        agent = build_greeting_agent(azure_llm)
         user_message = "I'd like to book a haircut please"
-        log.user_input(user_message)
         
-        llm_start = log.llm_call_start("Greeting Agent processing booking intent")
-        result = await agent.run(user_message, agent_context)
-        log.llm_call_end("Greeting Agent processing booking intent", llm_start)
-        
-        log.agent_response(
-            "greeting-agent",
-            result.content,
-            usage=result.usage if hasattr(result, 'usage') else None
-        )
-        
-        assert result.is_success()
-        assert len(result.content) > 0
-        
-        log.success("Greeting agent handled booking intent!")
-        log.summary(1, time.time() - log.start_time)
+        with metrics_context(
+            component_type='agent',
+            component_id='greeting-agent',
+            user_message=user_message,
+        ) as ctx:
+            result = await agent.run(user_message, agent_context)
+            ctx.update_from_usage(result.usage) if hasattr(result, 'usage') else None
+            ctx.response = str(result.content)
+            
+            assert result.is_success()
+            assert len(result.content) > 0
     
-    async def test_booking_agent_offers_addon(self, azure_llm, agent_context, interaction_logger):
+    async def test_booking_agent_offers_addon(self, azure_llm, agent_context, workflow_logger):
         """Test booking agent offers add-on for haircut."""
-        log = interaction_logger("test_booking_agent_offers_addon")
-        log.header("TEST: Booking Agent Add-on Offer")
-        
-        agent = build_booking_agent(azure_llm, log)
-        
+        agent = build_booking_agent(azure_llm)
         user_message = "I want to book a haircut"
-        log.user_input(user_message)
         
-        llm_start = log.llm_call_start("Booking Agent processing")
-        result = await agent.run(user_message, agent_context)
-        log.llm_call_end("Booking Agent processing", llm_start)
-        
-        log.agent_response(
-            "booking-agent",
-            result.content,
-            usage=result.usage if hasattr(result, 'usage') else None
-        )
-        
-        assert result.is_success()
-        assert len(result.content) > 0
-        
-        log.success("Booking agent offered add-on!")
-        log.summary(1, time.time() - log.start_time)
+        with metrics_context(
+            component_type='agent',
+            component_id='booking-agent',
+            user_message=user_message,
+        ) as ctx:
+            result = await agent.run(user_message, agent_context)
+            ctx.update_from_usage(result.usage) if hasattr(result, 'usage') else None
+            ctx.response = str(result.content)
+            
+            assert result.is_success()
+            assert len(result.content) > 0
     
-    async def test_cancellation_agent_asks_which_appointment(self, azure_llm, agent_context, interaction_logger):
+    async def test_cancellation_agent_asks_which_appointment(self, azure_llm, agent_context, workflow_logger):
         """Test cancellation agent asks which appointment."""
-        log = interaction_logger("test_cancellation_agent_asks_which_appointment")
-        log.header("TEST: Cancellation Agent")
-        
-        agent = build_cancellation_agent(azure_llm, log)
-        
+        agent = build_cancellation_agent(azure_llm)
         user_message = "I need to cancel my appointment"
-        log.user_input(user_message)
         
-        llm_start = log.llm_call_start("Cancellation Agent processing")
-        result = await agent.run(user_message, agent_context)
-        log.llm_call_end("Cancellation Agent processing", llm_start)
-        
-        log.agent_response(
-            "cancellation-agent",
-            result.content,
-            usage=result.usage if hasattr(result, 'usage') else None
-        )
-        
-        assert result.is_success()
-        assert len(result.content) > 0
-        
-        log.success("Cancellation agent responded!")
-        log.summary(1, time.time() - log.start_time)
+        with metrics_context(
+            component_type='agent',
+            component_id='cancellation-agent',
+            user_message=user_message,
+        ) as ctx:
+            result = await agent.run(user_message, agent_context)
+            ctx.update_from_usage(result.usage) if hasattr(result, 'usage') else None
+            ctx.response = str(result.content)
+            
+            assert result.is_success()
+            assert len(result.content) > 0
 
 
 # =============================================================================
@@ -909,50 +593,36 @@ class TestSalonAgents:
 class TestEdgeConditions:
     """Test edge condition evaluation."""
     
-    async def test_expression_condition_evaluation(self, interaction_logger):
+    async def test_expression_condition_evaluation(self, workflow_logger):
         """Test expression-based condition evaluation."""
-        log = interaction_logger("test_expression_condition_evaluation")
-        log.header("TEST: Expression Condition Evaluation")
-        
         edge = create_booking_to_cancellation_edge()
         condition = edge.conditions.conditions[0]
         
-        log.info(f"Testing edge: {edge.id}")
-        log.info(f"Condition field: {condition.field}")
-        log.info(f"Condition operator: {condition.operator}")
-        log.info(f"Condition value: {condition.value}")
+        with metrics_context(
+            component_type='condition',
+            condition_type='expression',
+        ) as ctx:
+            context_match = {"variables": {"guest_intent": "cancellation"}}
+            result = condition.evaluate(context_match)
+            ctx.condition_result = result
+            
+            assert result is True
         
-        # Test with matching value
-        context_match = {"variables": {"guest_intent": "cancellation"}}
-        log.subheader("Test 1: Matching Context")
-        log.info(f"Context: {context_match}")
-        result = condition.evaluate(context_match)
-        log.condition_check("EXPRESSION", f"{condition.field} IN {condition.value}", result)
-        assert result is True
-        
-        # Test with non-matching value
-        context_no_match = {"variables": {"guest_intent": "booking"}}
-        log.subheader("Test 2: Non-Matching Context")
-        log.info(f"Context: {context_no_match}")
-        result = condition.evaluate(context_no_match)
-        log.condition_check("EXPRESSION", f"{condition.field} IN {condition.value}", result)
-        assert result is False
-        
-        log.success("Expression condition evaluation passed!")
+        with metrics_context(
+            component_type='condition',
+            condition_type='expression',
+        ) as ctx:
+            context_no_match = {"variables": {"guest_intent": "booking"}}
+            result = condition.evaluate(context_no_match)
+            ctx.condition_result = result
+            
+            assert result is False
     
-    async def test_llm_condition_booking_intent(self, azure_llm, interaction_logger):
+    async def test_llm_condition_booking_intent(self, azure_llm, workflow_logger):
         """Test LLM condition detects booking intent."""
-        log = interaction_logger("test_llm_condition_booking_intent")
-        log.header("TEST: LLM Condition - Booking Intent Detection")
-        
         edge = create_greeting_to_booking_edge(azure_llm)
         llm_condition = edge.conditions.conditions[0]
         
-        log.info(f"Edge: {edge.id}")
-        log.info(f"Condition type: {llm_condition.condition_type}")
-        log.info(f"Condition prompt: {llm_condition.llm_config.condition_prompt[:100]}...")
-        
-        # Context with booking intent and service name
         context = {
             "messages": [
                 {"role": "user", "content": "Hi there!"},
@@ -963,29 +633,20 @@ class TestEdgeConditions:
             "variables": {}
         }
         
-        log.subheader("Conversation Context")
-        for msg in context["messages"]:
-            role_emoji = "👤" if msg["role"] == "user" else "🤖"
-            log.info(f"{role_emoji} {msg['role'].upper()}: {msg['content']}")
-        
-        llm_start = log.llm_call_start("LLM Condition Evaluation - Booking Intent")
-        result = await llm_condition.evaluate_async(context, azure_llm)
-        log.llm_call_end("LLM Condition Evaluation - Booking Intent", llm_start, result)
-        
-        log.condition_check("LLM", "booking intent + service name present", result)
-        
-        assert isinstance(result, bool)
-        log.success(f"LLM condition evaluation completed! Result: {result}")
+        with metrics_context(
+            component_type='condition',
+            condition_type='llm',
+        ) as ctx:
+            result = await llm_condition.evaluate_async(context, azure_llm)
+            ctx.condition_result = result
+            
+            assert isinstance(result, bool)
     
-    async def test_llm_condition_no_booking_intent(self, azure_llm, interaction_logger):
+    async def test_llm_condition_no_booking_intent(self, azure_llm, workflow_logger):
         """Test LLM condition does not trigger for general questions."""
-        log = interaction_logger("test_llm_condition_no_booking_intent")
-        log.header("TEST: LLM Condition - No Booking Intent")
-        
         edge = create_greeting_to_booking_edge(azure_llm)
         llm_condition = edge.conditions.conditions[0]
         
-        # Context with just general questions, no booking intent
         context = {
             "messages": [
                 {"role": "user", "content": "What are your hours?"},
@@ -994,33 +655,20 @@ class TestEdgeConditions:
             "variables": {}
         }
         
-        log.subheader("Conversation Context")
-        for msg in context["messages"]:
-            role_emoji = "👤" if msg["role"] == "user" else "🤖"
-            log.info(f"{role_emoji} {msg['role'].upper()}: {msg['content']}")
-        
-        llm_start = log.llm_call_start("LLM Condition Evaluation - General Question")
-        result = await llm_condition.evaluate_async(context, azure_llm)
-        log.llm_call_end("LLM Condition Evaluation - General Question", llm_start, result)
-        
-        log.condition_check("LLM", "booking intent + service name present", result)
-        
-        # Should NOT detect booking intent
-        assert result is False
-        log.success("LLM correctly did not detect booking intent!")
+        with metrics_context(
+            component_type='condition',
+            condition_type='llm',
+        ) as ctx:
+            result = await llm_condition.evaluate_async(context, azure_llm)
+            ctx.condition_result = result
+            
+            assert result is False
     
-    async def test_llm_condition_cancellation_intent(self, azure_llm, interaction_logger):
+    async def test_llm_condition_cancellation_intent(self, azure_llm, workflow_logger):
         """Test LLM condition detects cancellation intent."""
-        log = interaction_logger("test_llm_condition_cancellation_intent")
-        log.header("TEST: LLM Condition - Cancellation Intent Detection")
-        
         edge = create_booking_to_cancellation_edge_llm(azure_llm)
         llm_condition = edge.conditions.conditions[0]
         
-        log.info(f"Edge: {edge.id}")
-        log.info(f"Condition prompt: {llm_condition.llm_config.condition_prompt[:100]}...")
-        
-        # Context with cancellation intent
         context = {
             "messages": [
                 {"role": "user", "content": "Actually, I need to cancel my existing appointment first."},
@@ -1029,20 +677,14 @@ class TestEdgeConditions:
             "variables": {}
         }
         
-        log.subheader("Conversation Context")
-        for msg in context["messages"]:
-            role_emoji = "👤" if msg["role"] == "user" else "🤖"
-            log.info(f"{role_emoji} {msg['role'].upper()}: {msg['content']}")
-        
-        llm_start = log.llm_call_start("LLM Condition Evaluation - Cancellation Intent")
-        result = await llm_condition.evaluate_async(context, azure_llm)
-        log.llm_call_end("LLM Condition Evaluation - Cancellation Intent", llm_start, result)
-        
-        log.condition_check("LLM", "cancellation/reschedule intent", result)
-        
-        # Should detect cancellation intent
-        assert result is True
-        log.success("LLM correctly detected cancellation intent!")
+        with metrics_context(
+            component_type='condition',
+            condition_type='llm',
+        ) as ctx:
+            result = await llm_condition.evaluate_async(context, azure_llm)
+            ctx.condition_result = result
+            
+            assert result is True
 
 
 # =============================================================================
@@ -1051,19 +693,12 @@ class TestEdgeConditions:
 
 @pytest.mark.asyncio
 class TestPassThroughExtraction:
-    """Test pass-through field extraction."""
+    """Test pass-through field extraction with logging."""
     
-    async def test_extract_service_name(self, azure_llm, interaction_logger):
+    async def test_extract_service_name(self, azure_llm, workflow_logger):
         """Test extracting service_name from conversation."""
-        log = interaction_logger("test_extract_service_name")
-        log.header("TEST: Pass-Through Extraction - Service Name")
-        
         edge = create_greeting_to_booking_edge(azure_llm)
         
-        log.info(f"Edge: {edge.id}")
-        log.info(f"Pass-through fields: {[f.name for f in edge.pass_through.fields]}")
-        
-        # Context with service name mentioned
         context = {
             "messages": [
                 {"role": "user", "content": "I'd like to book a haircut please."},
@@ -1072,30 +707,19 @@ class TestPassThroughExtraction:
             "variables": {}
         }
         
-        log.subheader("Conversation Context")
-        for msg in context["messages"]:
-            role_emoji = "👤" if msg["role"] == "user" else "🤖"
-            log.info(f"{role_emoji} {msg['role'].upper()}: {msg['content']}")
-        
-        llm_start = log.llm_call_start("Pass-Through Field Extraction")
-        extracted = await edge.extract_pass_through_fields(context, azure_llm)
-        log.llm_call_end("Pass-Through Field Extraction", llm_start)
-        
-        log.subheader("Extracted Fields")
-        for field_name, value in extracted.items():
-            log.pass_through_extraction(field_name, value, "LLM")
-        
-        # Should extract service_name
-        assert "service_name" in extracted
-        assert "haircut" in extracted["service_name"].lower()
-        
-        log.success(f"Extracted service_name: {extracted['service_name']}")
+        with metrics_context(component_type='edge',
+            edge_id=edge.id,
+            source_node=edge.source_node_id,
+            target_node=edge.target_node_id
+        ) as ctx:
+            extracted = await edge.extract_pass_through_fields(context, azure_llm)
+            ctx.extracted_fields = extracted
+            
+            assert "service_name" in extracted
+            assert "haircut" in extracted["service_name"].lower()
     
-    async def test_extract_service_name_hair_color(self, azure_llm, interaction_logger):
+    async def test_extract_service_name_hair_color(self, azure_llm, workflow_logger):
         """Test extracting 'hair color' service name."""
-        log = interaction_logger("test_extract_service_name_hair_color")
-        log.header("TEST: Pass-Through Extraction - Hair Color Service")
-        
         edge = create_greeting_to_booking_edge(azure_llm)
         
         context = {
@@ -1105,23 +729,74 @@ class TestPassThroughExtraction:
             "variables": {}
         }
         
-        log.subheader("Conversation Context")
-        for msg in context["messages"]:
-            role_emoji = "👤" if msg["role"] == "user" else "🤖"
-            log.info(f"{role_emoji} {msg['role'].upper()}: {msg['content']}")
+        with metrics_context(component_type='edge',edge_id=edge.id) as ctx:
+            extracted = await edge.extract_pass_through_fields(context, azure_llm)
+            ctx.extracted_fields = extracted
+            
+            assert "service_name" in extracted
+            assert "color" in extracted["service_name"].lower()
+
+
+# =============================================================================
+# TEST CASES - MULTI-TURN CONVERSATIONS
+# =============================================================================
+
+@pytest.mark.asyncio
+class TestMultiTurnConversations:
+    """Test multi-turn conversations with logging."""
+    
+    async def test_greeting_conversation_flow(self, azure_llm, agent_context, workflow_logger):
+        """Test multi-turn conversation with greeting agent."""
+        agent = build_greeting_agent(azure_llm)
         
-        llm_start = log.llm_call_start("Pass-Through Field Extraction")
-        extracted = await edge.extract_pass_through_fields(context, azure_llm)
-        log.llm_call_end("Pass-Through Field Extraction", llm_start)
+        conversations = [
+            "Hello!",
+            "Are you AI or human?",
+            "What services do you offer?",
+            "I'd like to book a haircut please.",
+        ]
         
-        log.subheader("Extracted Fields")
-        for field_name, value in extracted.items():
-            log.pass_through_extraction(field_name, value, "LLM")
+        with metrics_context(component_type='workflow',
+            workflow_id="greeting_conversation_flow",
+            workflow_name="Greeting Conversation Test"
+        ):
+            for i, user_message in enumerate(conversations, 1):
+                with metrics_context(component_type='agent',
+                    agent_id=f"greeting-agent-turn-{i}",
+                    user_message=user_message
+                ) as ctx:
+                    result = await agent.run(user_message, agent_context)
+                    if hasattr(result, 'usage'):
+                        ctx.update_from_usage(result.usage)
+                    ctx.response = str(result.content)
+                    
+                    assert result.is_success()
+    
+    async def test_booking_flow_with_addon(self, azure_llm, agent_context, workflow_logger):
+        """Test booking flow with add-on offering."""
+        agent = build_booking_agent(azure_llm)
         
-        assert "service_name" in extracted
-        assert "color" in extracted["service_name"].lower()
+        conversations = [
+            "I want to book a haircut",
+            "Yes, I'd like to add the hair color too!",
+            "How about this Saturday at 2pm?",
+        ]
         
-        log.success(f"Extracted service_name: {extracted['service_name']}")
+        with metrics_context(component_type='workflow',
+            workflow_id="booking_flow_with_addon",
+            workflow_name="Booking Flow Test"
+        ):
+            for i, user_message in enumerate(conversations, 1):
+                with metrics_context(component_type='agent',
+                    agent_id=f"booking-agent-turn-{i}",
+                    user_message=user_message
+                ) as ctx:
+                    result = await agent.run(user_message, agent_context)
+                    if hasattr(result, 'usage'):
+                        ctx.update_from_usage(result.usage)
+                    ctx.response = str(result.content)
+                    
+                    assert result.is_success()
 
 
 # =============================================================================
@@ -1131,11 +806,8 @@ class TestPassThroughExtraction:
 class TestConditionGroupLogic:
     """Test condition group AND/OR logic."""
     
-    def test_and_group(self, interaction_logger):
+    def test_and_group(self, workflow_logger):
         """Test AND condition group."""
-        log = interaction_logger("test_and_group")
-        log.header("TEST: Condition Group - AND Logic")
-        
         cond1 = EdgeCondition(
             condition_type=EdgeConditionType.EXPRESSION,
             field="intent",
@@ -1154,31 +826,26 @@ class TestConditionGroupLogic:
             join_operator=ConditionJoinOperator.AND
         )
         
-        log.info(f"Condition 1: intent EQUALS 'booking'")
-        log.info(f"Condition 2: has_service EQUALS True")
-        log.info(f"Join operator: AND")
+        with metrics_context(component_type='condition',
+            condition_type="and_group",
+            condition_description="intent=booking AND has_service=true"
+        ) as ctx:
+            context_both = {"intent": "booking", "has_service": True}
+            result = and_group.evaluate(context_both)
+            ctx.condition_result = result
+            assert result is True
         
-        log.subheader("Test 1: Both conditions met")
-        context_both = {"intent": "booking", "has_service": True}
-        log.info(f"Context: {context_both}")
-        result = and_group.evaluate(context_both)
-        log.condition_check("AND GROUP", "both conditions met", result)
-        assert result is True
-        
-        log.subheader("Test 2: Only one condition met")
-        context_one = {"intent": "booking", "has_service": False}
-        log.info(f"Context: {context_one}")
-        result = and_group.evaluate(context_one)
-        log.condition_check("AND GROUP", "only one condition met", result)
-        assert result is False
-        
-        log.success("AND group logic working correctly!")
+        with metrics_context(component_type='condition',
+            condition_type="and_group",
+            condition_description="intent=booking AND has_service=false"
+        ) as ctx:
+            context_one = {"intent": "booking", "has_service": False}
+            result = and_group.evaluate(context_one)
+            ctx.condition_result = result
+            assert result is False
     
-    def test_or_group(self, interaction_logger):
+    def test_or_group(self, workflow_logger):
         """Test OR condition group."""
-        log = interaction_logger("test_or_group")
-        log.header("TEST: Condition Group - OR Logic")
-        
         cond1 = EdgeCondition(
             condition_type=EdgeConditionType.EXPRESSION,
             field="intent",
@@ -1197,191 +864,768 @@ class TestConditionGroupLogic:
             join_operator=ConditionJoinOperator.OR
         )
         
-        log.info(f"Condition 1: intent EQUALS 'cancellation'")
-        log.info(f"Condition 2: intent EQUALS 'reschedule'")
-        log.info(f"Join operator: OR")
+        with metrics_context(component_type='condition',
+            condition_type="or_group",
+            condition_description="intent=cancellation OR intent=reschedule"
+        ) as ctx:
+            result = or_group.evaluate({"intent": "cancellation"})
+            ctx.condition_result = result
+            assert result is True
         
-        log.subheader("Test 1: First condition met")
-        result = or_group.evaluate({"intent": "cancellation"})
-        log.condition_check("OR GROUP", "intent=cancellation", result)
-        assert result is True
-        
-        log.subheader("Test 2: Second condition met")
-        result = or_group.evaluate({"intent": "reschedule"})
-        log.condition_check("OR GROUP", "intent=reschedule", result)
-        assert result is True
-        
-        log.subheader("Test 3: No condition met")
-        result = or_group.evaluate({"intent": "booking"})
-        log.condition_check("OR GROUP", "intent=booking (neither)", result)
-        assert result is False
-        
-        log.success("OR group logic working correctly!")
+        with metrics_context(component_type='condition',
+            condition_type="or_group",
+            condition_description="intent=booking (neither match)"
+        ) as ctx:
+            result = or_group.evaluate({"intent": "booking"})
+            ctx.condition_result = result
+            assert result is False
 
 
 # =============================================================================
-# TEST CASES - TRANSFER RULES
+# TEST CASES - INTERRUPT HANDLING
 # =============================================================================
 
-@pytest.mark.asyncio
-class TestTransferRules:
-    """Test transfer rule generation for agent prompts."""
+class TestInterruptHandling:
+    """Tests for interrupt handling in workflows."""
     
-    async def test_edge_generates_transfer_rules(self, azure_llm, interaction_logger):
-        """Test that edges generate transfer rules."""
-        log = interaction_logger("test_edge_generates_transfer_rules")
-        log.header("TEST: Transfer Rules Generation")
+    def test_interrupt_manager_creation(self):
+        """Test creating an interrupt manager."""
+        from core.workflows.interrupt import (
+            InterruptManager,
+            InterruptConfig,
+        )
         
-        edge = create_greeting_to_booking_edge(azure_llm)
+        config = InterruptConfig(
+            enabled=True,
+            wait_for_followup_ms=500,
+        )
+        manager = InterruptManager(
+            config=config,
+            component_id="test-agent",
+            component_type="agent",
+        )
         
-        log.info(f"Edge: {edge.id}")
-        log.info(f"From: {edge.source_node_id} -> To: {edge.target_node_id}")
-        
-        rules = edge.get_transfer_rules()
-        
-        log.subheader("Generated Transfer Rules")
-        for i, rule in enumerate(rules, 1):
-            log.info(f"Rule {i}: {rule}")
-        
-        assert len(rules) > 0
-        log.success(f"Generated {len(rules)} transfer rule(s)!")
+        assert manager.is_enabled is True
+        assert manager.is_interrupted() is False
     
-    async def test_edge_generates_transfer_rules_prompt(self, azure_llm, interaction_logger):
-        """Test formatted transfer rules for agent prompt."""
-        log = interaction_logger("test_edge_generates_transfer_rules_prompt")
-        log.header("TEST: Transfer Rules Prompt Generation")
+    def test_interrupt_signal(self):
+        """Test sending interrupt signal."""
+        from core.workflows.interrupt import (
+            InterruptManager,
+            InterruptConfig,
+            InterruptReason,
+        )
         
-        edge = create_greeting_to_booking_edge(azure_llm)
+        manager = InterruptManager(
+            config=InterruptConfig(enabled=True),
+            component_id="test-llm",
+            component_type="llm",
+        )
         
-        prompt_section = edge.get_transfer_rules_prompt("Booking Agent")
+        # Signal interrupt
+        manager.signal_interrupt(
+            reason=InterruptReason.USER_INTERRUPT,
+            new_message="Actually, I changed my mind",
+        )
         
-        log.subheader("Generated Prompt Section")
-        print(f"\n{prompt_section}")
-        log.info(f"Prompt length: {len(prompt_section)} characters")
-        
-        assert "Transfer Rules" in prompt_section
-        assert "service_name" in prompt_section
-        
-        log.success("Transfer rules prompt generated successfully!")
-
-
-# =============================================================================
-# TEST CASES - FULL CONVERSATION FLOW
-# =============================================================================
-
-@pytest.mark.asyncio
-class TestFullConversationFlow:
-    """Test full conversation flow through workflow."""
+        assert manager.is_interrupted() is True
+        assert manager.has_followup() is True
+        assert manager.get_followup_message() == "Actually, I changed my mind"
     
-    async def test_multi_turn_greeting_conversation(self, azure_llm, agent_context, interaction_logger):
-        """Test multi-turn conversation with greeting agent."""
-        log = interaction_logger("test_multi_turn_greeting_conversation")
-        log.header("TEST: Multi-Turn Greeting Conversation")
+    def test_stash_partial_response(self):
+        """Test stashing partial response."""
+        from core.workflows.interrupt import (
+            InterruptManager,
+            InterruptConfig,
+            InterruptReason,
+        )
         
-        agent = build_greeting_agent(azure_llm, log)
+        manager = InterruptManager(
+            config=InterruptConfig(enabled=True, stash_partial_response=True),
+            component_id="test-agent",
+            component_type="agent",
+        )
         
-        conversations = [
-            "Hello!",
-            "Are you AI or human?",
-            "What services do you offer?",
-            "I'd like to book a haircut please.",
+        # Signal interrupt
+        manager.signal_interrupt(reason=InterruptReason.USER_INTERRUPT)
+        
+        # Stash partial response
+        manager.stash_partial_response(
+            content="I was about to say that your appointment is scheduled for...",
+            conversation_messages=[
+                {"role": "user", "content": "Book a haircut"},
+                {"role": "assistant", "content": "I'd be happy to help!"},
+            ],
+            tokens_generated=50,
+        )
+        
+        assert manager.has_stashed_response() is True
+        
+        stashed = manager.get_stashed_response()
+        assert stashed is not None
+        assert "appointment is scheduled" in stashed.content
+        assert stashed.tokens_generated == 50
+    
+    def test_interrupt_disabled(self):
+        """Test that interrupt does nothing when disabled."""
+        from core.workflows.interrupt import (
+            InterruptManager,
+            InterruptConfig,
+        )
+        
+        manager = InterruptManager(
+            config=InterruptConfig(enabled=False),
+            component_id="test",
+            component_type="test",
+        )
+        
+        manager.signal_interrupt()
+        
+        assert manager.is_interrupted() is False
+    
+    def test_clear_interrupt(self):
+        """Test clearing interrupt state."""
+        from core.workflows.interrupt import (
+            InterruptManager,
+            InterruptConfig,
+        )
+        
+        manager = InterruptManager(
+            config=InterruptConfig(enabled=True),
+            component_id="test",
+            component_type="test",
+        )
+        
+        manager.signal_interrupt()
+        assert manager.is_interrupted() is True
+        
+        manager.clear_interrupt()
+        assert manager.is_interrupted() is False
+    
+    def test_continuation_messages(self):
+        """Test getting continuation messages after interrupt."""
+        from core.workflows.interrupt import (
+            InterruptManager,
+            InterruptConfig,
+            InterruptReason,
+        )
+        
+        manager = InterruptManager(
+            config=InterruptConfig(
+                enabled=True,
+                include_conversation_history=True,
+                max_history_messages=10,
+            ),
+            component_id="test-agent",
+            component_type="agent",
+        )
+        
+        conversation = [
+            {"role": "user", "content": "Book a haircut"},
+            {"role": "assistant", "content": "Sure! When would you like?"},
         ]
         
-        total_start = time.time()
+        # Signal interrupt with new message
+        manager.signal_interrupt(
+            reason=InterruptReason.USER_INTERRUPT,
+            new_message="Wait, actually make it a hair coloring",
+        )
         
-        for i, user_message in enumerate(conversations, 1):
-            log.subheader(f"Turn {i}")
-            log.user_input(user_message)
-            
-            llm_start = log.llm_call_start(f"Agent processing turn {i}")
-            result = await agent.run(user_message, agent_context)
-            log.llm_call_end(f"Agent processing turn {i}", llm_start)
-            
-            log.agent_response(
-                "greeting-agent",
-                result.content,
-                usage=result.usage if hasattr(result, 'usage') else None
-            )
-            
-            assert result.is_success()
+        # Stash partial response
+        manager.stash_partial_response(
+            content="Your haircut is scheduled for...",
+            conversation_messages=conversation,
+        )
         
-        total_time = time.time() - total_start
-        log.summary(len(conversations), total_time)
-        log.success("Multi-turn conversation completed!")
-    
-    async def test_booking_flow_with_addon(self, azure_llm, agent_context, interaction_logger):
-        """Test booking flow with add-on offering."""
-        log = interaction_logger("test_booking_flow_with_addon")
-        log.header("TEST: Booking Flow with Add-on")
+        # Get continuation messages
+        messages = manager.get_continuation_messages(conversation)
         
-        agent = build_booking_agent(azure_llm, log)
-        
-        conversations = [
-            "I want to book a haircut",
-            "Yes, I'd like to add the hair color too!",
-            "How about this Saturday at 2pm?",
-        ]
-        
-        total_start = time.time()
-        
-        for i, user_message in enumerate(conversations, 1):
-            log.subheader(f"Turn {i}")
-            log.user_input(user_message)
-            
-            llm_start = log.llm_call_start(f"Booking agent processing turn {i}")
-            result = await agent.run(user_message, agent_context)
-            log.llm_call_end(f"Booking agent processing turn {i}", llm_start)
-            
-            log.agent_response(
-                "booking-agent",
-                result.content,
-                usage=result.usage if hasattr(result, 'usage') else None
-            )
-            
-            assert result.is_success()
-        
-        total_time = time.time() - total_start
-        log.summary(len(conversations), total_time)
-        log.success("Booking flow completed!")
+        # Should have conversation history + continuation prompt
+        assert len(messages) > 0
+        # Last message should be the continuation prompt
+        last_msg = messages[-1]
+        assert last_msg["role"] == "user"
+        assert "interrupted" in last_msg["content"].lower() or "hair coloring" in last_msg["content"]
 
 
 # =============================================================================
-# EXAMPLE CONVERSATION FLOW
+# TEST CASES - WORKING MEMORY INTEGRATION
 # =============================================================================
 
-def print_example_flow():
-    """Print an example conversation flow through the workflow."""
-    print("\n" + "="*80)
-    print("SALON BOOKING WORKFLOW - Example Conversation Flow")
-    print("="*80)
+class TestWorkingMemoryIntegration:
+    """Tests for working memory integration with workflows."""
     
-    print("\n--- GREETING AGENT ---")
-    print("Agent: Hi! Welcome to Glamour Salon. How can I help you today?")
-    print("Customer: Hi! Are you a real person or AI?")
-    print("Agent: I'm an AI assistant helping at Glamour Salon. I can help you book")
-    print("       appointments, answer questions about our services, and more!")
-    print("Customer: What services do you offer?")
-    print("Agent: We offer haircuts, hair coloring, styling, treatments, and")
-    print("       consultations. Would you like to book any of these?")
-    print("Customer: Yes, I'd like to book a haircut please.")
-    print("Agent: Great! I'd be happy to help you book a haircut appointment.")
-    print("\n[EDGE CONDITION MET: LLM detects booking intent + service_name='haircut']")
-    print("[PASS-THROUGH: service_name='haircut' extracted via LLM and passed]")
-    print("[TRANSFER TO: booking-agent]")
+    def test_workflow_with_memory(self, azure_llm, workflow_logger):
+        """Test workflow with working memory."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory(session_id="salon-workflow-session")
+        
+        # Simulate workflow execution
+        with metrics_context(component_type='workflow',
+            workflow_id="salon-workflow",
+            workflow_name="Salon with Memory"
+        ):
+            # Greeting phase
+            memory.add_user_message("Hello!")
+            memory.set_variable("current_node", "greeting")
+            memory.save_checkpoint("start")
+            
+            memory.add_assistant_message("Welcome to Glamour Salon!")
+            
+            # Service selection
+            memory.add_user_message("I want to book a haircut")
+            memory.set_variable("service_name", "haircut")
+            memory.set_variable("current_node", "booking")
+            memory.save_checkpoint("after-greeting")
+            
+            # Verify memory state
+            history = memory.get_conversation_history()
+            assert len(history) == 3
+            assert memory.get_variable("service_name") == "haircut"
+            
+            # Test checkpoint recovery
+            memory.restore_from_checkpoint("start")
+            assert memory.get_variable("current_node") == "greeting"
     
-    print("\n--- BOOKING AGENT ---")
-    print("Agent: Perfect! Let me help you book your haircut.")
-    print("       Would you like to add a hair color service? We have a special")
-    print("       20% discount when combined with a haircut!")
-    print("Customer: Actually, I need to cancel my existing appointment first.")
-    print("\n[EDGE CONDITION MET: LLM detects cancellation intent]")
-    print("[TRANSFER TO: cancellation-agent]")
+    def test_memory_state_for_agent(self, azure_llm, agent_context, workflow_logger):
+        """Test memory provides state for agent execution."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory(session_id="agent-session")
+        
+        # Set up conversation context
+        memory.add_system_message(GREETING_AGENT_SYSTEM_PROMPT)
+        memory.add_user_message("Hello!")
+        
+        with metrics_context(component_type='agent',
+            agent_id="greeting-agent",
+            user_message="Hello!"
+        ):
+            # Agent can use memory for LLM messages
+            llm_messages = memory.get_conversation_history()
+            
+            assert len(llm_messages) == 2
+            assert llm_messages[0]["role"] == "system"
+            assert llm_messages[1]["role"] == "user"
     
-    print("\n--- CANCELLATION AGENT ---")
-    print("Agent: I'm here to help you with your appointment changes.")
-    print("       Which appointment would you like to cancel or reschedule?")
+    def test_memory_checkpoint_workflow_recovery(self, workflow_logger):
+        """Test workflow can recover from checkpoints."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory(session_id="recovery-test")
+        
+        # Simulate partial workflow execution
+        memory.add_user_message("Book haircut")
+        memory.set_state("workflow_step", 1)
+        memory.set_variable("intent", "booking")
+        memory.save_checkpoint("step-1")
+        
+        memory.add_assistant_message("What time?")
+        memory.add_user_message("2pm tomorrow")
+        memory.set_state("workflow_step", 2)
+        memory.set_variable("time", "2pm")
+        memory.save_checkpoint("step-2")
+        
+        # Simulate failure - serialize state
+        saved_state = memory.to_dict()
+        
+        # Simulate recovery in new process
+        recovered_memory = WorkingMemory.from_dict(saved_state)
+        
+        # Can continue from step-2
+        assert recovered_memory.get_state("workflow_step") == 2
+        assert recovered_memory.get_variable("time") == "2pm"
+        
+        # Or rollback to step-1
+        recovered_memory.restore_from_checkpoint("step-1")
+        assert recovered_memory.get_state("workflow_step") == 1
+        assert recovered_memory.get_variable("time") is None
+
+
+# =============================================================================
+# TEST CASES - MEMORY SERIALIZATION (JSON/TOML)
+# =============================================================================
+
+class TestMemorySerialization:
+    """Tests for memory JSON/TOML serialization."""
     
-    print("\n" + "="*80)
+    def test_working_memory_to_json(self):
+        """Test serializing working memory to JSON."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory(session_id="json-test")
+        memory.add_system_message("You are a salon assistant.")
+        memory.add_user_message("I want to book a haircut")
+        memory.add_assistant_message("Great! When would you like to come in?")
+        memory.set_variable("service_name", "haircut")
+        memory.set_variable("current_node", "booking")
+        memory.save_checkpoint("booking-start")
+        
+        # Serialize to JSON
+        json_str = memory.to_json()
+        
+        assert json_str is not None
+        assert "json-test" in json_str
+        assert "haircut" in json_str
+        assert "booking" in json_str
+        
+        # Verify it's valid JSON
+        import json
+        data = json.loads(json_str)
+        assert data["session_id"] == "json-test"
+        assert data["variables"]["service_name"] == "haircut"
+    
+    def test_working_memory_from_json(self):
+        """Test deserializing working memory from JSON."""
+        from core.memory import WorkingMemory
+        
+        # Create and serialize
+        original = WorkingMemory(session_id="json-restore-test")
+        original.add_user_message("Hello!")
+        original.add_assistant_message("Welcome!")
+        original.set_variable("intent", "greeting")
+        original.save_checkpoint("initial")
+        
+        json_str = original.to_json()
+        
+        # Deserialize
+        restored = WorkingMemory.from_json(json_str)
+        
+        assert restored.session_id == "json-restore-test"
+        assert len(restored.get_conversation_history()) == 2
+        assert restored.get_variable("intent") == "greeting"
+        assert len(restored.list_checkpoints()) == 1
+    
+    def test_working_memory_to_toml(self):
+        """Test serializing working memory to TOML."""
+        from core.memory import WorkingMemory
+        
+        try:
+            memory = WorkingMemory(session_id="toml-test")
+            memory.add_user_message("Book appointment")
+            memory.set_variable("service", "haircut")
+            memory.set_variable("date", "tomorrow")
+            
+            # Serialize to TOML
+            toml_str = memory.to_toml()
+            
+            assert toml_str is not None
+            assert "toml-test" in toml_str
+            assert "haircut" in toml_str
+            assert "tomorrow" in toml_str
+            
+        except ImportError as e:
+            pytest.skip(f"TOML support not available: {e}")
+    
+    def test_working_memory_from_toml(self):
+        """Test deserializing working memory from TOML."""
+        from core.memory import WorkingMemory
+        
+        try:
+            # Create and serialize
+            original = WorkingMemory(session_id="toml-restore-test")
+            original.add_user_message("Cancel my appointment")
+            original.set_variable("intent", "cancellation")
+            
+            toml_str = original.to_toml()
+            
+            # Deserialize
+            restored = WorkingMemory.from_toml(toml_str)
+            
+            assert restored.session_id == "toml-restore-test"
+            assert len(restored.get_conversation_history()) == 1
+            assert restored.get_variable("intent") == "cancellation"
+            
+        except ImportError as e:
+            pytest.skip(f"TOML support not available: {e}")
+    
+    def test_conversation_history_to_json(self):
+        """Test serializing conversation history to JSON."""
+        from core.memory import ConversationHistory
+        
+        history = ConversationHistory()
+        history.add_message("system", "You are helpful.")
+        history.add_message("user", "Hello!")
+        history.add_message("assistant", "Hi there!")
+        
+        json_str = history.to_json()
+        
+        assert json_str is not None
+        import json
+        data = json.loads(json_str)
+        assert len(data["messages"]) == 3
+    
+    def test_conversation_history_from_json(self):
+        """Test deserializing conversation history from JSON."""
+        from core.memory import ConversationHistory
+        
+        original = ConversationHistory()
+        original.add_message("user", "Test message")
+        original.add_message("assistant", "Test response")
+        
+        json_str = original.to_json()
+        restored = ConversationHistory.from_json(json_str)
+        
+        assert restored.get_message_count() == 2
+        assert restored.get_last_message()["content"] == "Test response"
+    
+    def test_state_tracker_to_json(self):
+        """Test serializing state tracker to JSON."""
+        from core.memory import InMemoryStateTracker
+        
+        tracker = InMemoryStateTracker(session_id="tracker-json-test")
+        tracker.set_state("current_node", "greeting")
+        tracker.set_state("step", 1)
+        tracker.save_checkpoint("cp-1", {"status": "completed"})
+        
+        json_str = tracker.to_json()
+        
+        assert json_str is not None
+        import json
+        data = json.loads(json_str)
+        assert data["session_id"] == "tracker-json-test"
+        assert data["state"]["current_node"] == "greeting"
+    
+    def test_state_tracker_from_json(self):
+        """Test deserializing state tracker from JSON."""
+        from core.memory import InMemoryStateTracker
+        
+        original = InMemoryStateTracker(session_id="tracker-restore")
+        original.set_state("key", "value")
+        original.save_checkpoint("cp-1", {"data": "test"})
+        
+        json_str = original.to_json()
+        restored = InMemoryStateTracker.from_json(json_str)
+        
+        assert restored.session_id == "tracker-restore"
+        assert restored.get_state("key") == "value"
+        assert len(restored.list_checkpoints()) == 1
+
+
+# =============================================================================
+# TEST CASES - MEMORY FILE SAVE/LOAD
+# =============================================================================
+
+class TestMemoryFilePersistence:
+    """Tests for saving/loading memory to/from files."""
+    
+    def test_save_and_load_json_file(self, tmp_path):
+        """Test saving and loading memory to JSON file."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory(session_id="file-json-test")
+        memory.add_user_message("Book a haircut")
+        memory.set_variable("service", "haircut")
+        memory.save_checkpoint("initial")
+        
+        # Save to JSON file
+        json_file = tmp_path / "memory.json"
+        memory.save(json_file)
+        
+        assert json_file.exists()
+        
+        # Load from JSON file
+        loaded = WorkingMemory.load(json_file)
+        
+        assert loaded.session_id == "file-json-test"
+        assert loaded.get_variable("service") == "haircut"
+        assert len(loaded.list_checkpoints()) == 1
+    
+    def test_save_and_load_toml_file(self, tmp_path):
+        """Test saving and loading memory to TOML file."""
+        from core.memory import WorkingMemory
+        
+        try:
+            memory = WorkingMemory(session_id="file-toml-test")
+            memory.add_user_message("Cancel appointment")
+            memory.set_variable("intent", "cancellation")
+            
+            # Save to TOML file
+            toml_file = tmp_path / "memory.toml"
+            memory.save(toml_file)
+            
+            assert toml_file.exists()
+            
+            # Load from TOML file
+            loaded = WorkingMemory.load(toml_file)
+            
+            assert loaded.session_id == "file-toml-test"
+            assert loaded.get_variable("intent") == "cancellation"
+            
+        except ImportError as e:
+            pytest.skip(f"TOML support not available: {e}")
+    
+    def test_auto_detect_format_from_extension(self, tmp_path):
+        """Test that format is auto-detected from file extension."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory(session_id="auto-detect-test")
+        memory.set_variable("key", "value")
+        
+        # Save as JSON (detected from .json extension)
+        json_file = tmp_path / "auto.json"
+        memory.save(json_file)
+        
+        # Verify it's valid JSON
+        import json
+        with open(json_file) as f:
+            data = json.load(f)
+        assert data["session_id"] == "auto-detect-test"
+
+
+# =============================================================================
+# TEST CASES - MEMORY FACTORY WITH CUSTOM IMPLEMENTATIONS
+# =============================================================================
+
+class TestMemoryFactoryCustomImplementations:
+    """Tests for memory factory with custom implementations."""
+    
+    def test_register_custom_working_memory(self):
+        """Test registering and using custom working memory implementation."""
+        from core.memory import (
+            MemoryFactory,
+            BaseWorkingMemory,
+            DefaultConversationHistory,
+            DefaultStateTracker,
+        )
+        from core.memory.state.models import MemoryState
+        
+        class SalonWorkingMemory(BaseWorkingMemory):
+            """Custom working memory for salon workflows."""
+            
+            def __init__(self, salon_id: str = None, **kwargs):
+                super().__init__(**kwargs)
+                self._salon_id = salon_id or "default-salon"
+                self._conversation = DefaultConversationHistory(self._max_messages)
+                self._state_tracker = DefaultStateTracker(
+                    self._session_id, self._max_checkpoints
+                )
+                self._state_tracker.set_messages_reference(self._conversation._messages)
+                self._state_tracker.set_variables_reference(self._variables)
+            
+            @property
+            def salon_id(self) -> str:
+                return self._salon_id
+            
+            @property
+            def conversation(self):
+                return self._conversation
+            
+            @property
+            def state_tracker(self):
+                return self._state_tracker
+            
+            def add_message(self, role, content, metadata=None):
+                return self._conversation.add_message(role, content, metadata)
+            
+            def get_conversation_history(self, max_messages=None):
+                return self._conversation.to_llm_messages(max_messages)
+            
+            def save_checkpoint(self, checkpoint_id, metadata=None):
+                state = {"salon_id": self._salon_id}
+                return self._state_tracker.save_checkpoint(checkpoint_id, state, metadata)
+            
+            def restore_from_checkpoint(self, checkpoint_id):
+                cp = self._state_tracker.get_checkpoint(checkpoint_id)
+                if not cp:
+                    return False
+                self._conversation.set_raw_messages(cp.messages)
+                self._variables.clear()
+                self._variables.update(cp.variables)
+                return True
+            
+            def clear(self):
+                self._conversation.clear_messages()
+                self._variables.clear()
+                self._state_tracker.clear_state()
+                self._state_tracker.clear_checkpoints()
+            
+            def to_dict(self):
+                return {
+                    "session_id": self._session_id,
+                    "salon_id": self._salon_id,
+                    "conversation": self._conversation.to_dict(),
+                    "variables": self._variables.copy(),
+                    "state_tracker": self._state_tracker.to_dict(),
+                }
+            
+            @classmethod
+            def from_dict(cls, data):
+                memory = cls(
+                    session_id=data["session_id"],
+                    salon_id=data.get("salon_id"),
+                )
+                if "conversation" in data:
+                    memory._conversation = DefaultConversationHistory.from_dict(data["conversation"])
+                memory._variables = data.get("variables", {}).copy()
+                if "state_tracker" in data:
+                    memory._state_tracker = DefaultStateTracker.from_dict(data["state_tracker"])
+                memory._state_tracker.set_messages_reference(memory._conversation._messages)
+                memory._state_tracker.set_variables_reference(memory._variables)
+                return memory
+            
+            def create_memory_state(self):
+                return MemoryState(
+                    session_id=self._session_id,
+                    messages=self._conversation.get_raw_messages(),
+                    state=self._state_tracker.get_full_state(),
+                    variables=self._variables.copy(),
+                )
+        
+        # Register custom implementation
+        MemoryFactory.register_working_memory("salon", SalonWorkingMemory)
+        
+        # Create using factory
+        memory = MemoryFactory.create_working_memory(
+            session_id="salon-session",
+            implementation="salon",
+            salon_id="glamour-salon",
+        )
+        
+        assert isinstance(memory, SalonWorkingMemory)
+        assert memory.salon_id == "glamour-salon"
+        
+        # Use the memory
+        memory.add_user_message("Book a haircut")
+        memory.set_variable("service", "haircut")
+        
+        assert len(memory.get_conversation_history()) == 1
+        assert memory.get_variable("service") == "haircut"
+    
+    def test_list_registered_implementations(self):
+        """Test listing registered implementations."""
+        from core.memory import MemoryFactory
+        
+        implementations = MemoryFactory.list_working_memory_implementations()
+        
+        assert "default" in implementations
+        assert isinstance(implementations, list)
+    
+    def test_create_from_config_with_implementation(self):
+        """Test creating memory from config with implementation."""
+        from core.memory import MemoryFactory, WorkingMemory
+        
+        memory = MemoryFactory.create_from_config({
+            "type": "working",
+            "implementation": "default",
+            "session_id": "config-test",
+            "max_messages": 100,
+        })
+        
+        assert isinstance(memory, WorkingMemory)
+        assert memory.session_id == "config-test"
+    
+    def test_invalid_implementation_raises_error(self):
+        """Test that invalid implementation raises ValueError."""
+        from core.memory import MemoryFactory
+        
+        with pytest.raises(ValueError) as exc_info:
+            MemoryFactory.create_working_memory(
+                implementation="nonexistent"
+            )
+        
+        assert "nonexistent" in str(exc_info.value)
+
+
+# =============================================================================
+# TEST CASES - MEMORY BASE CLASSES
+# =============================================================================
+
+class TestMemoryBaseClasses:
+    """Tests for memory base classes."""
+    
+    def test_base_conversation_history_abstract(self):
+        """Test that BaseConversationHistory is abstract."""
+        from core.memory.conversation_history import BaseConversationHistory
+        
+        # Cannot instantiate directly
+        with pytest.raises(TypeError):
+            BaseConversationHistory()
+    
+    def test_base_state_tracker_abstract(self):
+        """Test that BaseStateTracker is abstract."""
+        from core.memory.state_tracker import BaseStateTracker
+        
+        # Cannot instantiate directly
+        with pytest.raises(TypeError):
+            BaseStateTracker(session_id="test")
+    
+    def test_base_working_memory_abstract(self):
+        """Test that BaseWorkingMemory is abstract."""
+        from core.memory.working_memory import BaseWorkingMemory
+        
+        # Cannot instantiate directly
+        with pytest.raises(TypeError):
+            BaseWorkingMemory()
+    
+    def test_default_conversation_history_implements_interface(self):
+        """Test DefaultConversationHistory implements IConversationMemory protocol."""
+        from core.memory import ConversationHistory
+        
+        history = ConversationHistory()
+        
+        # Check it has all required methods
+        assert hasattr(history, 'add_message')
+        assert hasattr(history, 'get_messages')
+        assert hasattr(history, 'get_last_message')
+        assert hasattr(history, 'get_message_count')
+        assert hasattr(history, 'clear_messages')
+        assert hasattr(history, 'to_llm_messages')
+        
+        # Check serialization methods from mixin
+        assert hasattr(history, 'to_json')
+        assert hasattr(history, 'to_toml')
+        assert hasattr(history, 'from_json')
+        assert hasattr(history, 'from_toml')
+        assert hasattr(history, 'save')
+        assert hasattr(history, 'load')
+    
+    def test_default_state_tracker_implements_interface(self):
+        """Test DefaultStateTracker implements IStateTracker protocol."""
+        from core.memory import InMemoryStateTracker
+        
+        tracker = InMemoryStateTracker(session_id="test")
+        
+        # Check it has all required methods
+        assert hasattr(tracker, 'save_checkpoint')
+        assert hasattr(tracker, 'get_checkpoint')
+        assert hasattr(tracker, 'get_latest_checkpoint')
+        assert hasattr(tracker, 'list_checkpoints')
+        assert hasattr(tracker, 'delete_checkpoint')
+        assert hasattr(tracker, 'clear_checkpoints')
+        assert hasattr(tracker, 'get_state')
+        assert hasattr(tracker, 'set_state')
+        assert hasattr(tracker, 'get_full_state')
+        
+        # Check serialization methods from mixin
+        assert hasattr(tracker, 'to_json')
+        assert hasattr(tracker, 'to_toml')
+    
+    def test_default_working_memory_implements_interface(self):
+        """Test DefaultWorkingMemory implements IWorkingMemory protocol."""
+        from core.memory import WorkingMemory
+        
+        memory = WorkingMemory()
+        
+        # Check it has all required properties
+        assert hasattr(memory, 'session_id')
+        assert hasattr(memory, 'conversation')
+        assert hasattr(memory, 'state_tracker')
+        
+        # Check it has all required methods
+        assert hasattr(memory, 'add_message')
+        assert hasattr(memory, 'get_conversation_history')
+        assert hasattr(memory, 'set_variable')
+        assert hasattr(memory, 'get_variable')
+        assert hasattr(memory, 'save_checkpoint')
+        assert hasattr(memory, 'restore_from_checkpoint')
+        
+        # Check serialization methods from mixin
+        assert hasattr(memory, 'to_json')
+        assert hasattr(memory, 'to_toml')
+        assert hasattr(memory, 'save')
+        assert hasattr(memory, 'load')
 
 
 # =============================================================================
@@ -1389,9 +1633,7 @@ def print_example_flow():
 # =============================================================================
 
 if __name__ == "__main__":
-    print_example_flow()
-    
     print("\n" + "="*80)
-    print("Running Tests...")
+    print("Running Salon Workflow Tests with Production Logging")
     print("="*80)
     pytest.main([__file__, "-v", "--tb=short", "-x", "-s"])

@@ -39,5 +39,22 @@
     "warn_threshold_seconds": 0.5,
     "error_threshold_seconds": 2.0
   },
+  "workflow_logging": {
+    "enabled": true,
+    "log_user_messages": true,
+    "log_agent_responses": true,
+    "log_usage_metrics": true,
+    "log_condition_evaluations": true,
+    "log_pass_through_extractions": true,
+    "truncate_messages_at": 500,
+    "include_trace_id": true,
+    "async_logging": false,
+    "messages": {
+      "tokens": "Consumed Input tokens {input_tokens}, Output tokens {output_tokens}, Total {total_tokens}",
+      "duration": "{component} '{name}' completed in {duration_ms:.2f}ms",
+      "cost": "Cost: ${cost_usd:.6f}",
+      "error": "{component} '{name}' failed: {error}"
+    }
+  },
   "notes": "Test environment configuration for comprehensive testing. Features: delayed logging disabled for immediate feedback, sensitive duration thresholds to catch performance issues early, detailed logging for debugging, redaction disabled to see full data during testing"
 } 
