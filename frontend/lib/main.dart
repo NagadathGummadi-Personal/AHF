@@ -38,7 +38,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 1; // Default to Tools for this task
-  bool _isSidebarCollapsed = true; // Start collapsed for "minimal" feel
+  bool _isSidebarCollapsed = false; // Keep open by default for clarity
 
   final List<NavItem> _navItems = [
     NavItem(id: 'agents', icon: Icons.smart_toy_outlined, label: 'Agents'),
@@ -57,7 +57,7 @@ class _MainLayoutState extends State<MainLayout> {
           // Minimal Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: _isSidebarCollapsed ? 60 : 200,
+            width: _isSidebarCollapsed ? 72 : 220,
             decoration: const BoxDecoration(
               color: AppTheme.sidebarColor,
               border: Border(right: BorderSide(color: AppTheme.borderColor)),
@@ -66,13 +66,10 @@ class _MainLayoutState extends State<MainLayout> {
               children: [
                 _buildLogo(),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: _navItems.length,
-                    separatorBuilder: (ctx, i) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      return _buildNavItem(_navItems[index], index);
-                    },
+                    itemBuilder: (context, index) => _buildNavItem(_navItems[index], index),
                   ),
                 ),
                 _buildCollapseButton(),
@@ -91,8 +88,9 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildLogo() {
     return Container(
-      height: 60,
-      alignment: Alignment.center,
+      height: 64,
+      padding: EdgeInsets.symmetric(horizontal: _isSidebarCollapsed ? 0 : 16),
+      alignment: _isSidebarCollapsed ? Alignment.center : Alignment.centerLeft,
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
       ),
@@ -120,23 +118,33 @@ class _MainLayoutState extends State<MainLayout> {
           onTap: () => setState(() => _selectedIndex = index),
           child: Container(
             height: 48,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isSelected ? AppTheme.surfaceColor : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-              border: isSelected ? Border.all(color: AppTheme.borderColor) : null,
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                )
-              ] : null,
+              color: isSelected ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isSelected ? AppTheme.borderColor : Colors.transparent),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      )
+                    ]
+                  : null,
             ),
             child: Row(
               mainAxisAlignment: _isSidebarCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
               children: [
-                if (!_isSidebarCollapsed) const SizedBox(width: 12),
+                Container(
+                  width: 4,
+                  height: 24,
+                  margin: const EdgeInsets.only(left: 6, right: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
                 Icon(
                   item.icon,
                   size: 20,
@@ -144,12 +152,15 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
                 if (!_isSidebarCollapsed) ...[
                   const SizedBox(width: 12),
-                  Text(
-                    item.label,
-                    style: GoogleFonts.inter(
-                      color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
-                      fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                  Expanded(
+                    child: Text(
+                      item.label,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      ),
                     ),
                   ),
                 ],
@@ -163,7 +174,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildCollapseButton() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: IconButton(
         onPressed: () => setState(() => _isSidebarCollapsed = !_isSidebarCollapsed),
         icon: Icon(

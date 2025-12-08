@@ -222,6 +222,12 @@ async def list_tools(
     """
     storage = get_storage()
     
+    if not await storage.ensure_bucket_exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 tools bucket '{storage._bucket_name}' does not exist and could not be created",
+        )
+    
     try:
         tool_ids = await storage.list_tools(prefix=prefix, limit=limit)
         
@@ -253,6 +259,12 @@ async def get_tool(
     Returns the full tool specification.
     """
     storage = get_storage()
+    
+    if not await storage.ensure_bucket_exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 tools bucket '{storage._bucket_name}' does not exist and could not be created",
+        )
     
     result = await storage.load(tool_id, version=version)
     
@@ -313,6 +325,13 @@ async def create_tool(
     """
     storage = get_storage()
     
+    # Ensure bucket exists or create
+    if not await storage.ensure_bucket_exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 tools bucket '{storage._bucket_name}' does not exist and could not be created",
+        )
+    
     # Check if tool already exists
     exists = await storage.exists(request.id)
     if exists:
@@ -353,6 +372,13 @@ async def update_tool(
     Only the tool owner can update.
     """
     storage = get_storage()
+    
+    # Ensure bucket exists or create
+    if not await storage.ensure_bucket_exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 tools bucket '{storage._bucket_name}' does not exist and could not be created",
+        )
     
     # Load existing
     existing = await storage.load(tool_id)
@@ -413,6 +439,12 @@ async def delete_tool(
     """
     storage = get_storage()
     
+    if not await storage.ensure_bucket_exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 tools bucket '{storage._bucket_name}' does not exist and could not be created",
+        )
+    
     # Load to check status
     existing = await storage.load(tool_id)
     if not existing.success:
@@ -451,6 +483,12 @@ async def delete_tool_version(
     Cannot delete the only remaining version - use DELETE /tools/{tool_id} instead.
     """
     storage = get_storage()
+    
+    if not await storage.ensure_bucket_exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 tools bucket '{storage._bucket_name}' does not exist and could not be created",
+        )
     
     # Check versions
     versions = await storage.list_versions(tool_id)

@@ -66,6 +66,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                 child: ToolDetailPanel(
                   tool: provider.selectedTool!,
                   onClose: () => provider.selectTool(null),
+                  onEdit: () => _showCreateToolPanel(context, provider.selectedTool),
                 ),
               ),
           ],
@@ -393,10 +394,10 @@ class _ToolsScreenState extends State<ToolsScreen> {
   }
 
   void _showCreateToolDialog(BuildContext context, [ToolType? type]) {
-    _showCreateToolPanel(context, type);
+    _showCreateToolPanel(context, null, type);
   }
 
-  void _showCreateToolPanel(BuildContext context, [ToolType? type]) {
+  void _showCreateToolPanel(BuildContext context, [Tool? editTool, ToolType? type]) {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -421,7 +422,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   ),
                 ],
               ),
-              child: CreateToolDialog(initialType: type),
+              child: CreateToolDialog(initialType: type ?? editTool?.type, editTool: editTool),
             ),
           ),
         );

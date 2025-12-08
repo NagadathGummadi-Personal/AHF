@@ -208,8 +208,16 @@ class _CreateToolDialogState extends State<CreateToolDialog> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: SelectableText.rich(
-                TextSpan(children: _pythonHighlight(_codeController.text)),
+              child: TextField(
+                controller: _codeController,
+                maxLines: null,
+                expands: true,
+                decoration: const InputDecoration(
+                  filled: true,
+                  fillColor: Color(0xFF1E1E1E),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(12),
+                ),
                 style: GoogleFonts.firaCode(
                   color: const Color(0xFFD4D4D4),
                   fontSize: 13,
@@ -278,12 +286,23 @@ class _CreateToolDialogState extends State<CreateToolDialog> {
           _buildHeader(),
           _buildStepIndicator(),
           Expanded(
-            child: Form(
-              key: _formKey,
-              child: _buildCurrentStep(),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1024),
+                child: Form(
+                  key: _formKey,
+                  child: _buildCurrentStep(),
+                ),
+              ),
             ),
           ),
-          _buildFooter(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1024),
+              child: _buildFooter(),
+            ),
+          ),
         ],
       ),
     );
@@ -304,7 +323,11 @@ class _CreateToolDialogState extends State<CreateToolDialog> {
               gradient: AppTheme.primaryGradient,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 24),
+            child: Icon(
+              widget.editTool != null ? Icons.edit : Icons.add,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1229,6 +1252,10 @@ class _CreateToolDialogState extends State<CreateToolDialog> {
   void _nextStep() {
     if (_currentStep == 0) {
       if (!_formKey.currentState!.validate()) return;
+    }
+    if (_currentStep == 1 && _selectedType == ToolType.function) {
+      setState(() => _currentStep = 2);
+      return;
     }
     setState(() => _currentStep++);
   }

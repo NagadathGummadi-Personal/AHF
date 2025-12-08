@@ -11,11 +11,13 @@ import '../theme/app_theme.dart';
 class ToolDetailPanel extends StatefulWidget {
   final Tool tool;
   final VoidCallback onClose;
+  final VoidCallback? onEdit;
 
   const ToolDetailPanel({
     super.key,
     required this.tool,
     required this.onClose,
+    this.onEdit,
   });
 
   @override
@@ -135,6 +137,21 @@ class _ToolDetailPanelState extends State<ToolDetailPanel> with SingleTickerProv
               ],
             ),
           ),
+          if (widget.onEdit != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: OutlinedButton.icon(
+                onPressed: widget.onEdit,
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('Edit'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.textSecondary,
+                  side: const BorderSide(color: AppTheme.borderColor),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
           IconButton(
             onPressed: widget.onClose,
             icon: const Icon(Icons.close),

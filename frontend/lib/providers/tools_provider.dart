@@ -55,6 +55,26 @@ class ToolsProvider extends ChangeNotifier {
   void selectTool(Tool? tool) {
     _selectedTool = tool;
     notifyListeners();
+    if (tool != null) {
+      _loadFullSpec(tool.id);
+    }
+  }
+
+  Future<void> _loadFullSpec(String id) async {
+    try {
+      final detailed = await getTool(id);
+      if (detailed != null) {
+        _selectedTool = detailed;
+        // also update list entry with full spec if helpful
+        final idx = _tools.indexWhere((t) => t.id == id);
+        if (idx >= 0) {
+          _tools[idx] = detailed;
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading full tool spec: $e');
+    }
   }
 
   Future<void> fetchTools() async {
