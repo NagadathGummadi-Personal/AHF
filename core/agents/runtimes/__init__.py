@@ -2,22 +2,20 @@
 Runtimes for Agents Subsystem.
 
 This module provides runtime components for agent execution including memory,
-scratchpad, checklist, and factory implementations.
+scratchpad, checklist, observer, and factory implementations.
+
+Note: Memory-related components (memory, scratchpad, checklist, observers) are now
+located in core.memory.agent and re-exported here for backward compatibility.
 """
 
-# Memory implementations
+# Import from local submodules which re-export from core.memory
+# This avoids circular imports
 from .memory import NoOpAgentMemory, DictMemory, AgentMemoryFactory
-
-# Scratchpad implementations
 from .scratchpad import BasicScratchpad, StructuredScratchpad, ScratchpadFactory
-
-# Checklist implementations
 from .checklist import BasicChecklist, ChecklistFactory
-
-# Observer implementations
 from .observers import NoOpObserver, LoggingObserver, ObserverFactory
 
-# Agent factory
+# Agent factory (remains in agents module)
 from .agent_factory import AgentFactory, AgentTypeRegistration
 
 __all__ = [
@@ -40,4 +38,3 @@ __all__ = [
     "AgentFactory",
     "AgentTypeRegistration",
 ]
-

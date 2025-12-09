@@ -1,3 +1,12 @@
+"""
+Tool Interfaces.
+
+Defines the core protocols (interfaces) for the tools subsystem.
+
+Note: IToolMemory is now defined in core.memory.interfaces and re-exported
+here for backward compatibility.
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, Protocol, runtime_checkable, Callable, Awaitable, AsyncContextManager, Optional, TYPE_CHECKING
@@ -7,6 +16,9 @@ if TYPE_CHECKING:
     from ..spec.tool_result import ToolResult
     from ..spec.tool_types import ToolSpec
     from ..spec.tool_context import ToolContext
+
+# Re-export ICache as IToolMemory for backward compatibility
+from core.memory.interfaces import ICache as IToolMemory
 
 
 @runtime_checkable
@@ -52,26 +64,6 @@ class IToolEmitter(Protocol):
     """Interface for event emission"""
     async def emit(self, event_type: str, payload: Dict[str, Any]) -> None:
         ...
-
-
-@runtime_checkable
-class IToolMemory(Protocol):
-    """Interface for memory/caching operations"""
-    async def get(self, key: str) -> Any:
-        ...
-
-    async def set(self, key: str, value: Any, ttl_s: Optional[int] = None) -> None:
-        ...
-
-    async def set_if_absent(self, key: str, value: Any, ttl_s: Optional[int] = None) -> bool:
-        ...
-
-    async def delete(self, key: str) -> None:
-        ...
-
-    @asynccontextmanager
-    async def lock(self, key: str, ttl_s: int = 10) -> AsyncContextManager[None]:
-        yield
 
 
 @runtime_checkable

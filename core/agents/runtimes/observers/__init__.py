@@ -1,14 +1,19 @@
 """
 Observer implementations for Agents.
+
+Note: Observer implementations are now located in core.memory.agent.observers
+and re-exported here for backward compatibility.
 """
 
-from .noop_observer import NoOpObserver
-from .logging_observer import LoggingObserver
-from .observer_factory import ObserverFactory
+# Re-export from core.memory.agent.observers for backward compatibility
+from core.memory.agent.observers import (
+    NoOpObserver,
+    LoggingObserver,
+    ObserverFactory,
+)
 
 __all__ = [
     "NoOpObserver",
     "LoggingObserver",
     "ObserverFactory",
 ]
-

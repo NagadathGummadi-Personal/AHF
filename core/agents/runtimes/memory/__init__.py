@@ -1,14 +1,19 @@
 """
 Memory implementations for Agents.
+
+Note: Memory implementations are now located in core.memory.agent.memory
+and re-exported here for backward compatibility.
 """
 
-from .noop_memory import NoOpAgentMemory
-from .dict_memory import DictMemory
-from .memory_factory import AgentMemoryFactory
+# Re-export from core.memory.agent.memory for backward compatibility
+from core.memory.agent.memory import (
+    NoOpAgentMemory,
+    DictMemory,
+    AgentMemoryFactory,
+)
 
 __all__ = [
     "NoOpAgentMemory",
     "DictMemory",
     "AgentMemoryFactory",
 ]
-

@@ -16,7 +16,7 @@ Folder Structure:
 - validators/: Parameter validators
 - security/: Security and authorization implementations
 - emitters/: Event emission implementations
-- memory/: Memory and caching implementations
+- memory/: Memory and caching implementations (re-exports from core.memory.cache)
 - metrics/: Metrics collection implementations
 - tracers/: Distributed tracing implementations
 - limiters/: Rate limiting implementations
@@ -72,7 +72,7 @@ from .policies import NoOpPolicy, PolicyFactory
 # Re-export from emitters module
 from .emitters import NoOpEmitter, EmitterFactory
 
-# Re-export from memory module
+# Re-export from memory module (which re-exports from core.memory.cache)
 from .memory import NoOpMemory, MemoryFactory
 
 # Re-export from metrics module
@@ -123,5 +123,3 @@ __all__ = [
     "NoOpLimiter",
     "LimiterFactory",
 ]
-
-
