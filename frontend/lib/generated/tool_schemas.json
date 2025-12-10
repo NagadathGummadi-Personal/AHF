@@ -1,0 +1,6162 @@
+{
+  "version": "1.0.0",
+  "generated": true,
+  "enums": {
+    "ToolType": {
+      "values": [
+        "function",
+        "http",
+        "db"
+      ],
+      "labels": {
+        "function": "Function (Python)",
+        "http": "HTTP (REST API)",
+        "db": "Database (SQL/NoSQL)"
+      }
+    },
+    "ToolReturnType": {
+      "values": [
+        "json",
+        "toon",
+        "text"
+      ],
+      "labels": {
+        "json": "JSON",
+        "text": "Text",
+        "toon": "TOON"
+      }
+    },
+    "ToolReturnTarget": {
+      "values": [
+        "human",
+        "llm",
+        "agent",
+        "step"
+      ],
+      "labels": {
+        "human": "Human (direct to user)",
+        "llm": "LLM (continue conversation)",
+        "agent": "Agent (for agent processing)",
+        "step": "Step (workflow step output)"
+      }
+    },
+    "ParameterType": {
+      "values": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "array",
+        "object"
+      ],
+      "labels": {
+        "string": "String",
+        "number": "Number",
+        "integer": "Integer",
+        "boolean": "Boolean",
+        "array": "Array",
+        "object": "Object"
+      }
+    },
+    "SpeechMode": {
+      "values": [
+        "auto",
+        "random",
+        "constant"
+      ],
+      "labels": {
+        "auto": "Auto (LLM generates)",
+        "random": "Random (from list)",
+        "constant": "Constant (fixed message)"
+      }
+    },
+    "ExecutionMode": {
+      "values": [
+        "sequential",
+        "parallel"
+      ],
+      "labels": {
+        "sequential": "Sequential (speech then execute)",
+        "parallel": "Parallel (speech and execute together)"
+      }
+    },
+    "VariableAssignmentOperator": {
+      "values": [
+        "set",
+        "set_if_exists",
+        "set_if_truthy",
+        "append",
+        "increment",
+        "transform"
+      ],
+      "labels": {
+        "set": "Set (always)",
+        "set_if_exists": "Set if Exists",
+        "set_if_truthy": "Set if Truthy",
+        "append": "Append to List",
+        "increment": "Increment Number",
+        "transform": "Transform with Function"
+      }
+    },
+    "SpeechContextScope": {
+      "values": [
+        "full_context",
+        "tool_only",
+        "last_message",
+        "custom"
+      ],
+      "labels": {
+        "full_context": "Full Context",
+        "tool_only": "Tool Only",
+        "last_message": "Last Message",
+        "custom": "Custom Instruction"
+      }
+    },
+    "TransformExecutionMode": {
+      "values": [
+        "sync",
+        "async",
+        "await"
+      ],
+      "labels": {
+        "sync": "Sync (block)",
+        "async": "Async (fire-and-forget)",
+        "await": "Await (async but wait)"
+      }
+    },
+    "CircuitBreakerState": {
+      "values": [
+        "closed",
+        "open",
+        "half_open"
+      ],
+      "labels": {
+        "closed": "Closed (normal)",
+        "open": "Open (failing fast)",
+        "half_open": "Half Open (testing)"
+      }
+    }
+  },
+  "schemas": {
+    "configs": {
+      "RetryConfig": {
+        "description": "Configuration for retry behavior.\n\nControls automatic retry on transient failures with exponential backoff.",
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Enable Retries",
+              "group": "retry",
+              "help_text": "Automatically retry on transient failures",
+              "widget_type": "switch"
+            }
+          },
+          "max_attempts": {
+            "default": 3,
+            "maximum": 10,
+            "minimum": 1,
+            "title": "Max Attempts",
+            "type": "integer",
+            "ui": {
+              "display_name": "Max Retry Attempts",
+              "group": "retry",
+              "help_text": "Maximum number of retry attempts before giving up",
+              "max_value": 10,
+              "min_value": 1,
+              "order": 1,
+              "step": 1,
+              "visible_when": "enabled == true",
+              "widget_type": "slider"
+            }
+          },
+          "base_delay_s": {
+            "default": 0.2,
+            "maximum": 60,
+            "minimum": 0.1,
+            "title": "Base Delay S",
+            "type": "number",
+            "ui": {
+              "display_name": "Base Delay",
+              "group": "retry",
+              "help_text": "Initial delay between retries (seconds)",
+              "max_value": 60,
+              "min_value": 0.1,
+              "order": 2,
+              "placeholder": "seconds",
+              "step": 0.1,
+              "visible_when": "enabled == true",
+              "widget_type": "number"
+            }
+          },
+          "max_delay_s": {
+            "default": 2.0,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Max Delay S",
+            "type": "number",
+            "ui": {
+              "display_name": "Max Delay",
+              "group": "retry",
+              "help_text": "Maximum delay between retries with exponential backoff",
+              "max_value": 300,
+              "min_value": 1,
+              "order": 3,
+              "placeholder": "seconds",
+              "step": 0.1,
+              "visible_when": "enabled == true",
+              "widget_type": "number"
+            }
+          },
+          "jitter_s": {
+            "default": 0.1,
+            "maximum": 10,
+            "minimum": 0,
+            "title": "Jitter S",
+            "type": "number",
+            "ui": {
+              "display_name": "Jitter",
+              "group": "retry",
+              "help_text": "Random jitter added to delay to prevent thundering herd",
+              "max_value": 10,
+              "min_value": 0,
+              "order": 4,
+              "placeholder": "seconds",
+              "step": 0.1,
+              "visible_when": "enabled == true",
+              "widget_type": "number"
+            }
+          }
+        },
+        "title": "RetryConfig",
+        "type": "object",
+        "_model_name": "RetryConfig"
+      },
+      "CircuitBreakerConfig": {
+        "description": "Configuration for circuit breaker pattern.\n\nProtects against cascading failures by failing fast when a service is unhealthy.",
+        "properties": {
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Enable Circuit Breaker",
+              "group": "circuit_breaker",
+              "help_text": "Fail fast when service is unhealthy to prevent cascading failures",
+              "widget_type": "switch"
+            }
+          },
+          "failure_threshold": {
+            "default": 5,
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Failure Threshold",
+            "type": "integer",
+            "ui": {
+              "display_name": "Failure Threshold",
+              "group": "circuit_breaker",
+              "help_text": "Consecutive failures before opening the circuit",
+              "max_value": 20,
+              "min_value": 1,
+              "order": 1,
+              "step": 1,
+              "visible_when": "enabled == true",
+              "widget_type": "slider"
+            }
+          },
+          "recovery_timeout_s": {
+            "default": 30,
+            "maximum": 600,
+            "minimum": 5,
+            "title": "Recovery Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Recovery Timeout",
+              "group": "circuit_breaker",
+              "help_text": "Seconds to wait before attempting recovery (OPEN → HALF_OPEN)",
+              "max_value": 600,
+              "min_value": 5,
+              "order": 2,
+              "step": 5,
+              "visible_when": "enabled == true",
+              "widget_type": "number"
+            }
+          },
+          "half_open_max_calls": {
+            "default": 1,
+            "maximum": 10,
+            "minimum": 1,
+            "title": "Half Open Max Calls",
+            "type": "integer",
+            "ui": {
+              "display_name": "Half-Open Max Calls",
+              "group": "circuit_breaker",
+              "help_text": "Number of test calls allowed in HALF_OPEN state",
+              "max_value": 10,
+              "min_value": 1,
+              "order": 3,
+              "step": 1,
+              "visible_when": "enabled == true",
+              "widget_type": "slider"
+            }
+          },
+          "error_codes_to_trip": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Error Codes To Trip",
+            "type": "array",
+            "ui": {
+              "display_name": "Error Codes to Trip",
+              "group": "circuit_breaker",
+              "help_text": "Error codes that should trip the circuit breaker",
+              "item_label": "Error Code {index}",
+              "order": 4,
+              "visible_when": "enabled == true",
+              "widget_type": "array_editor"
+            }
+          }
+        },
+        "title": "CircuitBreakerConfig",
+        "type": "object",
+        "_model_name": "CircuitBreakerConfig"
+      },
+      "IdempotencyConfig": {
+        "description": "Configuration for idempotency behavior.\n\nPrevents duplicate executions and enables result caching.",
+        "properties": {
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Enable Idempotency",
+              "group": "idempotency",
+              "help_text": "Cache and guard against repeated executions using key fields",
+              "widget_type": "switch"
+            }
+          },
+          "key_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Key Fields",
+            "ui": {
+              "display_name": "Key Fields",
+              "group": "idempotency",
+              "help_text": "Fields to use for idempotency key (empty = all args)",
+              "item_label": "Field {index}",
+              "order": 1,
+              "visible_when": "enabled == true",
+              "widget_type": "array_editor"
+            }
+          },
+          "ttl_s": {
+            "anyOf": [
+              {
+                "maximum": 86400,
+                "minimum": 60,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 3600,
+            "title": "Ttl S",
+            "ui": {
+              "display_name": "TTL (seconds)",
+              "group": "idempotency",
+              "help_text": "Time-to-live for cached results",
+              "max_value": 86400,
+              "min_value": 60,
+              "order": 2,
+              "step": 60,
+              "visible_when": "enabled == true",
+              "widget_type": "number"
+            }
+          },
+          "persist_result": {
+            "default": true,
+            "title": "Persist Result",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Persist Result",
+              "group": "idempotency",
+              "help_text": "Store result for reuse on duplicate calls",
+              "order": 3,
+              "visible_when": "enabled == true",
+              "widget_type": "switch"
+            }
+          },
+          "bypass_on_missing_key": {
+            "default": false,
+            "title": "Bypass On Missing Key",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Bypass on Missing Key",
+              "group": "idempotency",
+              "help_text": "Skip idempotency check if key fields are missing",
+              "order": 4,
+              "visible_when": "enabled == true",
+              "widget_type": "switch"
+            }
+          }
+        },
+        "title": "IdempotencyConfig",
+        "type": "object",
+        "_model_name": "IdempotencyConfig"
+      },
+      "InterruptionConfig": {
+        "description": "Configuration for tool interruption behavior.\n\nControls whether user inputs can interrupt tool execution.",
+        "properties": {
+          "disabled": {
+            "default": false,
+            "title": "Disabled",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Disable Interruption",
+              "group": "interruption",
+              "help_text": "If enabled, tool execution cannot be interrupted by user input",
+              "widget_type": "switch"
+            }
+          }
+        },
+        "title": "InterruptionConfig",
+        "type": "object",
+        "_model_name": "InterruptionConfig"
+      },
+      "PreToolSpeechConfig": {
+        "description": "Configuration for pre-tool speech/announcement.\n\nControls what the agent says before executing a tool.",
+        "properties": {
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Enable Pre-Tool Speech",
+              "group": "speech",
+              "help_text": "Whether to speak/announce before tool execution",
+              "widget_type": "switch"
+            }
+          },
+          "mode": {
+            "$ref": "#/$defs/SpeechMode",
+            "default": "auto",
+            "ui": {
+              "display_name": "Speech Mode",
+              "group": "speech",
+              "help_text": "How to generate the pre-tool speech",
+              "options": [
+                {
+                  "label": "Auto (LLM generates)",
+                  "value": "auto"
+                },
+                {
+                  "label": "Random (from list)",
+                  "value": "random"
+                },
+                {
+                  "label": "Constant (fixed message)",
+                  "value": "constant"
+                }
+              ],
+              "order": 1,
+              "visible_when": "enabled == true",
+              "widget_type": "dropdown"
+            }
+          },
+          "constant_message": {
+            "default": "",
+            "title": "Constant Message",
+            "type": "string",
+            "ui": {
+              "display_name": "Constant Message",
+              "group": "speech",
+              "help_text": "Fixed message to use when mode is CONSTANT",
+              "order": 2,
+              "placeholder": "Processing your request...",
+              "visible_when": "enabled == true && mode == 'constant'",
+              "widget_type": "text"
+            }
+          },
+          "random_messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Random Messages",
+            "type": "array",
+            "ui": {
+              "display_name": "Random Messages",
+              "group": "speech",
+              "help_text": "List of messages to randomly select from",
+              "item_label": "Message {index}",
+              "order": 3,
+              "visible_when": "enabled == true && mode == 'random'",
+              "widget_type": "array_editor"
+            }
+          },
+          "context_scope": {
+            "$ref": "#/$defs/SpeechContextScope",
+            "default": "tool_only",
+            "ui": {
+              "display_name": "Context Scope",
+              "group": "speech_auto",
+              "help_text": "What context the LLM uses when generating speech",
+              "options": [
+                {
+                  "label": "Full Context",
+                  "value": "full_context"
+                },
+                {
+                  "label": "Tool Only",
+                  "value": "tool_only"
+                },
+                {
+                  "label": "Last Message",
+                  "value": "last_message"
+                },
+                {
+                  "label": "Custom Instruction",
+                  "value": "custom"
+                }
+              ],
+              "order": 4,
+              "visible_when": "enabled == true && mode == 'auto'",
+              "widget_type": "dropdown"
+            }
+          },
+          "llm_instruction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Llm Instruction",
+            "ui": {
+              "display_name": "Custom LLM Instruction",
+              "group": "speech_auto",
+              "help_text": "Custom instruction for LLM (required when context_scope=CUSTOM)",
+              "order": 5,
+              "placeholder": "Generate a brief message that...",
+              "visible_when": "enabled == true && mode == 'auto' && context_scope == 'custom'",
+              "widget_type": "textarea"
+            }
+          },
+          "include_tool_params": {
+            "default": true,
+            "title": "Include Tool Params",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Include Tool Parameters",
+              "group": "speech_auto",
+              "help_text": "Include tool parameters in context for speech generation",
+              "order": 6,
+              "visible_when": "enabled == true && mode == 'auto'",
+              "widget_type": "switch"
+            }
+          },
+          "include_user_intent": {
+            "default": true,
+            "title": "Include User Intent",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Include User Intent",
+              "group": "speech_auto",
+              "help_text": "Include detected user intent in context",
+              "order": 7,
+              "visible_when": "enabled == true && mode == 'auto'",
+              "widget_type": "switch"
+            }
+          },
+          "max_tokens": {
+            "default": 50,
+            "maximum": 200,
+            "minimum": 10,
+            "title": "Max Tokens",
+            "type": "integer",
+            "ui": {
+              "display_name": "Max Tokens",
+              "group": "speech_auto",
+              "help_text": "Maximum tokens for generated speech",
+              "max_value": 200,
+              "min_value": 10,
+              "order": 8,
+              "step": 1,
+              "visible_when": "enabled == true && mode == 'auto'",
+              "widget_type": "slider"
+            }
+          },
+          "temperature": {
+            "default": 0.7,
+            "maximum": 2,
+            "minimum": 0,
+            "title": "Temperature",
+            "type": "number",
+            "ui": {
+              "display_name": "Temperature",
+              "group": "speech_auto",
+              "help_text": "LLM temperature (higher = more creative)",
+              "max_value": 2,
+              "min_value": 0,
+              "order": 9,
+              "step": 0.1,
+              "visible_when": "enabled == true && mode == 'auto'",
+              "widget_type": "slider"
+            }
+          },
+          "speech_style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Speech Style",
+            "ui": {
+              "display_name": "Speech Style",
+              "group": "speech_auto",
+              "help_text": "Style guidance for speech generation",
+              "order": 10,
+              "placeholder": "friendly, professional, concise",
+              "visible_when": "enabled == true && mode == 'auto'",
+              "widget_type": "text"
+            }
+          }
+        },
+        "title": "PreToolSpeechConfig",
+        "type": "object",
+        "_model_name": "PreToolSpeechConfig"
+      },
+      "ExecutionConfig": {
+        "description": "Configuration for tool execution behavior relative to speech.\n\nControls whether to wait for speech to complete before executing\nthe tool, or run both in parallel.",
+        "properties": {
+          "mode": {
+            "$ref": "#/$defs/ExecutionMode",
+            "default": "sequential",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "execution",
+              "help_text": "Whether to wait for speech (sequential) or run in parallel",
+              "options": [
+                {
+                  "label": "Sequential (speech then execute)",
+                  "value": "sequential"
+                },
+                {
+                  "label": "Parallel (speech and execute together)",
+                  "value": "parallel"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "speech_timeout_ms": {
+            "anyOf": [
+              {
+                "maximum": 10000,
+                "minimum": 100,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Speech Timeout Ms",
+            "ui": {
+              "display_name": "Speech Timeout (ms)",
+              "group": "execution",
+              "help_text": "Max time to wait for speech in sequential mode",
+              "max_value": 10000,
+              "min_value": 100,
+              "order": 1,
+              "step": 100,
+              "visible_when": "mode == 'sequential'",
+              "widget_type": "number"
+            }
+          }
+        },
+        "title": "ExecutionConfig",
+        "type": "object",
+        "_model_name": "ExecutionConfig"
+      },
+      "VariableAssignment": {
+        "description": "Single variable assignment rule.\n\nMaps a field from tool result to a dynamic variable.",
+        "properties": {
+          "target_variable": {
+            "title": "Target Variable",
+            "type": "string",
+            "ui": {
+              "display_name": "Target Variable",
+              "group": "assignment",
+              "help_text": "Name of the dynamic variable to update",
+              "placeholder": "guest_id",
+              "widget_type": "text"
+            }
+          },
+          "source_field": {
+            "title": "Source Field",
+            "type": "string",
+            "ui": {
+              "display_name": "Source Field",
+              "group": "assignment",
+              "help_text": "Path to field in tool result (dot notation)",
+              "order": 1,
+              "placeholder": "data.guest_id",
+              "widget_type": "text"
+            }
+          },
+          "operator": {
+            "$ref": "#/$defs/VariableAssignmentOperator",
+            "default": "set",
+            "ui": {
+              "display_name": "Operator",
+              "group": "assignment",
+              "help_text": "How to assign the value",
+              "options": [
+                {
+                  "label": "Set (always)",
+                  "value": "set"
+                },
+                {
+                  "label": "Set if Exists",
+                  "value": "set_if_exists"
+                },
+                {
+                  "label": "Set if Truthy",
+                  "value": "set_if_truthy"
+                },
+                {
+                  "label": "Append to List",
+                  "value": "append"
+                },
+                {
+                  "label": "Increment Number",
+                  "value": "increment"
+                },
+                {
+                  "label": "Transform with Function",
+                  "value": "transform"
+                }
+              ],
+              "order": 2,
+              "widget_type": "dropdown"
+            }
+          },
+          "default_value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Default Value",
+            "ui": {
+              "display_name": "Default Value",
+              "group": "assignment",
+              "help_text": "Default value if source field not found",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            }
+          },
+          "transform_expr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Transform Expr",
+            "ui": {
+              "display_name": "Transform Expression",
+              "group": "assignment",
+              "help_text": "Simple transformation expression (e.g., 'bool(value)', 'str(value)')",
+              "order": 4,
+              "placeholder": "bool(value)",
+              "visible_when": "operator == 'transform'",
+              "widget_type": "text"
+            }
+          },
+          "transform_func": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Transform Func",
+            "ui": {
+              "display_name": "Transform Function",
+              "help_text": "Custom callable for complex transformations (set programmatically)",
+              "widget_type": "hidden"
+            }
+          },
+          "transform_execution": {
+            "$ref": "#/$defs/TransformExecutionMode",
+            "default": "sync",
+            "ui": {
+              "display_name": "Transform Execution",
+              "group": "assignment",
+              "help_text": "Execution mode for transform_func",
+              "options": [
+                {
+                  "label": "Sync (block)",
+                  "value": "sync"
+                },
+                {
+                  "label": "Async (fire-and-forget)",
+                  "value": "async"
+                },
+                {
+                  "label": "Await (async but wait)",
+                  "value": "await"
+                }
+              ],
+              "order": 5,
+              "visible_when": "operator == 'transform'",
+              "widget_type": "dropdown"
+            }
+          }
+        },
+        "required": [
+          "target_variable",
+          "source_field"
+        ],
+        "title": "VariableAssignment",
+        "type": "object",
+        "_model_name": "VariableAssignment"
+      },
+      "DynamicVariableConfig": {
+        "description": "Configuration for dynamic variable assignments from tool results.\n\nAllows updating conversation/session variables based on tool execution results.",
+        "properties": {
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Enable Dynamic Variables",
+              "group": "dynamic_vars",
+              "help_text": "Update conversation/session variables based on tool results",
+              "widget_type": "switch"
+            }
+          },
+          "assignments": {
+            "items": {
+              "$ref": "#/$defs/VariableAssignment"
+            },
+            "title": "Assignments",
+            "type": "array",
+            "ui": {
+              "display_name": "Variable Assignments",
+              "group": "dynamic_vars",
+              "help_text": "List of variable assignment rules",
+              "item_label": "Assignment {index}",
+              "order": 1,
+              "visible_when": "enabled == true",
+              "widget_type": "array_editor"
+            }
+          },
+          "on_error": {
+            "default": "log",
+            "title": "On Error",
+            "type": "string",
+            "ui": {
+              "display_name": "On Error",
+              "group": "dynamic_vars",
+              "help_text": "Behavior on assignment error",
+              "options": [
+                {
+                  "label": "Ignore",
+                  "value": "ignore"
+                },
+                {
+                  "label": "Log Warning",
+                  "value": "log"
+                },
+                {
+                  "label": "Raise Exception",
+                  "value": "raise"
+                }
+              ],
+              "order": 2,
+              "visible_when": "enabled == true",
+              "widget_type": "dropdown"
+            }
+          }
+        },
+        "title": "DynamicVariableConfig",
+        "type": "object",
+        "_model_name": "DynamicVariableConfig"
+      }
+    },
+    "parameters": {
+      "ToolParameter": {
+        "description": "Base class for tool parameters with common fields.\n\nAll tool parameters share these common attributes for metadata\nand documentation purposes.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "ToolParameter",
+        "type": "object",
+        "_model_name": "ToolParameter"
+      },
+      "StringParameter": {
+        "description": "Parameter for string values with string-specific constraints.\n\nSupports enum values, format validation, length constraints, and patterns.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          },
+          "param_type": {
+            "$ref": "#/$defs/ParameterType",
+            "default": "string",
+            "ui": {
+              "display_name": "Type",
+              "widget_type": "hidden"
+            }
+          },
+          "enum": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Enum",
+            "ui": {
+              "display_name": "Allowed Values (Enum)",
+              "group": "constraints",
+              "help_text": "If set, parameter must be one of these values",
+              "item_label": "Value {index}",
+              "order": 4,
+              "widget_type": "array_editor"
+            }
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Format",
+            "ui": {
+              "display_name": "Format",
+              "group": "constraints",
+              "help_text": "Expected format for validation",
+              "options": [
+                {
+                  "label": "None",
+                  "value": ""
+                },
+                {
+                  "label": "Email",
+                  "value": "email"
+                },
+                {
+                  "label": "URI/URL",
+                  "value": "uri"
+                },
+                {
+                  "label": "Date (YYYY-MM-DD)",
+                  "value": "date"
+                },
+                {
+                  "label": "DateTime (ISO 8601)",
+                  "value": "date-time"
+                },
+                {
+                  "label": "Time (HH:MM:SS)",
+                  "value": "time"
+                },
+                {
+                  "label": "UUID",
+                  "value": "uuid"
+                },
+                {
+                  "label": "Hostname",
+                  "value": "hostname"
+                },
+                {
+                  "label": "IPv4 Address",
+                  "value": "ipv4"
+                },
+                {
+                  "label": "IPv6 Address",
+                  "value": "ipv6"
+                }
+              ],
+              "order": 5,
+              "widget_type": "dropdown"
+            }
+          },
+          "min_length": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Length",
+            "ui": {
+              "display_name": "Min Length",
+              "group": "constraints",
+              "help_text": "Minimum string length",
+              "max_value": 10000,
+              "min_value": 0,
+              "order": 6,
+              "widget_type": "number"
+            }
+          },
+          "max_length": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Length",
+            "ui": {
+              "display_name": "Max Length",
+              "group": "constraints",
+              "help_text": "Maximum string length",
+              "max_value": 100000,
+              "min_value": 1,
+              "order": 7,
+              "widget_type": "number"
+            }
+          },
+          "pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pattern",
+            "ui": {
+              "display_name": "Pattern (Regex)",
+              "group": "constraints",
+              "help_text": "Regular expression pattern for validation",
+              "order": 8,
+              "placeholder": "^[a-z]+$",
+              "widget_type": "text"
+            }
+          },
+          "coerce": {
+            "default": false,
+            "title": "Coerce",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Coerce to String",
+              "group": "advanced",
+              "help_text": "Automatically convert other types to string",
+              "order": 12,
+              "widget_type": "switch"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "StringParameter",
+        "type": "object",
+        "_model_name": "StringParameter"
+      },
+      "NumericParameter": {
+        "description": "Parameter for numeric values (number/integer) with numeric constraints.\n\nSupports min/max value validation.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          },
+          "param_type": {
+            "$ref": "#/$defs/ParameterType",
+            "default": "number",
+            "ui": {
+              "display_name": "Type",
+              "widget_type": "hidden"
+            }
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min",
+            "ui": {
+              "display_name": "Minimum Value",
+              "group": "constraints",
+              "help_text": "Minimum allowed value (inclusive)",
+              "order": 4,
+              "widget_type": "number"
+            }
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max",
+            "ui": {
+              "display_name": "Maximum Value",
+              "group": "constraints",
+              "help_text": "Maximum allowed value (inclusive)",
+              "order": 5,
+              "widget_type": "number"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "NumericParameter",
+        "type": "object",
+        "_model_name": "NumericParameter"
+      },
+      "IntegerParameter": {
+        "description": "Parameter for integer values.\n\nInherits min/max from NumericParameter, uses INTEGER type.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          },
+          "param_type": {
+            "$ref": "#/$defs/ParameterType",
+            "default": "integer",
+            "ui": {
+              "display_name": "Type",
+              "widget_type": "hidden"
+            }
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min",
+            "ui": {
+              "display_name": "Minimum Value",
+              "group": "constraints",
+              "help_text": "Minimum allowed value (inclusive)",
+              "order": 4,
+              "widget_type": "number"
+            }
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max",
+            "ui": {
+              "display_name": "Maximum Value",
+              "group": "constraints",
+              "help_text": "Maximum allowed value (inclusive)",
+              "order": 5,
+              "widget_type": "number"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "IntegerParameter",
+        "type": "object",
+        "_model_name": "IntegerParameter"
+      },
+      "BooleanParameter": {
+        "description": "Parameter for boolean values.\n\nSimple true/false parameter with no additional constraints.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          },
+          "param_type": {
+            "$ref": "#/$defs/ParameterType",
+            "default": "boolean",
+            "ui": {
+              "display_name": "Type",
+              "widget_type": "hidden"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "BooleanParameter",
+        "type": "object",
+        "_model_name": "BooleanParameter"
+      },
+      "ArrayParameter": {
+        "description": "Parameter for array values with array-specific constraints.\n\nSupports item type definition and length constraints.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          },
+          "param_type": {
+            "$ref": "#/$defs/ParameterType",
+            "default": "array",
+            "ui": {
+              "display_name": "Type",
+              "widget_type": "hidden"
+            }
+          },
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolParameter"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Item Type",
+              "group": "constraints",
+              "help_text": "Schema for array items",
+              "order": 4,
+              "widget_type": "object_editor"
+            }
+          },
+          "min_items": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Items",
+            "ui": {
+              "display_name": "Min Items",
+              "group": "constraints",
+              "help_text": "Minimum number of items",
+              "max_value": 1000,
+              "min_value": 0,
+              "order": 5,
+              "widget_type": "number"
+            }
+          },
+          "max_items": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Items",
+            "ui": {
+              "display_name": "Max Items",
+              "group": "constraints",
+              "help_text": "Maximum number of items",
+              "max_value": 10000,
+              "min_value": 1,
+              "order": 6,
+              "widget_type": "number"
+            }
+          },
+          "unique_items": {
+            "default": false,
+            "title": "Unique Items",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Unique Items",
+              "group": "constraints",
+              "help_text": "Whether items must be unique",
+              "order": 7,
+              "widget_type": "switch"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "ArrayParameter",
+        "type": "object",
+        "_model_name": "ArrayParameter"
+      },
+      "ObjectParameter": {
+        "description": "Parameter for object values with object-specific constraints.\n\nSupports nested property definitions and oneOf schemas.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Parameter Name",
+              "group": "basic",
+              "help_text": "Unique name for this parameter (snake_case recommended)",
+              "placeholder": "user_id",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "basic",
+              "help_text": "Description of the parameter (shown to LLM and users)",
+              "order": 1,
+              "placeholder": "Describe what this parameter is for...",
+              "widget_type": "textarea"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required",
+              "group": "basic",
+              "help_text": "Whether this parameter must be provided",
+              "order": 2,
+              "widget_type": "switch"
+            }
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Default Value",
+              "group": "basic",
+              "help_text": "Default value if parameter is not provided",
+              "order": 3,
+              "placeholder": "null",
+              "widget_type": "text"
+            },
+            "title": "Default"
+          },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Deprecated",
+              "group": "advanced",
+              "help_text": "Mark this parameter as deprecated",
+              "order": 10,
+              "widget_type": "switch"
+            }
+          },
+          "examples": {
+            "items": {},
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Examples",
+              "group": "advanced",
+              "help_text": "Example values for this parameter",
+              "item_label": "Example {index}",
+              "order": 11,
+              "widget_type": "array_editor"
+            }
+          },
+          "param_type": {
+            "$ref": "#/$defs/ParameterType",
+            "default": "object",
+            "ui": {
+              "display_name": "Type",
+              "widget_type": "hidden"
+            }
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ToolParameter"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "ui": {
+              "display_name": "Properties",
+              "group": "constraints",
+              "help_text": "Nested property definitions",
+              "order": 4,
+              "widget_type": "object_editor"
+            },
+            "title": "Properties"
+          },
+          "oneOf": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ToolParameter"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Oneof",
+            "ui": {
+              "display_name": "One Of (Union Types)",
+              "group": "constraints",
+              "help_text": "Value must match one of these schemas",
+              "item_label": "Option {index}",
+              "order": 5,
+              "widget_type": "array_editor"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "ObjectParameter",
+        "type": "object",
+        "_model_name": "ObjectParameter"
+      }
+    },
+    "tools": {
+      "ToolSpec": {
+        "description": "Base class for tool specifications with common metadata.\n\nThis is the main model representing a tool definition. Type-specific\nfields are in FunctionToolSpec, HttpToolSpec, and DbToolSpec.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "ui": {
+              "display_name": "Tool Type",
+              "group": "identity",
+              "help_text": "Type of tool implementation",
+              "options": [
+                {
+                  "label": "Function (Python)",
+                  "value": "function"
+                },
+                {
+                  "label": "HTTP (REST API)",
+                  "value": "http"
+                },
+                {
+                  "label": "Database (SQL/NoSQL)",
+                  "value": "db"
+                }
+              ],
+              "order": 4,
+              "widget_type": "dropdown"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description",
+          "tool_type"
+        ],
+        "title": "ToolSpec",
+        "type": "object",
+        "_model_name": "ToolSpec"
+      },
+      "FunctionToolSpec": {
+        "description": "Tool specification for function-based tools.\n\nIncludes Python code editor for the function implementation.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "function",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "function_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Function Code",
+            "ui": {
+              "display_name": "Function Code",
+              "group": "function",
+              "help_text": "Python async function implementation",
+              "language": "python",
+              "widget_type": "code_editor"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description"
+        ],
+        "title": "FunctionToolSpec",
+        "type": "object",
+        "_model_name": "FunctionToolSpec"
+      },
+      "HttpToolSpec": {
+        "description": "Tool specification for HTTP-based tools.\n\nIncludes URL, method, headers, and body configuration.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "http",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "url": {
+            "title": "Url",
+            "type": "string",
+            "ui": {
+              "display_name": "URL",
+              "group": "http",
+              "help_text": "API endpoint URL (supports {variable} substitution)",
+              "placeholder": "https://api.example.com/endpoint",
+              "widget_type": "text"
+            }
+          },
+          "method": {
+            "default": "post",
+            "title": "Method",
+            "type": "string",
+            "ui": {
+              "display_name": "HTTP Method",
+              "group": "http",
+              "help_text": "HTTP request method",
+              "options": [
+                {
+                  "label": "GET",
+                  "value": "GET"
+                },
+                {
+                  "label": "POST",
+                  "value": "POST"
+                },
+                {
+                  "label": "PUT",
+                  "value": "PUT"
+                },
+                {
+                  "label": "PATCH",
+                  "value": "PATCH"
+                },
+                {
+                  "label": "DELETE",
+                  "value": "DELETE"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "headers": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Headers",
+            "ui": {
+              "display_name": "Headers",
+              "group": "http",
+              "help_text": "HTTP headers (use ${VAR} for variable substitution)",
+              "order": 2,
+              "widget_type": "key_value_editor"
+            }
+          },
+          "query_params": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query Params",
+            "ui": {
+              "display_name": "Query Parameters",
+              "group": "http",
+              "help_text": "URL query parameters",
+              "order": 3,
+              "widget_type": "key_value_editor"
+            }
+          },
+          "body": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Body",
+            "ui": {
+              "display_name": "Request Body",
+              "group": "http",
+              "help_text": "JSON request body template",
+              "language": "json",
+              "order": 4,
+              "visible_when": "method != 'GET'",
+              "widget_type": "code_editor"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description",
+          "url"
+        ],
+        "title": "HttpToolSpec",
+        "type": "object",
+        "_model_name": "HttpToolSpec"
+      },
+      "DbToolSpec": {
+        "description": "Base specification for database-based tools.\n\nProvider-specific fields are defined in subclasses.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "db",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "driver": {
+            "default": "dynamodb",
+            "title": "Driver",
+            "type": "string",
+            "ui": {
+              "display_name": "Database Driver",
+              "group": "db",
+              "help_text": "Database driver/provider",
+              "options": [
+                {
+                  "label": "PostgreSQL",
+                  "value": "postgresql"
+                },
+                {
+                  "label": "MySQL",
+                  "value": "mysql"
+                },
+                {
+                  "label": "SQLite",
+                  "value": "sqlite"
+                },
+                {
+                  "label": "DynamoDB",
+                  "value": "dynamodb"
+                },
+                {
+                  "label": "MongoDB",
+                  "value": "mongodb"
+                },
+                {
+                  "label": "SQL Server",
+                  "value": "mssql"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description"
+        ],
+        "title": "DbToolSpec",
+        "type": "object",
+        "_model_name": "DbToolSpec"
+      },
+      "DynamoDbToolSpec": {
+        "description": "Tool specification for AWS DynamoDB operations.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "db",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "driver": {
+            "default": "dynamodb",
+            "title": "Driver",
+            "type": "string",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "region": {
+            "default": "us-west-2",
+            "title": "Region",
+            "type": "string",
+            "ui": {
+              "display_name": "AWS Region",
+              "group": "dynamodb",
+              "help_text": "AWS region for DynamoDB",
+              "options": [
+                {
+                  "label": "US East (N. Virginia)",
+                  "value": "us-east-1"
+                },
+                {
+                  "label": "US East (Ohio)",
+                  "value": "us-east-2"
+                },
+                {
+                  "label": "US West (N. California)",
+                  "value": "us-west-1"
+                },
+                {
+                  "label": "US West (Oregon)",
+                  "value": "us-west-2"
+                },
+                {
+                  "label": "EU (Ireland)",
+                  "value": "eu-west-1"
+                },
+                {
+                  "label": "EU (Frankfurt)",
+                  "value": "eu-central-1"
+                },
+                {
+                  "label": "Asia Pacific (Singapore)",
+                  "value": "ap-southeast-1"
+                },
+                {
+                  "label": "Asia Pacific (Tokyo)",
+                  "value": "ap-northeast-1"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "table_name": {
+            "title": "Table Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Table Name",
+              "group": "dynamodb",
+              "help_text": "DynamoDB table name",
+              "order": 2,
+              "placeholder": "my-table",
+              "widget_type": "text"
+            }
+          },
+          "endpoint_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Endpoint Url",
+            "ui": {
+              "display_name": "Endpoint URL (Optional)",
+              "group": "dynamodb",
+              "help_text": "Custom endpoint for LocalStack/testing",
+              "order": 3,
+              "placeholder": "http://localhost:8000",
+              "widget_type": "text"
+            }
+          },
+          "aws_access_key_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Aws Access Key Id",
+            "ui": {
+              "display_name": "AWS Access Key ID (Optional)",
+              "group": "dynamodb",
+              "help_text": "Prefer IAM roles over hardcoded credentials",
+              "order": 4,
+              "placeholder": "Leave empty for IAM role",
+              "widget_type": "text"
+            }
+          },
+          "aws_secret_access_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Aws Secret Access Key",
+            "ui": {
+              "display_name": "AWS Secret Access Key",
+              "group": "dynamodb",
+              "help_text": "Prefer IAM roles over hardcoded credentials",
+              "order": 5,
+              "placeholder": "Leave empty for IAM role",
+              "widget_type": "text"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description",
+          "table_name"
+        ],
+        "title": "DynamoDbToolSpec",
+        "type": "object",
+        "_model_name": "DynamoDbToolSpec"
+      },
+      "PostgreSqlToolSpec": {
+        "description": "Tool specification for PostgreSQL operations.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "db",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "driver": {
+            "default": "postgresql",
+            "title": "Driver",
+            "type": "string",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "host": {
+            "default": "localhost",
+            "title": "Host",
+            "type": "string",
+            "ui": {
+              "display_name": "Host",
+              "group": "postgresql",
+              "help_text": "Database host",
+              "order": 1,
+              "placeholder": "localhost",
+              "widget_type": "text"
+            }
+          },
+          "port": {
+            "default": 5432,
+            "maximum": 65535,
+            "minimum": 1,
+            "title": "Port",
+            "type": "integer",
+            "ui": {
+              "display_name": "Port",
+              "group": "postgresql",
+              "help_text": "Database port (default: 5432)",
+              "max_value": 65535,
+              "min_value": 1,
+              "order": 2,
+              "widget_type": "number"
+            }
+          },
+          "database": {
+            "title": "Database",
+            "type": "string",
+            "ui": {
+              "display_name": "Database Name",
+              "group": "postgresql",
+              "help_text": "Database name",
+              "order": 3,
+              "placeholder": "mydb",
+              "widget_type": "text"
+            }
+          },
+          "username": {
+            "title": "Username",
+            "type": "string",
+            "ui": {
+              "display_name": "Username",
+              "group": "postgresql",
+              "help_text": "Database username",
+              "order": 4,
+              "placeholder": "postgres",
+              "widget_type": "text"
+            }
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "ui": {
+              "display_name": "Password",
+              "group": "postgresql",
+              "help_text": "Database password",
+              "order": 5,
+              "widget_type": "text"
+            }
+          },
+          "connection_string": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Connection String",
+            "ui": {
+              "display_name": "Connection String (Optional)",
+              "group": "postgresql",
+              "help_text": "Full connection string (overrides individual fields)",
+              "order": 6,
+              "placeholder": "postgresql://user:pass@host:5432/db",
+              "widget_type": "text"
+            }
+          },
+          "ssl_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ssl Mode",
+            "ui": {
+              "display_name": "SSL Mode",
+              "group": "postgresql",
+              "help_text": "SSL connection mode",
+              "options": [
+                {
+                  "label": "Default",
+                  "value": ""
+                },
+                {
+                  "label": "Disable",
+                  "value": "disable"
+                },
+                {
+                  "label": "Allow",
+                  "value": "allow"
+                },
+                {
+                  "label": "Prefer",
+                  "value": "prefer"
+                },
+                {
+                  "label": "Require",
+                  "value": "require"
+                }
+              ],
+              "order": 7,
+              "widget_type": "dropdown"
+            }
+          },
+          "pool_size": {
+            "default": 10,
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Pool Size",
+            "type": "integer",
+            "ui": {
+              "display_name": "Pool Size",
+              "group": "postgresql",
+              "help_text": "Connection pool size",
+              "max_value": 100,
+              "min_value": 1,
+              "order": 8,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description",
+          "database",
+          "username",
+          "password"
+        ],
+        "title": "PostgreSqlToolSpec",
+        "type": "object",
+        "_model_name": "PostgreSqlToolSpec"
+      },
+      "MySqlToolSpec": {
+        "description": "Tool specification for MySQL operations.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "db",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "driver": {
+            "default": "mysql",
+            "title": "Driver",
+            "type": "string",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "host": {
+            "default": "localhost",
+            "title": "Host",
+            "type": "string",
+            "ui": {
+              "display_name": "Host",
+              "group": "mysql",
+              "help_text": "Database host",
+              "order": 1,
+              "placeholder": "localhost",
+              "widget_type": "text"
+            }
+          },
+          "port": {
+            "default": 3306,
+            "maximum": 65535,
+            "minimum": 1,
+            "title": "Port",
+            "type": "integer",
+            "ui": {
+              "display_name": "Port",
+              "group": "mysql",
+              "help_text": "Database port (default: 3306)",
+              "max_value": 65535,
+              "min_value": 1,
+              "order": 2,
+              "widget_type": "number"
+            }
+          },
+          "database": {
+            "title": "Database",
+            "type": "string",
+            "ui": {
+              "display_name": "Database Name",
+              "group": "mysql",
+              "help_text": "Database name",
+              "order": 3,
+              "placeholder": "mydb",
+              "widget_type": "text"
+            }
+          },
+          "username": {
+            "title": "Username",
+            "type": "string",
+            "ui": {
+              "display_name": "Username",
+              "group": "mysql",
+              "help_text": "Database username",
+              "order": 4,
+              "placeholder": "root",
+              "widget_type": "text"
+            }
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "ui": {
+              "display_name": "Password",
+              "group": "mysql",
+              "help_text": "Database password",
+              "order": 5,
+              "widget_type": "text"
+            }
+          },
+          "connection_string": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Connection String",
+            "ui": {
+              "display_name": "Connection String (Optional)",
+              "group": "mysql",
+              "help_text": "Full connection string (overrides individual fields)",
+              "order": 6,
+              "placeholder": "mysql://user:pass@host:3306/db",
+              "widget_type": "text"
+            }
+          },
+          "charset": {
+            "default": "utf8mb4",
+            "title": "Charset",
+            "type": "string",
+            "ui": {
+              "display_name": "Charset",
+              "group": "mysql",
+              "help_text": "Character set",
+              "order": 7,
+              "placeholder": "utf8mb4",
+              "widget_type": "text"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description",
+          "database",
+          "username",
+          "password"
+        ],
+        "title": "MySqlToolSpec",
+        "type": "object",
+        "_model_name": "MySqlToolSpec"
+      },
+      "SqliteToolSpec": {
+        "description": "Tool specification for SQLite operations.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string",
+            "ui": {
+              "display_name": "Tool ID",
+              "group": "identity",
+              "help_text": "Unique identifier for the tool (auto-generated from name)",
+              "placeholder": "my-tool-v1",
+              "widget_type": "text"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "title": "Version",
+            "type": "string",
+            "ui": {
+              "display_name": "Version",
+              "group": "identity",
+              "help_text": "Tool version string (semver recommended)",
+              "order": 1,
+              "placeholder": "1.0.0",
+              "widget_type": "text"
+            }
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string",
+            "ui": {
+              "display_name": "Display Name",
+              "group": "identity",
+              "help_text": "Human-readable tool name",
+              "order": 2,
+              "placeholder": "My Tool",
+              "widget_type": "text"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "ui": {
+              "display_name": "Description",
+              "group": "identity",
+              "help_text": "Tool description (helps LLM understand when to use it)",
+              "order": 3,
+              "placeholder": "Describe what this tool does and when to use it...",
+              "widget_type": "textarea"
+            }
+          },
+          "tool_type": {
+            "$ref": "#/$defs/ToolType",
+            "default": "db",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/$defs/ToolParameter"
+            },
+            "title": "Parameters",
+            "type": "array",
+            "ui": {
+              "display_name": "Parameters",
+              "group": "parameters",
+              "help_text": "Input parameters for this tool",
+              "item_label": "Parameter {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "returns": {
+            "$ref": "#/$defs/ToolReturnType",
+            "default": "json",
+            "ui": {
+              "display_name": "Return Type",
+              "group": "return",
+              "help_text": "Format of tool output",
+              "options": [
+                {
+                  "label": "JSON",
+                  "value": "json"
+                },
+                {
+                  "label": "Text",
+                  "value": "text"
+                },
+                {
+                  "label": "TOON",
+                  "value": "toon"
+                }
+              ],
+              "widget_type": "dropdown"
+            }
+          },
+          "return_target": {
+            "$ref": "#/$defs/ToolReturnTarget",
+            "default": "step",
+            "ui": {
+              "display_name": "Return Target",
+              "group": "return",
+              "help_text": "Where to route tool output",
+              "options": [
+                {
+                  "label": "LLM (continue conversation)",
+                  "value": "llm"
+                },
+                {
+                  "label": "Human (direct to user)",
+                  "value": "human"
+                },
+                {
+                  "label": "Agent (for agent processing)",
+                  "value": "agent"
+                },
+                {
+                  "label": "Step (workflow step output)",
+                  "value": "step"
+                }
+              ],
+              "order": 1,
+              "widget_type": "dropdown"
+            }
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Required Tool",
+              "group": "ownership",
+              "help_text": "Whether this tool must be available for the agent",
+              "widget_type": "switch"
+            }
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Owner",
+            "ui": {
+              "display_name": "Owner",
+              "group": "ownership",
+              "help_text": "Tool owner identifier",
+              "order": 1,
+              "placeholder": "team-name",
+              "widget_type": "text"
+            }
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array",
+            "ui": {
+              "display_name": "Required Permissions",
+              "group": "ownership",
+              "help_text": "Permissions required to use this tool",
+              "item_label": "Permission {index}",
+              "order": 2,
+              "widget_type": "array_editor"
+            }
+          },
+          "timeout_s": {
+            "default": 30,
+            "maximum": 300,
+            "minimum": 1,
+            "title": "Timeout S",
+            "type": "integer",
+            "ui": {
+              "display_name": "Timeout (seconds)",
+              "group": "execution",
+              "help_text": "Maximum execution time before timeout",
+              "max_value": 300,
+              "min_value": 1,
+              "step": 1,
+              "widget_type": "slider"
+            }
+          },
+          "examples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Examples",
+            "type": "array",
+            "ui": {
+              "display_name": "Usage Examples",
+              "group": "examples",
+              "help_text": "Example inputs/outputs for documentation",
+              "item_label": "Example {index}",
+              "widget_type": "array_editor"
+            }
+          },
+          "retry": {
+            "$ref": "#/$defs/RetryConfig",
+            "ui": {
+              "display_name": "Retry Configuration",
+              "group": "advanced_retry",
+              "help_text": "Configure automatic retry behavior",
+              "widget_type": "object_editor"
+            }
+          },
+          "circuit_breaker": {
+            "$ref": "#/$defs/CircuitBreakerConfig",
+            "ui": {
+              "display_name": "Circuit Breaker",
+              "group": "advanced_circuit_breaker",
+              "help_text": "Configure circuit breaker pattern",
+              "order": 1,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency": {
+            "$ref": "#/$defs/IdempotencyConfig",
+            "ui": {
+              "display_name": "Idempotency",
+              "group": "advanced_idempotency",
+              "help_text": "Configure idempotency behavior",
+              "order": 2,
+              "widget_type": "object_editor"
+            }
+          },
+          "idempotency_key_generator": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Idempotency Key Generator",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "circuit_breaker_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Circuit Breaker Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "retry_policy": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Retry Policy",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "metrics_tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Metrics Tags",
+            "type": "object",
+            "ui": {
+              "display_name": "Metrics Tags",
+              "group": "advanced_metrics",
+              "help_text": "Static tags for metrics/observability",
+              "widget_type": "key_value_editor"
+            }
+          },
+          "interruption": {
+            "$ref": "#/$defs/InterruptionConfig",
+            "ui": {
+              "display_name": "Interruption Control",
+              "group": "advanced_interruption",
+              "help_text": "Controls whether user input can interrupt tool execution",
+              "widget_type": "object_editor"
+            }
+          },
+          "pre_tool_speech": {
+            "$ref": "#/$defs/PreToolSpeechConfig",
+            "ui": {
+              "display_name": "Pre-Tool Speech",
+              "group": "advanced_speech",
+              "help_text": "Configuration for what agent says before executing tool",
+              "widget_type": "object_editor"
+            }
+          },
+          "execution": {
+            "$ref": "#/$defs/ExecutionConfig",
+            "ui": {
+              "display_name": "Execution Mode",
+              "group": "advanced_execution",
+              "help_text": "Controls speech/execution timing",
+              "widget_type": "object_editor"
+            }
+          },
+          "dynamic_variables": {
+            "$ref": "#/$defs/DynamicVariableConfig",
+            "ui": {
+              "display_name": "Dynamic Variables",
+              "group": "advanced_dynamic_vars",
+              "help_text": "Configuration for updating variables based on tool results",
+              "widget_type": "object_editor"
+            }
+          },
+          "driver": {
+            "default": "sqlite",
+            "title": "Driver",
+            "type": "string",
+            "ui": {
+              "widget_type": "hidden"
+            }
+          },
+          "database_path": {
+            "default": ":memory:",
+            "title": "Database Path",
+            "type": "string",
+            "ui": {
+              "display_name": "Database Path",
+              "group": "sqlite",
+              "help_text": "Path to SQLite database file (:memory: for in-memory)",
+              "order": 1,
+              "placeholder": "/path/to/database.db",
+              "widget_type": "text"
+            }
+          },
+          "timeout": {
+            "default": 5.0,
+            "maximum": 60,
+            "minimum": 0.1,
+            "title": "Timeout",
+            "type": "number",
+            "ui": {
+              "display_name": "Connection Timeout",
+              "group": "sqlite",
+              "help_text": "Connection timeout in seconds",
+              "max_value": 60,
+              "min_value": 0.1,
+              "order": 2,
+              "placeholder": "seconds",
+              "step": 0.1,
+              "widget_type": "number"
+            }
+          },
+          "check_same_thread": {
+            "default": false,
+            "title": "Check Same Thread",
+            "type": "boolean",
+            "ui": {
+              "display_name": "Check Same Thread",
+              "group": "sqlite",
+              "help_text": "Enable thread safety check (disable for async)",
+              "order": 3,
+              "widget_type": "switch"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "description"
+        ],
+        "title": "SqliteToolSpec",
+        "type": "object",
+        "_model_name": "SqliteToolSpec"
+      }
+    }
+  },
+  "definitions": {
+    "SpeechContextScope": {
+      "description": "Defines what context the LLM uses when generating speech in AUTO mode.\n\nFULL_CONTEXT: Use entire conversation history and tool context\nTOOL_ONLY: Use only tool name, description, and parameters\nLAST_MESSAGE: Use only the last user message and tool info\nCUSTOM: Use custom instruction provided in llm_instruction field",
+      "enum": [
+        "full_context",
+        "tool_only",
+        "last_message",
+        "custom"
+      ],
+      "title": "SpeechContextScope",
+      "type": "string"
+    },
+    "SpeechMode": {
+      "description": "Pre-tool speech generation modes.\n\nAUTO: LLM generates speech dynamically based on context\nRANDOM: Randomly select from predefined messages\nCONSTANT: Use a fixed constant message",
+      "enum": [
+        "auto",
+        "random",
+        "constant"
+      ],
+      "title": "SpeechMode",
+      "type": "string"
+    },
+    "ExecutionMode": {
+      "description": "Tool execution modes relative to speech.\n\nSEQUENTIAL: Wait for speech to complete, then execute tool\nPARALLEL: Execute speech and tool simultaneously",
+      "enum": [
+        "sequential",
+        "parallel"
+      ],
+      "title": "ExecutionMode",
+      "type": "string"
+    },
+    "TransformExecutionMode": {
+      "description": "Execution mode for custom transform functions.\n\nSYNC: Execute transform synchronously, block until complete\nASYNC: Execute transform asynchronously, don't block tool result\nAWAIT: Execute transform asynchronously but wait for result before returning",
+      "enum": [
+        "sync",
+        "async",
+        "await"
+      ],
+      "title": "TransformExecutionMode",
+      "type": "string"
+    },
+    "VariableAssignmentOperator": {
+      "description": "Operators for dynamic variable assignments from tool results.\n\nSET: Always set the variable to the value\nSET_IF_EXISTS: Only set if the source field exists in result\nSET_IF_TRUTHY: Only set if the source value is truthy\nAPPEND: Append value to existing list/string\nINCREMENT: Increment numeric value\nTRANSFORM: Apply a custom function to transform the value",
+      "enum": [
+        "set",
+        "set_if_exists",
+        "set_if_truthy",
+        "append",
+        "increment",
+        "transform"
+      ],
+      "title": "VariableAssignmentOperator",
+      "type": "string"
+    },
+    "VariableAssignment": {
+      "description": "Single variable assignment rule.\n\nMaps a field from tool result to a dynamic variable.",
+      "properties": {
+        "target_variable": {
+          "title": "Target Variable",
+          "type": "string",
+          "ui": {
+            "display_name": "Target Variable",
+            "group": "assignment",
+            "help_text": "Name of the dynamic variable to update",
+            "placeholder": "guest_id",
+            "widget_type": "text"
+          }
+        },
+        "source_field": {
+          "title": "Source Field",
+          "type": "string",
+          "ui": {
+            "display_name": "Source Field",
+            "group": "assignment",
+            "help_text": "Path to field in tool result (dot notation)",
+            "order": 1,
+            "placeholder": "data.guest_id",
+            "widget_type": "text"
+          }
+        },
+        "operator": {
+          "$ref": "#/$defs/VariableAssignmentOperator",
+          "default": "set",
+          "ui": {
+            "display_name": "Operator",
+            "group": "assignment",
+            "help_text": "How to assign the value",
+            "options": [
+              {
+                "label": "Set (always)",
+                "value": "set"
+              },
+              {
+                "label": "Set if Exists",
+                "value": "set_if_exists"
+              },
+              {
+                "label": "Set if Truthy",
+                "value": "set_if_truthy"
+              },
+              {
+                "label": "Append to List",
+                "value": "append"
+              },
+              {
+                "label": "Increment Number",
+                "value": "increment"
+              },
+              {
+                "label": "Transform with Function",
+                "value": "transform"
+              }
+            ],
+            "order": 2,
+            "widget_type": "dropdown"
+          }
+        },
+        "default_value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default Value",
+          "ui": {
+            "display_name": "Default Value",
+            "group": "assignment",
+            "help_text": "Default value if source field not found",
+            "order": 3,
+            "placeholder": "null",
+            "widget_type": "text"
+          }
+        },
+        "transform_expr": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transform Expr",
+          "ui": {
+            "display_name": "Transform Expression",
+            "group": "assignment",
+            "help_text": "Simple transformation expression (e.g., 'bool(value)', 'str(value)')",
+            "order": 4,
+            "placeholder": "bool(value)",
+            "visible_when": "operator == 'transform'",
+            "widget_type": "text"
+          }
+        },
+        "transform_func": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transform Func",
+          "ui": {
+            "display_name": "Transform Function",
+            "help_text": "Custom callable for complex transformations (set programmatically)",
+            "widget_type": "hidden"
+          }
+        },
+        "transform_execution": {
+          "$ref": "#/$defs/TransformExecutionMode",
+          "default": "sync",
+          "ui": {
+            "display_name": "Transform Execution",
+            "group": "assignment",
+            "help_text": "Execution mode for transform_func",
+            "options": [
+              {
+                "label": "Sync (block)",
+                "value": "sync"
+              },
+              {
+                "label": "Async (fire-and-forget)",
+                "value": "async"
+              },
+              {
+                "label": "Await (async but wait)",
+                "value": "await"
+              }
+            ],
+            "order": 5,
+            "visible_when": "operator == 'transform'",
+            "widget_type": "dropdown"
+          }
+        }
+      },
+      "required": [
+        "target_variable",
+        "source_field"
+      ],
+      "title": "VariableAssignment",
+      "type": "object"
+    },
+    "ParameterType": {
+      "description": "Enumeration for parameter types",
+      "enum": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "array",
+        "object"
+      ],
+      "title": "ParameterType",
+      "type": "string"
+    },
+    "ToolParameter": {
+      "description": "Base class for tool parameters with common fields.\n\nAll tool parameters share these common attributes for metadata\nand documentation purposes.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "ui": {
+            "display_name": "Parameter Name",
+            "group": "basic",
+            "help_text": "Unique name for this parameter (snake_case recommended)",
+            "placeholder": "user_id",
+            "widget_type": "text"
+          }
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "ui": {
+            "display_name": "Description",
+            "group": "basic",
+            "help_text": "Description of the parameter (shown to LLM and users)",
+            "order": 1,
+            "placeholder": "Describe what this parameter is for...",
+            "widget_type": "textarea"
+          }
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Required",
+            "group": "basic",
+            "help_text": "Whether this parameter must be provided",
+            "order": 2,
+            "widget_type": "switch"
+          }
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "ui": {
+            "display_name": "Default Value",
+            "group": "basic",
+            "help_text": "Default value if parameter is not provided",
+            "order": 3,
+            "placeholder": "null",
+            "widget_type": "text"
+          },
+          "title": "Default"
+        },
+        "deprecated": {
+          "default": false,
+          "title": "Deprecated",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Deprecated",
+            "group": "advanced",
+            "help_text": "Mark this parameter as deprecated",
+            "order": 10,
+            "widget_type": "switch"
+          }
+        },
+        "examples": {
+          "items": {},
+          "title": "Examples",
+          "type": "array",
+          "ui": {
+            "display_name": "Examples",
+            "group": "advanced",
+            "help_text": "Example values for this parameter",
+            "item_label": "Example {index}",
+            "order": 11,
+            "widget_type": "array_editor"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "title": "ToolParameter",
+      "type": "object"
+    },
+    "CircuitBreakerConfig": {
+      "description": "Configuration for circuit breaker pattern.\n\nProtects against cascading failures by failing fast when a service is unhealthy.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Enable Circuit Breaker",
+            "group": "circuit_breaker",
+            "help_text": "Fail fast when service is unhealthy to prevent cascading failures",
+            "widget_type": "switch"
+          }
+        },
+        "failure_threshold": {
+          "default": 5,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Failure Threshold",
+          "type": "integer",
+          "ui": {
+            "display_name": "Failure Threshold",
+            "group": "circuit_breaker",
+            "help_text": "Consecutive failures before opening the circuit",
+            "max_value": 20,
+            "min_value": 1,
+            "order": 1,
+            "step": 1,
+            "visible_when": "enabled == true",
+            "widget_type": "slider"
+          }
+        },
+        "recovery_timeout_s": {
+          "default": 30,
+          "maximum": 600,
+          "minimum": 5,
+          "title": "Recovery Timeout S",
+          "type": "integer",
+          "ui": {
+            "display_name": "Recovery Timeout",
+            "group": "circuit_breaker",
+            "help_text": "Seconds to wait before attempting recovery (OPEN → HALF_OPEN)",
+            "max_value": 600,
+            "min_value": 5,
+            "order": 2,
+            "step": 5,
+            "visible_when": "enabled == true",
+            "widget_type": "number"
+          }
+        },
+        "half_open_max_calls": {
+          "default": 1,
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Half Open Max Calls",
+          "type": "integer",
+          "ui": {
+            "display_name": "Half-Open Max Calls",
+            "group": "circuit_breaker",
+            "help_text": "Number of test calls allowed in HALF_OPEN state",
+            "max_value": 10,
+            "min_value": 1,
+            "order": 3,
+            "step": 1,
+            "visible_when": "enabled == true",
+            "widget_type": "slider"
+          }
+        },
+        "error_codes_to_trip": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Error Codes To Trip",
+          "type": "array",
+          "ui": {
+            "display_name": "Error Codes to Trip",
+            "group": "circuit_breaker",
+            "help_text": "Error codes that should trip the circuit breaker",
+            "item_label": "Error Code {index}",
+            "order": 4,
+            "visible_when": "enabled == true",
+            "widget_type": "array_editor"
+          }
+        }
+      },
+      "title": "CircuitBreakerConfig",
+      "type": "object"
+    },
+    "DynamicVariableConfig": {
+      "description": "Configuration for dynamic variable assignments from tool results.\n\nAllows updating conversation/session variables based on tool execution results.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Enable Dynamic Variables",
+            "group": "dynamic_vars",
+            "help_text": "Update conversation/session variables based on tool results",
+            "widget_type": "switch"
+          }
+        },
+        "assignments": {
+          "items": {
+            "$ref": "#/$defs/VariableAssignment"
+          },
+          "title": "Assignments",
+          "type": "array",
+          "ui": {
+            "display_name": "Variable Assignments",
+            "group": "dynamic_vars",
+            "help_text": "List of variable assignment rules",
+            "item_label": "Assignment {index}",
+            "order": 1,
+            "visible_when": "enabled == true",
+            "widget_type": "array_editor"
+          }
+        },
+        "on_error": {
+          "default": "log",
+          "title": "On Error",
+          "type": "string",
+          "ui": {
+            "display_name": "On Error",
+            "group": "dynamic_vars",
+            "help_text": "Behavior on assignment error",
+            "options": [
+              {
+                "label": "Ignore",
+                "value": "ignore"
+              },
+              {
+                "label": "Log Warning",
+                "value": "log"
+              },
+              {
+                "label": "Raise Exception",
+                "value": "raise"
+              }
+            ],
+            "order": 2,
+            "visible_when": "enabled == true",
+            "widget_type": "dropdown"
+          }
+        }
+      },
+      "title": "DynamicVariableConfig",
+      "type": "object"
+    },
+    "ExecutionConfig": {
+      "description": "Configuration for tool execution behavior relative to speech.\n\nControls whether to wait for speech to complete before executing\nthe tool, or run both in parallel.",
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/ExecutionMode",
+          "default": "sequential",
+          "ui": {
+            "display_name": "Execution Mode",
+            "group": "execution",
+            "help_text": "Whether to wait for speech (sequential) or run in parallel",
+            "options": [
+              {
+                "label": "Sequential (speech then execute)",
+                "value": "sequential"
+              },
+              {
+                "label": "Parallel (speech and execute together)",
+                "value": "parallel"
+              }
+            ],
+            "widget_type": "dropdown"
+          }
+        },
+        "speech_timeout_ms": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Speech Timeout Ms",
+          "ui": {
+            "display_name": "Speech Timeout (ms)",
+            "group": "execution",
+            "help_text": "Max time to wait for speech in sequential mode",
+            "max_value": 10000,
+            "min_value": 100,
+            "order": 1,
+            "step": 100,
+            "visible_when": "mode == 'sequential'",
+            "widget_type": "number"
+          }
+        }
+      },
+      "title": "ExecutionConfig",
+      "type": "object"
+    },
+    "IdempotencyConfig": {
+      "description": "Configuration for idempotency behavior.\n\nPrevents duplicate executions and enables result caching.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Enable Idempotency",
+            "group": "idempotency",
+            "help_text": "Cache and guard against repeated executions using key fields",
+            "widget_type": "switch"
+          }
+        },
+        "key_fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Key Fields",
+          "ui": {
+            "display_name": "Key Fields",
+            "group": "idempotency",
+            "help_text": "Fields to use for idempotency key (empty = all args)",
+            "item_label": "Field {index}",
+            "order": 1,
+            "visible_when": "enabled == true",
+            "widget_type": "array_editor"
+          }
+        },
+        "ttl_s": {
+          "anyOf": [
+            {
+              "maximum": 86400,
+              "minimum": 60,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 3600,
+          "title": "Ttl S",
+          "ui": {
+            "display_name": "TTL (seconds)",
+            "group": "idempotency",
+            "help_text": "Time-to-live for cached results",
+            "max_value": 86400,
+            "min_value": 60,
+            "order": 2,
+            "step": 60,
+            "visible_when": "enabled == true",
+            "widget_type": "number"
+          }
+        },
+        "persist_result": {
+          "default": true,
+          "title": "Persist Result",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Persist Result",
+            "group": "idempotency",
+            "help_text": "Store result for reuse on duplicate calls",
+            "order": 3,
+            "visible_when": "enabled == true",
+            "widget_type": "switch"
+          }
+        },
+        "bypass_on_missing_key": {
+          "default": false,
+          "title": "Bypass On Missing Key",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Bypass on Missing Key",
+            "group": "idempotency",
+            "help_text": "Skip idempotency check if key fields are missing",
+            "order": 4,
+            "visible_when": "enabled == true",
+            "widget_type": "switch"
+          }
+        }
+      },
+      "title": "IdempotencyConfig",
+      "type": "object"
+    },
+    "InterruptionConfig": {
+      "description": "Configuration for tool interruption behavior.\n\nControls whether user inputs can interrupt tool execution.",
+      "properties": {
+        "disabled": {
+          "default": false,
+          "title": "Disabled",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Disable Interruption",
+            "group": "interruption",
+            "help_text": "If enabled, tool execution cannot be interrupted by user input",
+            "widget_type": "switch"
+          }
+        }
+      },
+      "title": "InterruptionConfig",
+      "type": "object"
+    },
+    "PreToolSpeechConfig": {
+      "description": "Configuration for pre-tool speech/announcement.\n\nControls what the agent says before executing a tool.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Enable Pre-Tool Speech",
+            "group": "speech",
+            "help_text": "Whether to speak/announce before tool execution",
+            "widget_type": "switch"
+          }
+        },
+        "mode": {
+          "$ref": "#/$defs/SpeechMode",
+          "default": "auto",
+          "ui": {
+            "display_name": "Speech Mode",
+            "group": "speech",
+            "help_text": "How to generate the pre-tool speech",
+            "options": [
+              {
+                "label": "Auto (LLM generates)",
+                "value": "auto"
+              },
+              {
+                "label": "Random (from list)",
+                "value": "random"
+              },
+              {
+                "label": "Constant (fixed message)",
+                "value": "constant"
+              }
+            ],
+            "order": 1,
+            "visible_when": "enabled == true",
+            "widget_type": "dropdown"
+          }
+        },
+        "constant_message": {
+          "default": "",
+          "title": "Constant Message",
+          "type": "string",
+          "ui": {
+            "display_name": "Constant Message",
+            "group": "speech",
+            "help_text": "Fixed message to use when mode is CONSTANT",
+            "order": 2,
+            "placeholder": "Processing your request...",
+            "visible_when": "enabled == true && mode == 'constant'",
+            "widget_type": "text"
+          }
+        },
+        "random_messages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Random Messages",
+          "type": "array",
+          "ui": {
+            "display_name": "Random Messages",
+            "group": "speech",
+            "help_text": "List of messages to randomly select from",
+            "item_label": "Message {index}",
+            "order": 3,
+            "visible_when": "enabled == true && mode == 'random'",
+            "widget_type": "array_editor"
+          }
+        },
+        "context_scope": {
+          "$ref": "#/$defs/SpeechContextScope",
+          "default": "tool_only",
+          "ui": {
+            "display_name": "Context Scope",
+            "group": "speech_auto",
+            "help_text": "What context the LLM uses when generating speech",
+            "options": [
+              {
+                "label": "Full Context",
+                "value": "full_context"
+              },
+              {
+                "label": "Tool Only",
+                "value": "tool_only"
+              },
+              {
+                "label": "Last Message",
+                "value": "last_message"
+              },
+              {
+                "label": "Custom Instruction",
+                "value": "custom"
+              }
+            ],
+            "order": 4,
+            "visible_when": "enabled == true && mode == 'auto'",
+            "widget_type": "dropdown"
+          }
+        },
+        "llm_instruction": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Llm Instruction",
+          "ui": {
+            "display_name": "Custom LLM Instruction",
+            "group": "speech_auto",
+            "help_text": "Custom instruction for LLM (required when context_scope=CUSTOM)",
+            "order": 5,
+            "placeholder": "Generate a brief message that...",
+            "visible_when": "enabled == true && mode == 'auto' && context_scope == 'custom'",
+            "widget_type": "textarea"
+          }
+        },
+        "include_tool_params": {
+          "default": true,
+          "title": "Include Tool Params",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Include Tool Parameters",
+            "group": "speech_auto",
+            "help_text": "Include tool parameters in context for speech generation",
+            "order": 6,
+            "visible_when": "enabled == true && mode == 'auto'",
+            "widget_type": "switch"
+          }
+        },
+        "include_user_intent": {
+          "default": true,
+          "title": "Include User Intent",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Include User Intent",
+            "group": "speech_auto",
+            "help_text": "Include detected user intent in context",
+            "order": 7,
+            "visible_when": "enabled == true && mode == 'auto'",
+            "widget_type": "switch"
+          }
+        },
+        "max_tokens": {
+          "default": 50,
+          "maximum": 200,
+          "minimum": 10,
+          "title": "Max Tokens",
+          "type": "integer",
+          "ui": {
+            "display_name": "Max Tokens",
+            "group": "speech_auto",
+            "help_text": "Maximum tokens for generated speech",
+            "max_value": 200,
+            "min_value": 10,
+            "order": 8,
+            "step": 1,
+            "visible_when": "enabled == true && mode == 'auto'",
+            "widget_type": "slider"
+          }
+        },
+        "temperature": {
+          "default": 0.7,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number",
+          "ui": {
+            "display_name": "Temperature",
+            "group": "speech_auto",
+            "help_text": "LLM temperature (higher = more creative)",
+            "max_value": 2,
+            "min_value": 0,
+            "order": 9,
+            "step": 0.1,
+            "visible_when": "enabled == true && mode == 'auto'",
+            "widget_type": "slider"
+          }
+        },
+        "speech_style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Speech Style",
+          "ui": {
+            "display_name": "Speech Style",
+            "group": "speech_auto",
+            "help_text": "Style guidance for speech generation",
+            "order": 10,
+            "placeholder": "friendly, professional, concise",
+            "visible_when": "enabled == true && mode == 'auto'",
+            "widget_type": "text"
+          }
+        }
+      },
+      "title": "PreToolSpeechConfig",
+      "type": "object"
+    },
+    "RetryConfig": {
+      "description": "Configuration for retry behavior.\n\nControls automatic retry on transient failures with exponential backoff.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean",
+          "ui": {
+            "display_name": "Enable Retries",
+            "group": "retry",
+            "help_text": "Automatically retry on transient failures",
+            "widget_type": "switch"
+          }
+        },
+        "max_attempts": {
+          "default": 3,
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Max Attempts",
+          "type": "integer",
+          "ui": {
+            "display_name": "Max Retry Attempts",
+            "group": "retry",
+            "help_text": "Maximum number of retry attempts before giving up",
+            "max_value": 10,
+            "min_value": 1,
+            "order": 1,
+            "step": 1,
+            "visible_when": "enabled == true",
+            "widget_type": "slider"
+          }
+        },
+        "base_delay_s": {
+          "default": 0.2,
+          "maximum": 60,
+          "minimum": 0.1,
+          "title": "Base Delay S",
+          "type": "number",
+          "ui": {
+            "display_name": "Base Delay",
+            "group": "retry",
+            "help_text": "Initial delay between retries (seconds)",
+            "max_value": 60,
+            "min_value": 0.1,
+            "order": 2,
+            "placeholder": "seconds",
+            "step": 0.1,
+            "visible_when": "enabled == true",
+            "widget_type": "number"
+          }
+        },
+        "max_delay_s": {
+          "default": 2.0,
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Max Delay S",
+          "type": "number",
+          "ui": {
+            "display_name": "Max Delay",
+            "group": "retry",
+            "help_text": "Maximum delay between retries with exponential backoff",
+            "max_value": 300,
+            "min_value": 1,
+            "order": 3,
+            "placeholder": "seconds",
+            "step": 0.1,
+            "visible_when": "enabled == true",
+            "widget_type": "number"
+          }
+        },
+        "jitter_s": {
+          "default": 0.1,
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Jitter S",
+          "type": "number",
+          "ui": {
+            "display_name": "Jitter",
+            "group": "retry",
+            "help_text": "Random jitter added to delay to prevent thundering herd",
+            "max_value": 10,
+            "min_value": 0,
+            "order": 4,
+            "placeholder": "seconds",
+            "step": 0.1,
+            "visible_when": "enabled == true",
+            "widget_type": "number"
+          }
+        }
+      },
+      "title": "RetryConfig",
+      "type": "object"
+    },
+    "ToolReturnTarget": {
+      "description": "Enumeration for tool return routing targets",
+      "enum": [
+        "human",
+        "llm",
+        "agent",
+        "step"
+      ],
+      "title": "ToolReturnTarget",
+      "type": "string"
+    },
+    "ToolReturnType": {
+      "description": "Enumeration for tool return formats",
+      "enum": [
+        "json",
+        "toon",
+        "text"
+      ],
+      "title": "ToolReturnType",
+      "type": "string"
+    },
+    "ToolType": {
+      "description": "Enumeration for tool types",
+      "enum": [
+        "function",
+        "http",
+        "db"
+      ],
+      "title": "ToolType",
+      "type": "string"
+    }
+  }
+}

@@ -7,6 +7,7 @@
       "name": "ahf_frontend",
       "version": "1.0.0+1",
       "dependencies": [
+        "collection",
         "flutter",
         "google_fonts",
         "http",
@@ -42,6 +43,11 @@
         "test_api",
         "vector_math"
       ]
+    },
+    {
+      "name": "collection",
+      "version": "1.19.1",
+      "dependencies": []
     },
     {
       "name": "intl",
@@ -108,11 +114,6 @@
     {
       "name": "meta",
       "version": "1.17.0",
-      "dependencies": []
-    },
-    {
-      "name": "collection",
-      "version": "1.19.1",
       "dependencies": []
     },
     {

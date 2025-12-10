@@ -111,3 +111,4 @@ class BasicScratchpad(IAgentScratchpad):
         return self.read()
 
 
+

@@ -1,6 +1,13 @@
 """
 Core spec exports for the tools system.
 """
+# UI Metadata
+from .ui_metadata import (
+    WidgetType,
+    UIFieldConfig,
+    UIPresets,
+    ui,
+)
 #Tool Config
 from .tool_config import (
     RetryConfig,
@@ -40,6 +47,11 @@ from .tool_types import (
 )
 
 __all__ = [
+    # UI Metadata
+    "WidgetType",
+    "UIFieldConfig",
+    "UIPresets",
+    "ui",
     #Tool Config
     "RetryConfig",
     "CircuitBreakerConfig",

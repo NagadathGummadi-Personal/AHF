@@ -1,3 +1,12 @@
+"""
+Tool Configuration Models with UI Metadata.
+
+This module defines configuration models for tool behavior including
+retry, circuit breaker, idempotency, speech, and dynamic variable configs.
+
+Each field includes UI metadata for automatic Flutter form generation.
+"""
+
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
@@ -27,31 +36,218 @@ from ..enum import (
     SpeechContextScope,
     TransformExecutionMode,
 )
+from .ui_metadata import UIPresets, WidgetType, ui
+
 
 class RetryConfig(BaseModel):
-    """Configuration for retry behavior"""
-    max_attempts: int = RETRY_DEFAULT_MAX_ATTEMPTS
-    base_delay_s: float = RETRY_DEFAULT_BASE_DELAY_S
-    max_delay_s: float = RETRY_DEFAULT_MAX_DELAY_S
-    jitter_s: float = RETRY_DEFAULT_JITTER_S
+    """
+    Configuration for retry behavior.
+    
+    Controls automatic retry on transient failures with exponential backoff.
+    """
+    enabled: bool = Field(
+        default=False,
+        json_schema_extra={"ui": UIPresets.enabled_switch(
+            display_name="Enable Retries",
+            help_text="Automatically retry on transient failures",
+            group="retry",
+            order=0,
+        )}
+    )
+    max_attempts: int = Field(
+        default=RETRY_DEFAULT_MAX_ATTEMPTS,
+        ge=1,
+        le=10,
+        json_schema_extra={"ui": UIPresets.count_slider(
+            display_name="Max Retry Attempts",
+            min_value=1,
+            max_value=10,
+            visible_when="enabled == true",
+            help_text="Maximum number of retry attempts before giving up",
+            group="retry",
+            order=1,
+        )}
+    )
+    base_delay_s: float = Field(
+        default=RETRY_DEFAULT_BASE_DELAY_S,
+        ge=0.1,
+        le=60,
+        json_schema_extra={"ui": UIPresets.duration_seconds(
+            display_name="Base Delay",
+            min_value=0.1,
+            max_value=60,
+            visible_when="enabled == true",
+            help_text="Initial delay between retries (seconds)",
+            group="retry",
+            order=2,
+        )}
+    )
+    max_delay_s: float = Field(
+        default=RETRY_DEFAULT_MAX_DELAY_S,
+        ge=1,
+        le=300,
+        json_schema_extra={"ui": UIPresets.duration_seconds(
+            display_name="Max Delay",
+            min_value=1,
+            max_value=300,
+            visible_when="enabled == true",
+            help_text="Maximum delay between retries with exponential backoff",
+            group="retry",
+            order=3,
+        )}
+    )
+    jitter_s: float = Field(
+        default=RETRY_DEFAULT_JITTER_S,
+        ge=0,
+        le=10,
+        json_schema_extra={"ui": UIPresets.duration_seconds(
+            display_name="Jitter",
+            min_value=0,
+            max_value=10,
+            visible_when="enabled == true",
+            help_text="Random jitter added to delay to prevent thundering herd",
+            group="retry",
+            order=4,
+        )}
+    )
 
 
 class CircuitBreakerConfig(BaseModel):
-    """Configuration for circuit breaker pattern"""
-    enabled: bool = CB_DEFAULT_ENABLED
-    failure_threshold: int = CB_DEFAULT_FAILURE_THRESHOLD  # consecutive failures to open
-    recovery_timeout_s: int = CB_DEFAULT_RECOVERY_TIMEOUT_S  # OPEN -> HALF_OPEN after timeout
-    half_open_max_calls: int = CB_DEFAULT_HALF_OPEN_MAX_CALLS  # allowed test calls in HALF_OPEN
-    error_codes_to_trip: List[str] = Field(default_factory=lambda: CB_DEFAULT_ERROR_CODES_TO_TRIP)
+    """
+    Configuration for circuit breaker pattern.
+    
+    Protects against cascading failures by failing fast when a service is unhealthy.
+    """
+    enabled: bool = Field(
+        default=CB_DEFAULT_ENABLED,
+        json_schema_extra={"ui": UIPresets.enabled_switch(
+            display_name="Enable Circuit Breaker",
+            help_text="Fail fast when service is unhealthy to prevent cascading failures",
+            group="circuit_breaker",
+            order=0,
+        )}
+    )
+    failure_threshold: int = Field(
+        default=CB_DEFAULT_FAILURE_THRESHOLD,
+        ge=1,
+        le=20,
+        json_schema_extra={"ui": UIPresets.count_slider(
+            display_name="Failure Threshold",
+            min_value=1,
+            max_value=20,
+            visible_when="enabled == true",
+            help_text="Consecutive failures before opening the circuit",
+            group="circuit_breaker",
+            order=1,
+        )}
+    )
+    recovery_timeout_s: int = Field(
+        default=CB_DEFAULT_RECOVERY_TIMEOUT_S,
+        ge=5,
+        le=600,
+        json_schema_extra={"ui": ui(
+            display_name="Recovery Timeout",
+            widget_type=WidgetType.NUMBER,
+            min_value=5,
+            max_value=600,
+            step=5,
+            visible_when="enabled == true",
+            help_text="Seconds to wait before attempting recovery (OPEN → HALF_OPEN)",
+            group="circuit_breaker",
+            order=2,
+        )}
+    )
+    half_open_max_calls: int = Field(
+        default=CB_DEFAULT_HALF_OPEN_MAX_CALLS,
+        ge=1,
+        le=10,
+        json_schema_extra={"ui": UIPresets.count_slider(
+            display_name="Half-Open Max Calls",
+            min_value=1,
+            max_value=10,
+            visible_when="enabled == true",
+            help_text="Number of test calls allowed in HALF_OPEN state",
+            group="circuit_breaker",
+            order=3,
+        )}
+    )
+    error_codes_to_trip: List[str] = Field(
+        default_factory=lambda: CB_DEFAULT_ERROR_CODES_TO_TRIP,
+        json_schema_extra={"ui": UIPresets.string_list(
+            display_name="Error Codes to Trip",
+            item_label="Error Code {index}",
+            visible_when="enabled == true",
+            help_text="Error codes that should trip the circuit breaker",
+            group="circuit_breaker",
+            order=4,
+        )}
+    )
 
 
 class IdempotencyConfig(BaseModel):
-    """Configuration for idempotency behavior"""
-    enabled: bool = IDEMPOTENCY_DEFAULT_ENABLED
-    key_fields: Optional[List[str]] = None  # if None, use all args
-    ttl_s: Optional[int] = IDEMPOTENCY_DEFAULT_TTL_S
-    persist_result: bool = IDEMPOTENCY_DEFAULT_PERSIST_RESULT  # store result for reuse
-    bypass_on_missing_key: bool = IDEMPOTENCY_DEFAULT_BYPASS_ON_MISSING_KEY  # if key_fields missing, bypass idempotency
+    """
+    Configuration for idempotency behavior.
+    
+    Prevents duplicate executions and enables result caching.
+    """
+    enabled: bool = Field(
+        default=IDEMPOTENCY_DEFAULT_ENABLED,
+        json_schema_extra={"ui": UIPresets.enabled_switch(
+            display_name="Enable Idempotency",
+            help_text="Cache and guard against repeated executions using key fields",
+            group="idempotency",
+            order=0,
+        )}
+    )
+    key_fields: Optional[List[str]] = Field(
+        default=None,
+        json_schema_extra={"ui": UIPresets.string_list(
+            display_name="Key Fields",
+            item_label="Field {index}",
+            visible_when="enabled == true",
+            help_text="Fields to use for idempotency key (empty = all args)",
+            group="idempotency",
+            order=1,
+        )}
+    )
+    ttl_s: Optional[int] = Field(
+        default=IDEMPOTENCY_DEFAULT_TTL_S,
+        ge=60,
+        le=86400,
+        json_schema_extra={"ui": ui(
+            display_name="TTL (seconds)",
+            widget_type=WidgetType.NUMBER,
+            min_value=60,
+            max_value=86400,
+            step=60,
+            visible_when="enabled == true",
+            help_text="Time-to-live for cached results",
+            group="idempotency",
+            order=2,
+        )}
+    )
+    persist_result: bool = Field(
+        default=IDEMPOTENCY_DEFAULT_PERSIST_RESULT,
+        json_schema_extra={"ui": ui(
+            display_name="Persist Result",
+            widget_type=WidgetType.SWITCH,
+            visible_when="enabled == true",
+            help_text="Store result for reuse on duplicate calls",
+            group="idempotency",
+            order=3,
+        )}
+    )
+    bypass_on_missing_key: bool = Field(
+        default=IDEMPOTENCY_DEFAULT_BYPASS_ON_MISSING_KEY,
+        json_schema_extra={"ui": ui(
+            display_name="Bypass on Missing Key",
+            widget_type=WidgetType.SWITCH,
+            visible_when="enabled == true",
+            help_text="Skip idempotency check if key fields are missing",
+            group="idempotency",
+            order=4,
+        )}
+    )
 
 
 class InterruptionConfig(BaseModel):
@@ -59,21 +255,16 @@ class InterruptionConfig(BaseModel):
     Configuration for tool interruption behavior.
     
     Controls whether user inputs can interrupt tool execution.
-    
-    Attributes:
-        disabled: If True, tool execution won't stop for any user inputs.
-                  If False, tool execution will pause for user input validation.
-    
-    Example:
-        # Tool that should not be interrupted (e.g., payment processing)
-        InterruptionConfig(disabled=True)
-        
-        # Tool that can be interrupted for user confirmation
-        InterruptionConfig(disabled=False)
     """
     disabled: bool = Field(
         default=INTERRUPTION_DEFAULT_DISABLED,
-        description="If True, tool execution cannot be interrupted by user input"
+        json_schema_extra={"ui": ui(
+            display_name="Disable Interruption",
+            widget_type=WidgetType.SWITCH,
+            help_text="If enabled, tool execution cannot be interrupted by user input",
+            group="interruption",
+            order=0,
+        )}
     )
 
 
@@ -82,113 +273,144 @@ class PreToolSpeechConfig(BaseModel):
     Configuration for pre-tool speech/announcement.
     
     Controls what the agent says before executing a tool.
-    
-    Attributes:
-        enabled: Whether to speak before tool execution
-        mode: Speech generation mode (auto, random, constant)
-        constant_message: Fixed message for CONSTANT mode
-        random_messages: List of messages to choose from for RANDOM mode
-        
-        # AUTO mode specific configuration
-        context_scope: What context the LLM uses for generation
-        llm_instruction: Custom instruction for LLM (required when context_scope=CUSTOM)
-        include_tool_params: Whether to include tool parameters in context
-        include_user_intent: Whether to include detected user intent
-        max_tokens: Maximum tokens for generated speech
-        temperature: LLM temperature for speech generation
-        speech_style: Style guidance (e.g., "friendly", "professional", "concise")
-    
-    Example:
-        # LLM generates contextual speech using full conversation context
-        PreToolSpeechConfig(
-            enabled=True,
-            mode=SpeechMode.AUTO,
-            context_scope=SpeechContextScope.FULL_CONTEXT,
-            speech_style="friendly and concise"
-        )
-        
-        # LLM generates based only on tool info (faster, less context)
-        PreToolSpeechConfig(
-            enabled=True,
-            mode=SpeechMode.AUTO,
-            context_scope=SpeechContextScope.TOOL_ONLY,
-            include_tool_params=True
-        )
-        
-        # Custom instruction for specific behavior
-        PreToolSpeechConfig(
-            enabled=True,
-            mode=SpeechMode.AUTO,
-            context_scope=SpeechContextScope.CUSTOM,
-            llm_instruction="Generate a brief, reassuring message that we're looking up their reservation. Mention their name if available."
-        )
-        
-        # Random selection from predefined messages
-        PreToolSpeechConfig(
-            enabled=True,
-            mode=SpeechMode.RANDOM,
-            random_messages=[
-                "Let me check that for you...",
-                "Looking that up now...",
-                "One moment please..."
-            ]
-        )
-        
-        # Fixed constant message
-        PreToolSpeechConfig(
-            enabled=True,
-            mode=SpeechMode.CONSTANT,
-            constant_message="Processing your request..."
-        )
-        
-        # No speech (LLM should not speak for this tool)
-        PreToolSpeechConfig(enabled=False)
     """
     enabled: bool = Field(
         default=SPEECH_DEFAULT_ENABLED,
-        description="Whether to speak before tool execution"
+        json_schema_extra={"ui": UIPresets.enabled_switch(
+            display_name="Enable Pre-Tool Speech",
+            help_text="Whether to speak/announce before tool execution",
+            group="speech",
+            order=0,
+        )}
     )
     mode: SpeechMode = Field(
         default=SpeechMode.AUTO,
-        description="Speech generation mode: auto (LLM generates), random (from list), constant (fixed)"
+        json_schema_extra={"ui": UIPresets.enum_dropdown(
+            display_name="Speech Mode",
+            options=[
+                {"value": "auto", "label": "Auto (LLM generates)"},
+                {"value": "random", "label": "Random (from list)"},
+                {"value": "constant", "label": "Constant (fixed message)"},
+            ],
+            visible_when="enabled == true",
+            help_text="How to generate the pre-tool speech",
+            group="speech",
+            order=1,
+        )}
     )
     constant_message: str = Field(
         default=SPEECH_DEFAULT_CONSTANT_MESSAGE,
-        description="Fixed message to use when mode is CONSTANT"
+        json_schema_extra={"ui": UIPresets.text_input(
+            display_name="Constant Message",
+            placeholder="Processing your request...",
+            visible_when="enabled == true && mode == 'constant'",
+            help_text="Fixed message to use when mode is CONSTANT",
+            group="speech",
+            order=2,
+        )}
     )
     random_messages: List[str] = Field(
         default_factory=list,
-        description="List of messages to randomly select from when mode is RANDOM"
+        json_schema_extra={"ui": UIPresets.string_list(
+            display_name="Random Messages",
+            item_label="Message {index}",
+            visible_when="enabled == true && mode == 'random'",
+            help_text="List of messages to randomly select from",
+            group="speech",
+            order=3,
+        )}
     )
     
     # AUTO mode specific configuration
     context_scope: SpeechContextScope = Field(
         default=SpeechContextScope.TOOL_ONLY,
-        description="What context the LLM uses when generating speech in AUTO mode"
+        json_schema_extra={"ui": UIPresets.enum_dropdown(
+            display_name="Context Scope",
+            options=[
+                {"value": "full_context", "label": "Full Context"},
+                {"value": "tool_only", "label": "Tool Only"},
+                {"value": "last_message", "label": "Last Message"},
+                {"value": "custom", "label": "Custom Instruction"},
+            ],
+            visible_when="enabled == true && mode == 'auto'",
+            help_text="What context the LLM uses when generating speech",
+            group="speech_auto",
+            order=4,
+        )}
     )
     llm_instruction: Optional[str] = Field(
         default=None,
-        description="Custom instruction for LLM (required when context_scope=CUSTOM, optional otherwise)"
+        json_schema_extra={"ui": UIPresets.multiline_text(
+            display_name="Custom LLM Instruction",
+            placeholder="Generate a brief message that...",
+            visible_when="enabled == true && mode == 'auto' && context_scope == 'custom'",
+            help_text="Custom instruction for LLM (required when context_scope=CUSTOM)",
+            group="speech_auto",
+            order=5,
+        )}
     )
     include_tool_params: bool = Field(
         default=True,
-        description="Whether to include tool parameters in the context for AUTO mode"
+        json_schema_extra={"ui": ui(
+            display_name="Include Tool Parameters",
+            widget_type=WidgetType.SWITCH,
+            visible_when="enabled == true && mode == 'auto'",
+            help_text="Include tool parameters in context for speech generation",
+            group="speech_auto",
+            order=6,
+        )}
     )
     include_user_intent: bool = Field(
         default=True,
-        description="Whether to include detected user intent in the context"
+        json_schema_extra={"ui": ui(
+            display_name="Include User Intent",
+            widget_type=WidgetType.SWITCH,
+            visible_when="enabled == true && mode == 'auto'",
+            help_text="Include detected user intent in context",
+            group="speech_auto",
+            order=7,
+        )}
     )
     max_tokens: int = Field(
         default=50,
-        description="Maximum tokens for generated speech (keeps it concise)"
+        ge=10,
+        le=200,
+        json_schema_extra={"ui": UIPresets.count_slider(
+            display_name="Max Tokens",
+            min_value=10,
+            max_value=200,
+            visible_when="enabled == true && mode == 'auto'",
+            help_text="Maximum tokens for generated speech",
+            group="speech_auto",
+            order=8,
+        )}
     )
     temperature: float = Field(
         default=0.7,
-        description="LLM temperature for speech generation (higher = more creative)"
+        ge=0,
+        le=2,
+        json_schema_extra={"ui": ui(
+            display_name="Temperature",
+            widget_type=WidgetType.SLIDER,
+            min_value=0,
+            max_value=2,
+            step=0.1,
+            visible_when="enabled == true && mode == 'auto'",
+            help_text="LLM temperature (higher = more creative)",
+            group="speech_auto",
+            order=9,
+        )}
     )
     speech_style: Optional[str] = Field(
         default=None,
-        description="Style guidance for speech (e.g., 'friendly', 'professional', 'concise')"
+        json_schema_extra={"ui": UIPresets.text_input(
+            display_name="Speech Style",
+            placeholder="friendly, professional, concise",
+            visible_when="enabled == true && mode == 'auto'",
+            help_text="Style guidance for speech generation",
+            group="speech_auto",
+            order=10,
+        )}
     )
 
 
@@ -198,25 +420,35 @@ class ExecutionConfig(BaseModel):
     
     Controls whether to wait for speech to complete before executing
     the tool, or run both in parallel.
-    
-    Attributes:
-        mode: Execution mode (sequential or parallel)
-        speech_timeout_ms: Max time to wait for speech in sequential mode
-    
-    Example:
-        # Wait for speech to complete, then execute tool
-        ExecutionConfig(mode=ExecutionMode.SEQUENTIAL)
-        
-        # Execute speech and tool simultaneously
-        ExecutionConfig(mode=ExecutionMode.PARALLEL)
     """
     mode: ExecutionMode = Field(
         default=ExecutionMode.SEQUENTIAL,
-        description="Whether to wait for speech (sequential) or run in parallel"
+        json_schema_extra={"ui": UIPresets.enum_dropdown(
+            display_name="Execution Mode",
+            options=[
+                {"value": "sequential", "label": "Sequential (speech then execute)"},
+                {"value": "parallel", "label": "Parallel (speech and execute together)"},
+            ],
+            help_text="Whether to wait for speech (sequential) or run in parallel",
+            group="execution",
+            order=0,
+        )}
     )
     speech_timeout_ms: Optional[int] = Field(
         default=None,
-        description="Max time to wait for speech in sequential mode (ms)"
+        ge=100,
+        le=10000,
+        json_schema_extra={"ui": ui(
+            display_name="Speech Timeout (ms)",
+            widget_type=WidgetType.NUMBER,
+            min_value=100,
+            max_value=10000,
+            step=100,
+            visible_when="mode == 'sequential'",
+            help_text="Max time to wait for speech in sequential mode",
+            group="execution",
+            order=1,
+        )}
     )
 
 
@@ -225,85 +457,85 @@ class VariableAssignment(BaseModel):
     Single variable assignment rule.
     
     Maps a field from tool result to a dynamic variable.
-    
-    Attributes:
-        target_variable: Name of the dynamic variable to update
-        source_field: JSONPath or dot-notation path to field in tool result
-        operator: How to assign the value (set, set_if_exists, set_if_truthy, append, increment, transform)
-        default_value: Default value if source field is not found
-        transform_expr: Optional transformation expression (e.g., "bool(value)", "str(value)")
-        transform_func: Optional callable for custom transformation
-        transform_execution: Execution mode for transform function (sync, async, await)
-        wait_for_transform: Whether to wait for async transform before returning tool result
-    
-    Example:
-        # Set guest_id from result.data.guest_id
-        VariableAssignment(
-            target_variable="guest_id",
-            source_field="data.guest_id",
-            operator=VariableAssignmentOperator.SET
-        )
-        
-        # Set is_new_guest to True if guest was created
-        VariableAssignment(
-            target_variable="is_new_guest_created",
-            source_field="data.created",
-            operator=VariableAssignmentOperator.SET_IF_TRUTHY,
-            transform_expr="bool(value)"
-        )
-        
-        # Use custom function to transform value
-        VariableAssignment(
-            target_variable="formatted_date",
-            source_field="data.created_at",
-            operator=VariableAssignmentOperator.TRANSFORM,
-            transform_func=lambda value: datetime.fromisoformat(value).strftime("%B %d, %Y"),
-            transform_execution=TransformExecutionMode.SYNC
-        )
-        
-        # Async transform that doesn't block tool result
-        VariableAssignment(
-            target_variable="enriched_profile",
-            source_field="data.user_id",
-            operator=VariableAssignmentOperator.TRANSFORM,
-            transform_func=fetch_user_profile,  # async function
-            transform_execution=TransformExecutionMode.ASYNC
-        )
-        
-        # Async transform that waits for completion before returning
-        VariableAssignment(
-            target_variable="validated_address",
-            source_field="data.address",
-            operator=VariableAssignmentOperator.TRANSFORM,
-            transform_func=validate_and_normalize_address,  # async function
-            transform_execution=TransformExecutionMode.AWAIT
-        )
     """
     target_variable: str = Field(
-        description="Name of the dynamic variable to update"
+        json_schema_extra={"ui": UIPresets.text_input(
+            display_name="Target Variable",
+            placeholder="guest_id",
+            help_text="Name of the dynamic variable to update",
+            group="assignment",
+            order=0,
+        )}
     )
     source_field: str = Field(
-        description="Path to field in tool result (dot notation, e.g., 'data.guest_id')"
+        json_schema_extra={"ui": UIPresets.text_input(
+            display_name="Source Field",
+            placeholder="data.guest_id",
+            help_text="Path to field in tool result (dot notation)",
+            group="assignment",
+            order=1,
+        )}
     )
     operator: VariableAssignmentOperator = Field(
         default=VariableAssignmentOperator.SET,
-        description="Assignment operator"
+        json_schema_extra={"ui": UIPresets.enum_dropdown(
+            display_name="Operator",
+            options=[
+                {"value": "set", "label": "Set (always)"},
+                {"value": "set_if_exists", "label": "Set if Exists"},
+                {"value": "set_if_truthy", "label": "Set if Truthy"},
+                {"value": "append", "label": "Append to List"},
+                {"value": "increment", "label": "Increment Number"},
+                {"value": "transform", "label": "Transform with Function"},
+            ],
+            help_text="How to assign the value",
+            group="assignment",
+            order=2,
+        )}
     )
     default_value: Optional[Any] = Field(
         default=None,
-        description="Default value if source field not found"
+        json_schema_extra={"ui": UIPresets.text_input(
+            display_name="Default Value",
+            placeholder="null",
+            help_text="Default value if source field not found",
+            group="assignment",
+            order=3,
+        )}
     )
     transform_expr: Optional[str] = Field(
         default=None,
-        description="Simple transformation expression (e.g., 'bool(value)', 'str(value)', 'int(value)')"
+        json_schema_extra={"ui": UIPresets.text_input(
+            display_name="Transform Expression",
+            placeholder="bool(value)",
+            visible_when="operator == 'transform'",
+            help_text="Simple transformation expression (e.g., 'bool(value)', 'str(value)')",
+            group="assignment",
+            order=4,
+        )}
     )
     transform_func: Optional[Any] = Field(
         default=None,
-        description="Custom callable for complex transformations. Receives (value, context) and returns transformed value"
+        json_schema_extra={"ui": ui(
+            display_name="Transform Function",
+            widget_type=WidgetType.HIDDEN,
+            help_text="Custom callable for complex transformations (set programmatically)",
+        )}
     )
     transform_execution: TransformExecutionMode = Field(
         default=TransformExecutionMode.SYNC,
-        description="Execution mode for transform_func: sync (block), async (fire-and-forget), await (async but wait)"
+        json_schema_extra={"ui": UIPresets.enum_dropdown(
+            display_name="Transform Execution",
+            options=[
+                {"value": "sync", "label": "Sync (block)"},
+                {"value": "async", "label": "Async (fire-and-forget)"},
+                {"value": "await", "label": "Await (async but wait)"},
+            ],
+            visible_when="operator == 'transform'",
+            help_text="Execution mode for transform_func",
+            group="assignment",
+            order=5,
+        )}
     )
     
     model_config = {
@@ -316,44 +548,40 @@ class DynamicVariableConfig(BaseModel):
     Configuration for dynamic variable assignments from tool results.
     
     Allows updating conversation/session variables based on tool execution results.
-    
-    Attributes:
-        enabled: Whether dynamic variable assignment is enabled
-        assignments: List of variable assignment rules
-        on_error: Behavior on assignment error ('ignore', 'log', 'raise')
-    
-    Example:
-        DynamicVariableConfig(
-            enabled=True,
-            assignments=[
-                VariableAssignment(
-                    target_variable="guest_id",
-                    source_field="data.guest_id",
-                    operator=VariableAssignmentOperator.SET
-                ),
-                VariableAssignment(
-                    target_variable="is_new_guest_created",
-                    source_field="data.created",
-                    operator=VariableAssignmentOperator.SET_IF_TRUTHY,
-                    default_value=False
-                ),
-                VariableAssignment(
-                    target_variable="reservation_count",
-                    source_field="data.reservation_count",
-                    operator=VariableAssignmentOperator.INCREMENT
-                )
-            ]
-        )
     """
     enabled: bool = Field(
         default=VARIABLE_ASSIGNMENT_DEFAULT_ENABLED,
-        description="Whether dynamic variable assignment is enabled"
+        json_schema_extra={"ui": UIPresets.enabled_switch(
+            display_name="Enable Dynamic Variables",
+            help_text="Update conversation/session variables based on tool results",
+            group="dynamic_vars",
+            order=0,
+        )}
     )
     assignments: List[VariableAssignment] = Field(
         default_factory=list,
-        description="List of variable assignment rules"
+        json_schema_extra={"ui": ui(
+            display_name="Variable Assignments",
+            widget_type=WidgetType.ARRAY_EDITOR,
+            item_label="Assignment {index}",
+            visible_when="enabled == true",
+            help_text="List of variable assignment rules",
+            group="dynamic_vars",
+            order=1,
+        )}
     )
     on_error: str = Field(
         default="log",
-        description="Behavior on assignment error: 'ignore', 'log', or 'raise'"
+        json_schema_extra={"ui": UIPresets.enum_dropdown(
+            display_name="On Error",
+            options=[
+                {"value": "ignore", "label": "Ignore"},
+                {"value": "log", "label": "Log Warning"},
+                {"value": "raise", "label": "Raise Exception"},
+            ],
+            visible_when="enabled == true",
+            help_text="Behavior on assignment error",
+            group="dynamic_vars",
+            order=2,
+        )}
     )

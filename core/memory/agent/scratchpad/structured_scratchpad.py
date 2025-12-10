@@ -251,3 +251,4 @@ class StructuredScratchpad(IAgentScratchpad):
         return self.read()
 
 
+
