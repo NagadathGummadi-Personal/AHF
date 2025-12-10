@@ -51,12 +51,15 @@ class Defaults:
     # =========================================================================
     # Checkpoint Configuration
     # =========================================================================
-    CHECKPOINT_STRATEGY = "lazy"  # "immediate", "lazy", "batched"
-    CHECKPOINT_BATCH_SIZE = 10
-    CHECKPOINT_BATCH_TIMEOUT_MS = 100
-    CHECKPOINT_STORAGE_PATH = ".checkpoints"
-    CHECKPOINT_WAL_ENABLED = True
-    CHECKPOINT_CACHE_MAX_SIZE = 1000
+    CHECKPOINT_STRATEGY = "dynamodb"  # "dynamodb" (production), "local" (development)
+    CHECKPOINT_STORAGE_PATH = ".checkpoints"  # Local fallback path
+    CHECKPOINT_CACHE_MAX_SIZE = 100
+    
+    # DynamoDB settings
+    CHECKPOINT_DYNAMODB_TABLE = "ahf_workflow_checkpoints"
+    CHECKPOINT_TTL_DAYS = 1  # 1-10 days, default 1
+    CHECKPOINT_MAX_TTL_DAYS = 10
+    CHECKPOINT_USE_LOCAL_FALLBACK = True  # Fall back to local if DynamoDB unavailable
     
     # =========================================================================
     # Memory Configuration

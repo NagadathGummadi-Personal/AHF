@@ -12,8 +12,6 @@ from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..interfaces import ICheckpointer
-
 
 class BaseCheckpointer(ABC):
     """

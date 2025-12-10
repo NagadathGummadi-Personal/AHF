@@ -152,6 +152,11 @@ from .constants import (
 from .task_queue import (
     BaseTaskQueue,
     BaseCheckpointer,
+    DynamoDBCheckpointer,
+    create_dynamodb_checkpointer,
+    create_table_if_not_exists,
+    DEFAULT_TTL_DAYS,
+    MAX_TTL_DAYS,
 )
 
 # ============================================================================
@@ -295,4 +300,10 @@ __all__ = [
     # =========================================================================
     "BaseTaskQueue",
     "BaseCheckpointer",
+    # DynamoDB Checkpointer
+    "DynamoDBCheckpointer",
+    "create_dynamodb_checkpointer",
+    "create_table_if_not_exists",
+    "DEFAULT_TTL_DAYS",
+    "MAX_TTL_DAYS",
 ]

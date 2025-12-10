@@ -7,7 +7,6 @@ voice agent-specific extensions.
 Version: 1.0.0
 """
 
-import asyncio
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 import uuid
@@ -18,15 +17,14 @@ from core.memory import (
     IStateTracker,
     IConversationMemory,
 )
-from core.workflows.interrupt import InterruptManager
 
-from app.config import get_settings, Defaults
+from app.config import get_settings
 from app.models.task import Task, TaskPriority
 from app.models.dynamic_variables import DynamicVariables
-from app.models.workflow_state import WorkflowState, StepTracker, StashedResponse
+from app.models.workflow_state import WorkflowState, StepTracker
 
 from .task_queue import VoiceAgentTaskQueue
-from .checkpointer import VoiceAgentCheckpointer
+from .checkpointer import create_voice_agent_checkpointer, DynamoDBCheckpointer
 
 
 class VoiceAgentSession:
@@ -70,9 +68,10 @@ class VoiceAgentSession:
             storage_path=f"{self._settings.checkpoint_storage_path}/tasks/{self._session_id}",
         )
         
-        self._checkpointer = VoiceAgentCheckpointer(
-            storage_path=f"{self._settings.checkpoint_storage_path}/sessions/{self._session_id}",
-            wal_enabled=self._settings.checkpoint_wal_enabled,
+        self._checkpointer = create_voice_agent_checkpointer(
+            session_id=self._session_id,
+            ttl_days=1,  # Default 1 day retention
+            use_local_fallback=True,  # Use local for development
         )
         
         # Dynamic variables
@@ -81,9 +80,6 @@ class VoiceAgentSession:
         # Workflow state tracking
         self._workflow_state = WorkflowState(session_id=self._session_id)
         self._step_tracker = StepTracker()
-        
-        # Interrupt handling
-        self._interrupt_manager: Optional[InterruptManager] = None
         
         # Timestamps
         self._created_at = datetime.utcnow()
@@ -119,7 +115,7 @@ class VoiceAgentSession:
         return self._task_queue
     
     @property
-    def checkpointer(self) -> VoiceAgentCheckpointer:
+    def checkpointer(self) -> DynamoDBCheckpointer:
         """Get checkpointer."""
         return self._checkpointer
     

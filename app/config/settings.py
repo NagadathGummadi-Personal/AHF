@@ -82,14 +82,16 @@ class Settings(BaseSettings):
     task_queue_persist_interval_ms: int = Field(default=Defaults.TASK_QUEUE_PERSIST_INTERVAL_MS)
     
     # =========================================================================
-    # Checkpoint Configuration
+    # Checkpoint Configuration (DynamoDB)
     # =========================================================================
     checkpoint_strategy: str = Field(default=Defaults.CHECKPOINT_STRATEGY)
-    checkpoint_batch_size: int = Field(default=Defaults.CHECKPOINT_BATCH_SIZE)
-    checkpoint_batch_timeout_ms: int = Field(default=Defaults.CHECKPOINT_BATCH_TIMEOUT_MS)
     checkpoint_storage_path: str = Field(default=Defaults.CHECKPOINT_STORAGE_PATH)
-    checkpoint_wal_enabled: bool = Field(default=Defaults.CHECKPOINT_WAL_ENABLED)
     checkpoint_cache_max_size: int = Field(default=Defaults.CHECKPOINT_CACHE_MAX_SIZE)
+    
+    # DynamoDB settings
+    checkpoint_dynamodb_table: str = Field(default=Defaults.CHECKPOINT_DYNAMODB_TABLE)
+    checkpoint_ttl_days: int = Field(default=Defaults.CHECKPOINT_TTL_DAYS)
+    checkpoint_use_local_fallback: bool = Field(default=Defaults.CHECKPOINT_USE_LOCAL_FALLBACK)
     
     # =========================================================================
     # Memory Configuration
