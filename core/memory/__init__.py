@@ -83,6 +83,11 @@ from .interfaces import (
     # Cache interfaces
     ICache,
     IToolMemory,  # Alias for backward compatibility
+    # Task queue and checkpointing interfaces
+    ITask,
+    ITaskQueue,
+    ICheckpointer,
+    IInterruptHandler,
 )
 
 # ============================================================================
@@ -142,6 +147,14 @@ from .constants import (
 )
 
 # ============================================================================
+# Task Queue and Checkpointing Base Classes
+# ============================================================================
+from .task_queue import (
+    BaseTaskQueue,
+    BaseCheckpointer,
+)
+
+# ============================================================================
 # Agent Memory Components
 # ============================================================================
 from .agent import (
@@ -191,6 +204,11 @@ __all__ = [
     # Cache
     "ICache",
     "IToolMemory",
+    # Task queue and checkpointing
+    "ITask",
+    "ITaskQueue",
+    "ICheckpointer",
+    "IInterruptHandler",
     
     # =========================================================================
     # Core Memory Base Classes
@@ -271,4 +289,10 @@ __all__ = [
     # Backward compatibility
     "NoOpMemory",
     "ToolMemoryFactory",
+    
+    # =========================================================================
+    # Task Queue and Checkpointing Base Classes
+    # =========================================================================
+    "BaseTaskQueue",
+    "BaseCheckpointer",
 ]
