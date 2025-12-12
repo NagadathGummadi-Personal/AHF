@@ -6,6 +6,7 @@ All components are pluggable:
 - Validators: NoOpPromptValidator, BasicPromptValidator, or custom
 - Security: NoOpPromptSecurity, RoleBasedPromptSecurity, or custom
 - BasePromptRegistry: Abstract base class for creating custom registries
+- ConditionalProcessor: Process conditional blocks in prompts
 
 Note: LLM usage tracking is now handled directly in core/llms.
       Use llm.set_prompt_registry(registry) and pass prompt_id in LLMContext.
@@ -30,6 +31,11 @@ from .security import (
     PromptSecurityFactory,
 )
 
+from .conditional_processor import (
+    ConditionalProcessor,
+    process_conditionals,
+)
+
 __all__ = [
     # Base
     "BasePromptRegistry",
@@ -45,5 +51,8 @@ __all__ = [
     "NoOpPromptSecurity",
     "RoleBasedPromptSecurity",
     "PromptSecurityFactory",
+    # Conditional Processing
+    "ConditionalProcessor",
+    "process_conditionals",
 ]
 

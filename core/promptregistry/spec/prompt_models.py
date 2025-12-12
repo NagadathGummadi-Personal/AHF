@@ -26,6 +26,7 @@ from ..constants import (
     MIN_EVAL_SCORE,
     MAX_EVAL_SCORE,
     ERROR_MISSING_VARIABLES,
+    CONDITIONAL_PATTERN,
 )
 
 
@@ -464,47 +465,103 @@ class PromptMetadata(BaseModel):
 
 class PromptTemplate(BaseModel):
     """
-    Template for prompts with dynamic variable support.
+    Template for prompts with dynamic variable and conditional support.
     
-    Handles extraction and substitution of dynamic variables in prompt templates.
-    Variables are specified using {variable_name} syntax.
+    Handles:
+    - Extraction and substitution of dynamic variables: {variable_name}
+    - Conditional blocks: {# if condition #}...{# endif #}
+    - Nested conditionals and elif/else blocks
+    
+    Conditional Syntax:
+        - {# if condition #}...{# endif #}
+        - {# if condition #}...{# else #}...{# endif #}
+        - {# if condition #}...{# elif condition #}...{# else #}...{# endif #}
+    
+    Condition Types:
+        - Boolean: {# if is_premium #}
+        - Negation: {# if not is_active #}
+        - Comparison: {# if age >= 18 #}
+        - Equality: {# if status == 'active' #}
+        - Membership: {# if 'admin' in roles #}
+        - Logical: {# if is_active and is_verified #}
     
     Attributes:
-        content: The raw template content with {variables}
+        content: The raw template content with {variables} and conditionals
         dynamic_variables: Set of variable names extracted from content
+        conditional_variables: Set of variable names used in conditionals
         default_values: Default values for variables
+        enable_conditionals: Whether to process conditional blocks
     
     Example:
         template = PromptTemplate(
-            content="You are {role}. Help the user with {task}.",
+            content='''
+            You are {role}. 
+            {# if is_premium #}
+            You have access to advanced features.
+            {# else #}
+            Consider upgrading for more features.
+            {# endif #}
+            Help the user with {task}.
+            ''',
             default_values={"role": "a helpful assistant"}
         )
         
         # Get required variables
-        vars = template.get_required_variables()  # {"role", "task"}
+        vars = template.get_required_variables()  # {"task"}
         
         # Render with variables
-        rendered = template.render({"role": "an expert", "task": "coding"})
+        rendered = template.render({
+            "task": "coding",
+            "is_premium": True
+        })
     """
     
     content: str = Field(description="Raw template content")
     dynamic_variables: Set[str] = Field(
         default_factory=set,
-        description="Extracted variable names"
+        description="Extracted variable names from {variable} syntax"
+    )
+    conditional_variables: Set[str] = Field(
+        default_factory=set,
+        description="Variable names used in conditional expressions"
     )
     default_values: Dict[str, Any] = Field(
         default_factory=dict,
         description="Default values for variables"
     )
+    enable_conditionals: bool = Field(
+        default=True,
+        description="Whether to process conditional blocks"
+    )
+    
+    # Private attribute for conditional processor
+    _conditional_processor: Any = None
     
     def model_post_init(self, __context: Any) -> None:
         """Extract variables after initialization."""
         self._extract_variables()
+        self._extract_conditional_variables()
+    
+    def _get_processor(self) -> Any:
+        """Get or create the conditional processor."""
+        if self._conditional_processor is None:
+            from ..runtimes.conditional_processor import ConditionalProcessor
+            self._conditional_processor = ConditionalProcessor(strict=False)
+        return self._conditional_processor
     
     def _extract_variables(self) -> None:
         """Extract all {variable} patterns from content."""
         matches = re.findall(VARIABLE_PATTERN, self.content)
         self.dynamic_variables = set(matches)
+    
+    def _extract_conditional_variables(self) -> None:
+        """Extract variable names from conditional expressions."""
+        if not self.enable_conditionals:
+            self.conditional_variables = set()
+            return
+        
+        processor = self._get_processor()
+        self.conditional_variables = processor.extract_conditional_variables(self.content)
     
     def get_required_variables(self) -> Set[str]:
         """
@@ -513,6 +570,11 @@ class PromptTemplate(BaseModel):
         Returns:
             Set of variable names that must be provided for rendering.
             Variables with default values are not included.
+            
+        Note:
+            This returns dynamic variables (for {var} substitution).
+            Conditional variables are typically boolean flags and are
+            not considered "required" - they default to False if not provided.
         """
         return self.dynamic_variables - set(self.default_values.keys())
     
@@ -521,9 +583,41 @@ class PromptTemplate(BaseModel):
         Get all variable names in the template.
         
         Returns:
-            Set of all variable names (required and optional).
+            Set of all variable names (required and optional),
+            including those used in conditionals.
         """
-        return self.dynamic_variables.copy()
+        return self.dynamic_variables.union(self.conditional_variables)
+    
+    def get_conditional_variables(self) -> Set[str]:
+        """
+        Get variable names used in conditional expressions.
+        
+        Returns:
+            Set of variable names used in {# if condition #} blocks.
+        """
+        return self.conditional_variables.copy()
+    
+    def has_conditionals(self) -> bool:
+        """
+        Check if the template contains conditional blocks.
+        
+        Returns:
+            True if the template has {# if #} blocks.
+        """
+        if not self.enable_conditionals:
+            return False
+        return self._get_processor().has_conditionals(self.content)
+    
+    def validate_conditionals(self) -> List[str]:
+        """
+        Validate the conditional syntax in the template.
+        
+        Returns:
+            List of validation error messages (empty if valid).
+        """
+        if not self.enable_conditionals:
+            return []
+        return self._get_processor().validate_template(self.content)
     
     def validate_variables(self, variables: Dict[str, Any]) -> List[str]:
         """
@@ -543,40 +637,65 @@ class PromptTemplate(BaseModel):
     def render(
         self,
         variables: Optional[Dict[str, Any]] = None,
-        strict: bool = True
+        strict: bool = True,
+        process_conditionals: bool = True
     ) -> str:
         """
         Render the template with provided variables.
         
+        Processing order:
+        1. Process conditional blocks (if enabled)
+        2. Substitute {variable} placeholders
+        
         Args:
             variables: Dictionary of variable values
             strict: If True, raise error for missing required variables
+            process_conditionals: If True, process {# if #} blocks
             
         Returns:
             Rendered prompt string
             
         Raises:
-            ValueError: If strict=True and required variables are missing
+            ValueError: If strict=True and required variables are missing,
+                       or if conditional syntax is invalid
         """
         variables = variables or {}
         
         # Merge with defaults
         merged = {**self.default_values, **variables}
         
-        # Validate if strict
-        if strict:
-            missing = self.validate_variables(merged)
-            if missing:
-                raise ValueError(ERROR_MISSING_VARIABLES.format(variables=missing))
+        # Start with raw content
+        result = self.content
         
-        # Render template
+        # Step 1: Process conditionals
+        if process_conditionals and self.enable_conditionals:
+            processor = self._get_processor()
+            
+            # Validate conditional syntax first
+            errors = processor.validate_template(result)
+            if errors and strict:
+                raise ValueError(f"Invalid conditional syntax: {'; '.join(errors)}")
+            
+            # Process conditionals
+            result = processor.process(result, merged)
+        
+        # Step 2: Re-extract variables from processed content
+        # (some {variables} may have been removed by conditionals)
+        remaining_vars = set(re.findall(VARIABLE_PATTERN, result))
+        
+        # Validate required variables in processed content
+        if strict:
+            missing = remaining_vars - set(merged.keys())
+            if missing:
+                raise ValueError(ERROR_MISSING_VARIABLES.format(variables=list(missing)))
+        
+        # Step 3: Substitute variables
         try:
-            return self.content.format(**merged)
+            return result.format(**merged)
         except KeyError as e:
             if strict:
                 raise ValueError(f"Missing variable: {e}")
             # Non-strict: leave unresolved variables as-is
-            result = self.content
             for key, value in merged.items():
                 result = result.replace(f"{{{key}}}", str(value))
             return result
