@@ -133,6 +133,22 @@ CATEGORY_EXAMPLE = "example"
 VARIABLE_PATTERN = r'\{([a-zA-Z_][a-zA-Z0-9_]*)\}'
 
 # ============================================================================
+# CONDITIONAL PATTERNS
+# ============================================================================
+
+# Pattern for conditional blocks: {# if condition #}, {# elif condition #}, etc.
+CONDITIONAL_PATTERN = r'\{#\s*(if|elif|else|endif)(?:\s+(.+?))?\s*#\}'
+
+# Conditional keywords
+CONDITIONAL_IF = "if"
+CONDITIONAL_ELIF = "elif"
+CONDITIONAL_ELSE = "else"
+CONDITIONAL_ENDIF = "endif"
+
+# Conditional operators
+CONDITIONAL_OPERATORS = ['==', '!=', '>=', '<=', '>', '<', 'and', 'or', 'not', 'in', 'not in']
+
+# ============================================================================
 # AGENT PROMPT LABELS
 # ============================================================================
 
