@@ -1,10 +1,17 @@
 """
 Voice Agent Session Memory
 
-Unified session memory combining core.memory components with
-voice agent-specific extensions.
+Unified session memory for low-latency text-to-text WebSocket workflows.
+Combines core.memory components with voice agent-specific extensions.
 
-Version: 1.0.0
+IMPORTANT - Request Isolation (Fargate/Container Safety):
+- Each WebSocket connection gets its OWN VoiceAgentSession instance
+- All state is stored in instance variables (self._xxx)
+- NEVER use global variables, singletons, or class-level mutable state
+- Sessions are ephemeral and live only for the duration of the connection
+- This ensures complete isolation between concurrent requests
+
+Version: 1.1.0
 """
 
 from datetime import datetime
@@ -24,7 +31,6 @@ from app.models.dynamic_variables import DynamicVariables
 from app.models.workflow_state import WorkflowState, StepTracker
 
 from .task_queue import VoiceAgentTaskQueue
-from .checkpointer import create_voice_agent_checkpointer, DynamoDBCheckpointer
 
 
 class VoiceAgentSession:
@@ -34,7 +40,6 @@ class VoiceAgentSession:
     Integrates:
     - core.memory.WorkingMemory for conversation and state
     - VoiceAgentTaskQueue for task management
-    - VoiceAgentCheckpointer for lazy checkpointing
     - InterruptManager for interrupt handling
     
     This is the primary memory interface for nodes and edges.
@@ -55,23 +60,16 @@ class VoiceAgentSession:
         self._session_id = session_id or str(uuid.uuid4())
         self._settings = settings or get_settings()
         
-        # Core working memory (conversation, state, checkpoints)
+        # Core working memory (conversation and state)
         self._working_memory = DefaultWorkingMemory(
             session_id=self._session_id,
             max_messages=self._settings.max_conversation_messages,
-            max_checkpoints=self._settings.max_checkpoints,
+            max_checkpoints=self._settings.max_state_snapshots,  # Internal state snapshots
         )
         
-        # Voice agent extensions
+        # Voice agent extensions (in-memory for low-latency)
         self._task_queue = VoiceAgentTaskQueue(
             max_size=self._settings.task_queue_max_size,
-            storage_path=f"{self._settings.checkpoint_storage_path}/tasks/{self._session_id}",
-        )
-        
-        self._checkpointer = create_voice_agent_checkpointer(
-            session_id=self._session_id,
-            ttl_days=1,  # Default 1 day retention
-            use_local_fallback=True,  # Use local for development
         )
         
         # Dynamic variables
@@ -115,11 +113,6 @@ class VoiceAgentSession:
         return self._task_queue
     
     @property
-    def checkpointer(self) -> DynamoDBCheckpointer:
-        """Get checkpointer."""
-        return self._checkpointer
-    
-    @property
     def workflow_state(self) -> WorkflowState:
         """Get workflow state."""
         return self._workflow_state
@@ -143,15 +136,12 @@ class VoiceAgentSession:
         if self._started:
             return
         
-        await self._checkpointer.start()
         await self._task_queue.recover()
         self._started = True
         self._workflow_state.started_at = datetime.utcnow()
     
     async def close(self) -> None:
         """Close session and persist state."""
-        await self.save_checkpoint("session_close")
-        await self._checkpointer.close()
         self._started = False
     
     # =========================================================================
@@ -275,14 +265,33 @@ class VoiceAgentSession:
         """Get current node ID."""
         return self._workflow_state.current_node_id
     
-    def set_workflow_variable(self, key: str, value: Any) -> None:
-        """Set a workflow variable."""
-        self._workflow_state.set_variable(key, value)
+    def get_previous_node(self) -> Optional[str]:
+        """Get previous node ID."""
+        return self._workflow_state.previous_node_id
+    
+    def get_node_history(self) -> List[str]:
+        """Get node visit history."""
+        return self._workflow_state.node_history.copy()
+    
+    # =========================================================================
+    # Variables (single source of truth: WorkingMemory)
+    # =========================================================================
+    
+    def set_variable(self, key: str, value: Any) -> None:
+        """Set a context variable."""
         self._working_memory.set_variable(key, value)
     
-    def get_workflow_variable(self, key: str, default: Any = None) -> Any:
-        """Get a workflow variable."""
-        return self._workflow_state.get_variable(key, default)
+    def get_variable(self, key: str, default: Any = None) -> Any:
+        """Get a context variable."""
+        return self._working_memory.get_variable(key, default)
+    
+    def get_all_variables(self) -> Dict[str, Any]:
+        """Get all context variables."""
+        return self._working_memory.get_all_variables()
+    
+    # Aliases for backward compatibility
+    set_workflow_variable = set_variable
+    get_workflow_variable = get_variable
     
     # =========================================================================
     # Step Tracking
@@ -327,56 +336,6 @@ class VoiceAgentSession:
         if stashed:
             return stashed.get_continuation_context()
         return None
-    
-    # =========================================================================
-    # Checkpointing
-    # =========================================================================
-    
-    async def save_checkpoint(
-        self,
-        checkpoint_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """Save a checkpoint of current state."""
-        cp_id = checkpoint_id or f"cp_{datetime.utcnow().timestamp()}"
-        
-        state_data = {
-            "session_id": self._session_id,
-            "working_memory": self._working_memory.to_dict(),
-            "workflow_state": self._workflow_state.to_checkpoint_data(),
-            "step_tracker": self._step_tracker.model_dump(mode="json"),
-            "dynamic_vars": self._dynamic_vars.model_dump(mode="json") if self._dynamic_vars else None,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-        
-        return await self._checkpointer.save_checkpoint(cp_id, state_data, metadata)
-    
-    async def restore_from_checkpoint(self, checkpoint_id: str) -> bool:
-        """Restore from checkpoint."""
-        data = await self._checkpointer.get_checkpoint(checkpoint_id)
-        if not data:
-            return False
-        
-        try:
-            # Restore working memory
-            if "working_memory" in data:
-                self._working_memory = DefaultWorkingMemory.from_dict(data["working_memory"])
-            
-            # Restore workflow state
-            if "workflow_state" in data:
-                self._workflow_state = WorkflowState.from_checkpoint_data(data["workflow_state"])
-            
-            # Restore step tracker
-            if "step_tracker" in data:
-                self._step_tracker = StepTracker(**data["step_tracker"])
-            
-            # Restore dynamic vars
-            if data.get("dynamic_vars"):
-                self._dynamic_vars = DynamicVariables(**data["dynamic_vars"])
-            
-            return True
-        except Exception:
-            return False
     
     # =========================================================================
     # Serialization

@@ -43,29 +43,15 @@ class Defaults:
     RETRY_BACKOFF_MULTIPLIER = 2.0
     
     # =========================================================================
-    # Queue Configuration
+    # Queue Configuration (in-memory for low-latency)
     # =========================================================================
     TASK_QUEUE_MAX_SIZE = 100
-    TASK_QUEUE_PERSIST_INTERVAL_MS = 100
-    
-    # =========================================================================
-    # Checkpoint Configuration
-    # =========================================================================
-    CHECKPOINT_STRATEGY = "dynamodb"  # "dynamodb" (production), "local" (development)
-    CHECKPOINT_STORAGE_PATH = ".checkpoints"  # Local fallback path
-    CHECKPOINT_CACHE_MAX_SIZE = 100
-    
-    # DynamoDB settings
-    CHECKPOINT_DYNAMODB_TABLE = "ahf_workflow_checkpoints"
-    CHECKPOINT_TTL_DAYS = 1  # 1-10 days, default 1
-    CHECKPOINT_MAX_TTL_DAYS = 10
-    CHECKPOINT_USE_LOCAL_FALLBACK = True  # Fall back to local if DynamoDB unavailable
     
     # =========================================================================
     # Memory Configuration
     # =========================================================================
     MAX_CONVERSATION_MESSAGES = 100
-    MAX_CHECKPOINTS = 50
+    MAX_STATE_SNAPSHOTS = 50  # For internal state tracking
     
     # =========================================================================
     # Agent Configuration

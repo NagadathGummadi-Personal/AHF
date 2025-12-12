@@ -8,7 +8,7 @@ Architecture:
 - Configurable edges with condition evaluation
 - Task queue for user request management
 - Interrupt handling with response stashing
-- Lazy checkpointing for state persistence
+- Low-latency execution optimized for voice applications
 
 Version: 1.0.0
 """

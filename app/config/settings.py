@@ -79,25 +79,12 @@ class Settings(BaseSettings):
     # Queue Configuration
     # =========================================================================
     task_queue_max_size: int = Field(default=Defaults.TASK_QUEUE_MAX_SIZE)
-    task_queue_persist_interval_ms: int = Field(default=Defaults.TASK_QUEUE_PERSIST_INTERVAL_MS)
-    
-    # =========================================================================
-    # Checkpoint Configuration (DynamoDB)
-    # =========================================================================
-    checkpoint_strategy: str = Field(default=Defaults.CHECKPOINT_STRATEGY)
-    checkpoint_storage_path: str = Field(default=Defaults.CHECKPOINT_STORAGE_PATH)
-    checkpoint_cache_max_size: int = Field(default=Defaults.CHECKPOINT_CACHE_MAX_SIZE)
-    
-    # DynamoDB settings
-    checkpoint_dynamodb_table: str = Field(default=Defaults.CHECKPOINT_DYNAMODB_TABLE)
-    checkpoint_ttl_days: int = Field(default=Defaults.CHECKPOINT_TTL_DAYS)
-    checkpoint_use_local_fallback: bool = Field(default=Defaults.CHECKPOINT_USE_LOCAL_FALLBACK)
     
     # =========================================================================
     # Memory Configuration
     # =========================================================================
     max_conversation_messages: int = Field(default=Defaults.MAX_CONVERSATION_MESSAGES)
-    max_checkpoints: int = Field(default=Defaults.MAX_CHECKPOINTS)
+    max_state_snapshots: int = Field(default=Defaults.MAX_STATE_SNAPSHOTS)
     
     # =========================================================================
     # Agent Configuration
@@ -160,8 +147,13 @@ def get_settings() -> Settings:
     """
     Get cached settings instance.
     
-    Settings are cached for performance. Call Settings() directly
-    if you need a fresh instance.
+    Settings are cached for performance. This is safe for Fargate/containers
+    because settings are:
+    - Loaded from environment variables at startup
+    - Immutable (read-only)
+    - Same for all requests in the container
+    
+    Call Settings() directly if you need a fresh instance.
     
     Returns:
         Settings instance

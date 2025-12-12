@@ -4,6 +4,12 @@ Base Node Classes
 Abstract base classes for tool and agent nodes.
 Implements INode from core.workflows.interfaces.
 
+IMPORTANT - Request Isolation (Fargate/Container Safety):
+- Nodes are stateless - all state is passed via session parameter
+- Node instances can be shared (they're just logic containers)
+- All request-specific data must be in VoiceAgentSession
+- NEVER store mutable per-request state in node instances
+
 Version: 1.0.0
 """
 

@@ -1,17 +1,15 @@
 """
 Voice Agent Task Queue
 
-Custom task queue implementation for the voice agent workflow.
+Lightweight in-memory task queue for low-latency voice workflows.
 Extends BaseTaskQueue from core.memory.
 
-Version: 1.0.0
+Version: 1.1.0
 """
 
-from typing import Any, Dict, List, Optional
-import json
-from pathlib import Path
+from typing import List, Optional
 
-from core.memory import BaseTaskQueue, ITask
+from core.memory import BaseTaskQueue
 from app.models.task import Task
 
 
@@ -19,72 +17,38 @@ class VoiceAgentTaskQueue(BaseTaskQueue[Task]):
     """
     Voice agent-specific task queue.
     
-    Extends BaseTaskQueue with:
-    - Local file persistence for development
-    - Interrupt priority detection
+    Designed for low-latency text-to-text WebSocket workflows:
+    - Purely in-memory (no disk I/O overhead)
+    - Interrupt priority detection (O(1))
     - Task pause/resume support
     
-    In production, override _persist_task etc. for Redis/database.
+    Sessions are ephemeral—task state lives only for the WebSocket connection.
     """
     
-    def __init__(
-        self,
-        max_size: int = 100,
-        storage_path: Optional[str] = None,
-    ):
+    def __init__(self, max_size: int = 100):
         """
         Initialize task queue.
         
         Args:
             max_size: Maximum queue size
-            storage_path: Path for local persistence (None for in-memory only)
         """
         super().__init__(max_size=max_size)
-        
-        self._storage_path = Path(storage_path) if storage_path else None
-        if self._storage_path:
-            self._storage_path.mkdir(parents=True, exist_ok=True)
     
     # =========================================================================
-    # Override Abstract Methods
+    # Override Abstract Methods (No-op for in-memory only)
     # =========================================================================
     
     async def _persist_task(self, task: Task) -> None:
-        """Persist task to local file."""
-        if not self._storage_path:
-            return
-        
-        task_file = self._storage_path / f"{task.task_id}.json"
-        try:
-            with open(task_file, "w") as f:
-                json.dump(task.model_dump(mode="json"), f)
-        except Exception:
-            pass  # Log in production
+        """No-op: Tasks are in-memory only for low-latency."""
+        pass
     
     async def _remove_persisted_task(self, task_id: str) -> None:
-        """Remove persisted task file."""
-        if not self._storage_path:
-            return
-        
-        task_file = self._storage_path / f"{task_id}.json"
-        if task_file.exists():
-            task_file.unlink()
+        """No-op: Tasks are in-memory only."""
+        pass
     
     async def _load_tasks(self) -> List[Task]:
-        """Load all persisted tasks."""
-        if not self._storage_path:
-            return []
-        
-        tasks = []
-        for task_file in self._storage_path.glob("*.json"):
-            try:
-                with open(task_file, "r") as f:
-                    data = json.load(f)
-                    tasks.append(Task(**data))
-            except Exception:
-                pass  # Log in production
-        
-        return tasks
+        """No-op: No persistence to load from."""
+        return []
     
     # =========================================================================
     # Voice Agent Specific Methods

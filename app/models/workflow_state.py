@@ -181,10 +181,15 @@ class StashedResponse(BaseModel):
 
 class WorkflowState(BaseModel):
     """
-    Complete workflow execution state.
+    Workflow execution state.
     
-    Tracks all aspects of workflow execution for persistence
-    and recovery.
+    Tracks workflow-specific execution concerns:
+    - Node position and history
+    - Task tracking (IDs only)
+    - Interrupt handling
+    - Status and errors
+    
+    Note: Variables are stored in WorkingMemory (single source of truth).
     """
     
     state_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -201,13 +206,7 @@ class WorkflowState(BaseModel):
     # Node visit history
     node_history: List[str] = Field(default_factory=list)
     
-    # Step tracking
-    step_tracker: StepTracker = Field(default_factory=StepTracker)
-    
-    # Variables
-    variables: Dict[str, Any] = Field(default_factory=dict)
-    
-    # Task tracking
+    # Task tracking (IDs only - actual tasks in VoiceAgentTaskQueue)
     current_task_id: Optional[str] = Field(default=None)
     task_queue: List[str] = Field(default_factory=list, description="Queue of task IDs")
     completed_tasks: List[str] = Field(default_factory=list)
@@ -237,15 +236,6 @@ class WorkflowState(BaseModel):
         self.current_node_id = node_id
         self.node_history.append(node_id)
         self.updated_at = datetime.utcnow()
-    
-    def set_variable(self, key: str, value: Any) -> None:
-        """Set a variable."""
-        self.variables[key] = value
-        self.updated_at = datetime.utcnow()
-    
-    def get_variable(self, key: str, default: Any = None) -> Any:
-        """Get a variable."""
-        return self.variables.get(key, default)
     
     def stash_response(
         self,

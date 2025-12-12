@@ -1,7 +1,14 @@
 """
 Voice Agent Workflow Executor
 
-Executes workflows with interrupt handling and checkpointing.
+Executes workflows with interrupt handling and timeout management.
+
+IMPORTANT - Request Isolation (Fargate/Container Safety):
+- Each WebSocket connection gets its OWN VoiceAgentExecutor instance
+- The executor creates and owns a VoiceAgentSession
+- All state is stored in instance variables (self._xxx)
+- NEVER share executor instances between requests
+- This ensures complete isolation between concurrent requests
 
 Version: 1.0.0
 """
@@ -27,7 +34,6 @@ class VoiceAgentExecutor:
     
     Features:
     - Interrupt handling with response stashing
-    - Lazy checkpointing
     - Timeout management
     - Low-latency execution
     
@@ -154,9 +160,6 @@ class VoiceAgentExecutor:
         self._session.move_to_node("greeting_routing_agent")
         self._current_node = "greeting_routing_agent"
         
-        # Save checkpoint
-        await self._session.save_checkpoint("after_init")
-        
         return {
             "first_message": first_message_result.output.get("first_message"),
             "dynamic_variables": init_result.output.get("dynamic_variables"),
@@ -215,9 +218,6 @@ class VoiceAgentExecutor:
         if next_node:
             self._current_node = next_node
             self._session.move_to_node(next_node)
-        
-        # Save checkpoint periodically
-        await self._maybe_checkpoint()
         
         return {
             "response": result.output.get("response", ""),
@@ -329,32 +329,21 @@ class VoiceAgentExecutor:
         # Could emit engagement message here
         pass
     
-    async def _maybe_checkpoint(self) -> None:
-        """Save checkpoint if needed."""
-        # Checkpoint every N turns or based on strategy
-        message_count = self._session.conversation.get_message_count()
-        if message_count % 5 == 0:
-            await self._session.save_checkpoint(f"turn_{message_count}")
-    
     async def pause(self) -> bool:
         """Pause execution."""
         if self._session:
-            await self._session.save_checkpoint("paused")
             self._is_running = False
             return True
         return False
     
     async def resume(self, session_id: str) -> bool:
-        """Resume execution from checkpoint."""
+        """Resume execution (for low-latency voice apps, sessions are ephemeral)."""
+        # For low-latency voice applications, resume creates a new session
+        # since checkpoints are not used
         self._session = await create_session(session_id=session_id)
-        
-        # Try to restore from latest checkpoint
-        if await self._session.restore_from_checkpoint("paused"):
-            self._is_running = True
-            self._current_node = self._session.get_current_node() or "greeting_routing_agent"
-            return True
-        
-        return False
+        self._is_running = True
+        self._current_node = self._session.get_current_node() or "greeting_routing_agent"
+        return True
     
     async def cancel(self) -> bool:
         """Cancel execution."""
