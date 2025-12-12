@@ -1,0 +1,2158 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "TwilioStreamStack": {
+        "id": "TwilioStreamStack",
+        "path": "TwilioStreamStack",
+        "children": {
+          "ConnectionsTable": {
+            "id": "ConnectionsTable",
+            "path": "TwilioStreamStack/ConnectionsTable",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/ConnectionsTable/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::DynamoDB::Table",
+                  "aws:cdk:cloudformation:props": {
+                    "attributeDefinitions": [
+                      {
+                        "attributeName": "connectionId",
+                        "attributeType": "S"
+                      }
+                    ],
+                    "billingMode": "PAY_PER_REQUEST",
+                    "keySchema": [
+                      {
+                        "attributeName": "connectionId",
+                        "keyType": "HASH"
+                      }
+                    ],
+                    "tableName": "twilio-stream-connections"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_dynamodb.CfnTable",
+                  "version": "2.170.0"
+                }
+              },
+              "ScalingRole": {
+                "id": "ScalingRole",
+                "path": "TwilioStreamStack/ConnectionsTable/ScalingRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_dynamodb.Table",
+              "version": "2.170.0"
+            }
+          },
+          "TranscriptsTable": {
+            "id": "TranscriptsTable",
+            "path": "TwilioStreamStack/TranscriptsTable",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/TranscriptsTable/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::DynamoDB::Table",
+                  "aws:cdk:cloudformation:props": {
+                    "attributeDefinitions": [
+                      {
+                        "attributeName": "streamSid",
+                        "attributeType": "S"
+                      },
+                      {
+                        "attributeName": "timestamp",
+                        "attributeType": "S"
+                      }
+                    ],
+                    "billingMode": "PAY_PER_REQUEST",
+                    "keySchema": [
+                      {
+                        "attributeName": "streamSid",
+                        "keyType": "HASH"
+                      },
+                      {
+                        "attributeName": "timestamp",
+                        "keyType": "RANGE"
+                      }
+                    ],
+                    "tableName": "twilio-stream-transcripts"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_dynamodb.CfnTable",
+                  "version": "2.170.0"
+                }
+              },
+              "ScalingRole": {
+                "id": "ScalingRole",
+                "path": "TwilioStreamStack/TranscriptsTable/ScalingRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_dynamodb.Table",
+              "version": "2.170.0"
+            }
+          },
+          "AudioBucket": {
+            "id": "AudioBucket",
+            "path": "TwilioStreamStack/AudioBucket",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/AudioBucket/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                  "aws:cdk:cloudformation:props": {
+                    "tags": [
+                      {
+                        "key": "aws-cdk:auto-delete-objects",
+                        "value": "true"
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.CfnBucket",
+                  "version": "2.170.0"
+                }
+              },
+              "Policy": {
+                "id": "Policy",
+                "path": "TwilioStreamStack/AudioBucket/Policy",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/AudioBucket/Policy/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::S3::BucketPolicy",
+                      "aws:cdk:cloudformation:props": {
+                        "bucket": {
+                          "Ref": "AudioBucket96BEECBA"
+                        },
+                        "policyDocument": {
+                          "Statement": [
+                            {
+                              "Action": [
+                                "s3:DeleteObject*",
+                                "s3:GetBucket*",
+                                "s3:List*",
+                                "s3:PutBucketPolicy"
+                              ],
+                              "Effect": "Allow",
+                              "Principal": {
+                                "AWS": {
+                                  "Fn::GetAtt": [
+                                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                                    "Arn"
+                                  ]
+                                }
+                              },
+                              "Resource": [
+                                {
+                                  "Fn::GetAtt": [
+                                    "AudioBucket96BEECBA",
+                                    "Arn"
+                                  ]
+                                },
+                                {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "AudioBucket96BEECBA",
+                                          "Arn"
+                                        ]
+                                      },
+                                      "/*"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.CfnBucketPolicy",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.BucketPolicy",
+                  "version": "2.170.0"
+                }
+              },
+              "AutoDeleteObjectsCustomResource": {
+                "id": "AutoDeleteObjectsCustomResource",
+                "path": "TwilioStreamStack/AudioBucket/AutoDeleteObjectsCustomResource",
+                "children": {
+                  "Default": {
+                    "id": "Default",
+                    "path": "TwilioStreamStack/AudioBucket/AutoDeleteObjectsCustomResource/Default",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CustomResource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_s3.Bucket",
+              "version": "2.170.0"
+            }
+          },
+          "LatestNodeRuntimeMap": {
+            "id": "LatestNodeRuntimeMap",
+            "path": "TwilioStreamStack/LatestNodeRuntimeMap",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnMapping",
+              "version": "2.170.0"
+            }
+          },
+          "Custom::S3AutoDeleteObjectsCustomResourceProvider": {
+            "id": "Custom::S3AutoDeleteObjectsCustomResourceProvider",
+            "path": "TwilioStreamStack/Custom::S3AutoDeleteObjectsCustomResourceProvider",
+            "children": {
+              "Staging": {
+                "id": "Staging",
+                "path": "TwilioStreamStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Staging",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.AssetStaging",
+                  "version": "2.170.0"
+                }
+              },
+              "Role": {
+                "id": "Role",
+                "path": "TwilioStreamStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.170.0"
+                }
+              },
+              "Handler": {
+                "id": "Handler",
+                "path": "TwilioStreamStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CustomResourceProviderBase",
+              "version": "2.170.0"
+            }
+          },
+          "WebSocketHandler": {
+            "id": "WebSocketHandler",
+            "path": "TwilioStreamStack/WebSocketHandler",
+            "children": {
+              "ServiceRole": {
+                "id": "ServiceRole",
+                "path": "TwilioStreamStack/WebSocketHandler/ServiceRole",
+                "children": {
+                  "ImportServiceRole": {
+                    "id": "ImportServiceRole",
+                    "path": "TwilioStreamStack/WebSocketHandler/ServiceRole/ImportServiceRole",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.Resource",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/WebSocketHandler/ServiceRole/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "TwilioStreamStack/WebSocketHandler/ServiceRole/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "TwilioStreamStack/WebSocketHandler/ServiceRole/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": [
+                                    "dynamodb:BatchGetItem",
+                                    "dynamodb:BatchWriteItem",
+                                    "dynamodb:ConditionCheckItem",
+                                    "dynamodb:DeleteItem",
+                                    "dynamodb:DescribeTable",
+                                    "dynamodb:GetItem",
+                                    "dynamodb:GetRecords",
+                                    "dynamodb:GetShardIterator",
+                                    "dynamodb:PutItem",
+                                    "dynamodb:Query",
+                                    "dynamodb:Scan",
+                                    "dynamodb:UpdateItem"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Resource": [
+                                    {
+                                      "Fn::GetAtt": [
+                                        "ConnectionsTable8000B8A1",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "TranscriptsTable936147D6",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Ref": "AWS::NoValue"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": [
+                                    "s3:Abort*",
+                                    "s3:DeleteObject*",
+                                    "s3:GetBucket*",
+                                    "s3:GetObject*",
+                                    "s3:List*",
+                                    "s3:PutObject",
+                                    "s3:PutObjectLegalHold",
+                                    "s3:PutObjectRetention",
+                                    "s3:PutObjectTagging",
+                                    "s3:PutObjectVersionTagging"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Resource": [
+                                    {
+                                      "Fn::GetAtt": [
+                                        "AudioBucket96BEECBA",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "AudioBucket96BEECBA",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": "execute-api:ManageConnections",
+                                  "Effect": "Allow",
+                                  "Resource": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:aws:execute-api:",
+                                        {
+                                          "Ref": "AWS::Region"
+                                        },
+                                        ":",
+                                        {
+                                          "Ref": "AWS::AccountId"
+                                        },
+                                        ":",
+                                        {
+                                          "Ref": "TwilioStreamWebSocketApi621CF863"
+                                        },
+                                        "/*"
+                                      ]
+                                    ]
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "WebSocketHandlerServiceRoleDefaultPolicyF180304B",
+                            "roles": [
+                              {
+                                "Ref": "WebSocketHandlerServiceRole79B07D0E"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                          "version": "2.170.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Policy",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.170.0"
+                }
+              },
+              "Code": {
+                "id": "Code",
+                "path": "TwilioStreamStack/WebSocketHandler/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "TwilioStreamStack/WebSocketHandler/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "TwilioStreamStack/WebSocketHandler/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.170.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/WebSocketHandler/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "073fd7ba2cfa079c0135d86e549dfb0dd2dffea4026b1a6c4b6a33801eaa831a.zip"
+                    },
+                    "environment": {
+                      "variables": {
+                        "CONNECTIONS_TABLE": {
+                          "Ref": "ConnectionsTable8000B8A1"
+                        },
+                        "AUDIO_BUCKET": {
+                          "Ref": "AudioBucket96BEECBA"
+                        },
+                        "TRANSCRIPTS_TABLE": {
+                          "Ref": "TranscriptsTable936147D6"
+                        },
+                        "ELEVENLABS_API_KEY": "dummykey"
+                      }
+                    },
+                    "functionName": "twilio-stream-websocket-handler",
+                    "handler": "lambda_handler.lambda_handler",
+                    "memorySize": 512,
+                    "role": {
+                      "Fn::GetAtt": [
+                        "WebSocketHandlerServiceRole79B07D0E",
+                        "Arn"
+                      ]
+                    },
+                    "runtime": "python3.12",
+                    "timeout": 60
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.170.0"
+                }
+              },
+              "LogRetention": {
+                "id": "LogRetention",
+                "path": "TwilioStreamStack/WebSocketHandler/LogRetention",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/WebSocketHandler/LogRetention/Resource",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_logs.LogRetention",
+                  "version": "2.170.0"
+                }
+              },
+              "LogGroup": {
+                "id": "LogGroup",
+                "path": "TwilioStreamStack/WebSocketHandler/LogGroup",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.170.0"
+            }
+          },
+          "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a": {
+            "id": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a",
+            "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.170.0"
+                }
+              },
+              "ServiceRole": {
+                "id": "ServiceRole",
+                "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole",
+                "children": {
+                  "ImportServiceRole": {
+                    "id": "ImportServiceRole",
+                    "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/ImportServiceRole",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.Resource",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": [
+                                    "logs:DeleteRetentionPolicy",
+                                    "logs:PutRetentionPolicy"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Resource": "*"
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+                            "roles": [
+                              {
+                                "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                          "version": "2.170.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Policy",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.170.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.4.4"
+            }
+          },
+          "TwilioStreamWebSocketApi": {
+            "id": "TwilioStreamWebSocketApi",
+            "path": "TwilioStreamStack/TwilioStreamWebSocketApi",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/TwilioStreamWebSocketApi/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Api",
+                  "aws:cdk:cloudformation:props": {
+                    "description": "WebSocket API for Twilio Media Stream",
+                    "name": "twilio-stream-websocket",
+                    "protocolType": "WEBSOCKET",
+                    "routeSelectionExpression": "$request.body.action"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnApi",
+                  "version": "2.170.0"
+                }
+              },
+              "$connect-Route": {
+                "id": "$connect-Route",
+                "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$connect-Route",
+                "children": {
+                  "ConnectIntegration-Permission": {
+                    "id": "ConnectIntegration-Permission",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$connect-Route/ConnectIntegration-Permission",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                      "aws:cdk:cloudformation:props": {
+                        "action": "lambda:InvokeFunction",
+                        "functionName": {
+                          "Fn::GetAtt": [
+                            "WebSocketHandler47C0AA1A",
+                            "Arn"
+                          ]
+                        },
+                        "principal": "apigateway.amazonaws.com",
+                        "sourceArn": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "arn:",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              ":execute-api:",
+                              {
+                                "Ref": "AWS::Region"
+                              },
+                              ":",
+                              {
+                                "Ref": "AWS::AccountId"
+                              },
+                              ":",
+                              {
+                                "Ref": "TwilioStreamWebSocketApi621CF863"
+                              },
+                              "/*$connect"
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "ConnectIntegration": {
+                    "id": "ConnectIntegration",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$connect-Route/ConnectIntegration",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$connect-Route/ConnectIntegration/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Integration",
+                          "aws:cdk:cloudformation:props": {
+                            "apiId": {
+                              "Ref": "TwilioStreamWebSocketApi621CF863"
+                            },
+                            "integrationType": "AWS_PROXY",
+                            "integrationUri": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "arn:",
+                                  {
+                                    "Ref": "AWS::Partition"
+                                  },
+                                  ":apigateway:",
+                                  {
+                                    "Ref": "AWS::Region"
+                                  },
+                                  ":lambda:path/2015-03-31/functions/",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "WebSocketHandler47C0AA1A",
+                                      "Arn"
+                                    ]
+                                  },
+                                  "/invocations"
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnIntegration",
+                          "version": "2.170.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketIntegration",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$connect-Route/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "apiId": {
+                          "Ref": "TwilioStreamWebSocketApi621CF863"
+                        },
+                        "authorizationType": "NONE",
+                        "routeKey": "$connect",
+                        "target": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "integrations/",
+                              {
+                                "Ref": "TwilioStreamWebSocketApiconnectRouteConnectIntegrationC650C4D6"
+                              }
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnRoute",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketRoute",
+                  "version": "2.170.0"
+                }
+              },
+              "$disconnect-Route": {
+                "id": "$disconnect-Route",
+                "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$disconnect-Route",
+                "children": {
+                  "DisconnectIntegration-Permission": {
+                    "id": "DisconnectIntegration-Permission",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$disconnect-Route/DisconnectIntegration-Permission",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                      "aws:cdk:cloudformation:props": {
+                        "action": "lambda:InvokeFunction",
+                        "functionName": {
+                          "Fn::GetAtt": [
+                            "WebSocketHandler47C0AA1A",
+                            "Arn"
+                          ]
+                        },
+                        "principal": "apigateway.amazonaws.com",
+                        "sourceArn": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "arn:",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              ":execute-api:",
+                              {
+                                "Ref": "AWS::Region"
+                              },
+                              ":",
+                              {
+                                "Ref": "AWS::AccountId"
+                              },
+                              ":",
+                              {
+                                "Ref": "TwilioStreamWebSocketApi621CF863"
+                              },
+                              "/*$disconnect"
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "DisconnectIntegration": {
+                    "id": "DisconnectIntegration",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$disconnect-Route/DisconnectIntegration",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$disconnect-Route/DisconnectIntegration/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Integration",
+                          "aws:cdk:cloudformation:props": {
+                            "apiId": {
+                              "Ref": "TwilioStreamWebSocketApi621CF863"
+                            },
+                            "integrationType": "AWS_PROXY",
+                            "integrationUri": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "arn:",
+                                  {
+                                    "Ref": "AWS::Partition"
+                                  },
+                                  ":apigateway:",
+                                  {
+                                    "Ref": "AWS::Region"
+                                  },
+                                  ":lambda:path/2015-03-31/functions/",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "WebSocketHandler47C0AA1A",
+                                      "Arn"
+                                    ]
+                                  },
+                                  "/invocations"
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnIntegration",
+                          "version": "2.170.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketIntegration",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$disconnect-Route/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "apiId": {
+                          "Ref": "TwilioStreamWebSocketApi621CF863"
+                        },
+                        "authorizationType": "NONE",
+                        "routeKey": "$disconnect",
+                        "target": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "integrations/",
+                              {
+                                "Ref": "TwilioStreamWebSocketApidisconnectRouteDisconnectIntegration9A9EAB83"
+                              }
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnRoute",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketRoute",
+                  "version": "2.170.0"
+                }
+              },
+              "$default-Route": {
+                "id": "$default-Route",
+                "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$default-Route",
+                "children": {
+                  "DefaultIntegration-Permission": {
+                    "id": "DefaultIntegration-Permission",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$default-Route/DefaultIntegration-Permission",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                      "aws:cdk:cloudformation:props": {
+                        "action": "lambda:InvokeFunction",
+                        "functionName": {
+                          "Fn::GetAtt": [
+                            "WebSocketHandler47C0AA1A",
+                            "Arn"
+                          ]
+                        },
+                        "principal": "apigateway.amazonaws.com",
+                        "sourceArn": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "arn:",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              ":execute-api:",
+                              {
+                                "Ref": "AWS::Region"
+                              },
+                              ":",
+                              {
+                                "Ref": "AWS::AccountId"
+                              },
+                              ":",
+                              {
+                                "Ref": "TwilioStreamWebSocketApi621CF863"
+                              },
+                              "/*$default"
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "DefaultIntegration": {
+                    "id": "DefaultIntegration",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$default-Route/DefaultIntegration",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$default-Route/DefaultIntegration/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Integration",
+                          "aws:cdk:cloudformation:props": {
+                            "apiId": {
+                              "Ref": "TwilioStreamWebSocketApi621CF863"
+                            },
+                            "integrationType": "AWS_PROXY",
+                            "integrationUri": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "arn:",
+                                  {
+                                    "Ref": "AWS::Partition"
+                                  },
+                                  ":apigateway:",
+                                  {
+                                    "Ref": "AWS::Region"
+                                  },
+                                  ":lambda:path/2015-03-31/functions/",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "WebSocketHandler47C0AA1A",
+                                      "Arn"
+                                    ]
+                                  },
+                                  "/invocations"
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnIntegration",
+                          "version": "2.170.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketIntegration",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwilioStreamWebSocketApi/$default-Route/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Route",
+                      "aws:cdk:cloudformation:props": {
+                        "apiId": {
+                          "Ref": "TwilioStreamWebSocketApi621CF863"
+                        },
+                        "authorizationType": "NONE",
+                        "routeKey": "$default",
+                        "target": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "integrations/",
+                              {
+                                "Ref": "TwilioStreamWebSocketApidefaultRouteDefaultIntegration27C63009"
+                              }
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnRoute",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketRoute",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketApi",
+              "version": "2.170.0"
+            }
+          },
+          "WebSocketStage": {
+            "id": "WebSocketStage",
+            "path": "TwilioStreamStack/WebSocketStage",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/WebSocketStage/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ApiGatewayV2::Stage",
+                  "aws:cdk:cloudformation:props": {
+                    "apiId": {
+                      "Ref": "TwilioStreamWebSocketApi621CF863"
+                    },
+                    "autoDeploy": true,
+                    "stageName": "prod"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigatewayv2.CfnStage",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_apigatewayv2.WebSocketStage",
+              "version": "2.170.0"
+            }
+          },
+          "TwiMLHandler": {
+            "id": "TwiMLHandler",
+            "path": "TwilioStreamStack/TwiMLHandler",
+            "children": {
+              "ServiceRole": {
+                "id": "ServiceRole",
+                "path": "TwilioStreamStack/TwiMLHandler/ServiceRole",
+                "children": {
+                  "ImportServiceRole": {
+                    "id": "ImportServiceRole",
+                    "path": "TwilioStreamStack/TwiMLHandler/ServiceRole/ImportServiceRole",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.Resource",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwiMLHandler/ServiceRole/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.170.0"
+                }
+              },
+              "Code": {
+                "id": "Code",
+                "path": "TwilioStreamStack/TwiMLHandler/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "TwilioStreamStack/TwiMLHandler/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.170.0"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "TwilioStreamStack/TwiMLHandler/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.170.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/TwiMLHandler/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "073fd7ba2cfa079c0135d86e549dfb0dd2dffea4026b1a6c4b6a33801eaa831a.zip"
+                    },
+                    "environment": {
+                      "variables": {
+                        "WEBSOCKET_URL": {
+                          "Fn::Join": [
+                            "",
+                            [
+                              "wss://",
+                              {
+                                "Ref": "TwilioStreamWebSocketApi621CF863"
+                              },
+                              ".execute-api.",
+                              {
+                                "Ref": "AWS::Region"
+                              },
+                              ".",
+                              {
+                                "Ref": "AWS::URLSuffix"
+                              },
+                              "/prod"
+                            ]
+                          ]
+                        }
+                      }
+                    },
+                    "functionName": "twilio-stream-twiml-handler",
+                    "handler": "twiml_handler.lambda_handler",
+                    "memorySize": 128,
+                    "role": {
+                      "Fn::GetAtt": [
+                        "TwiMLHandlerServiceRoleE8224894",
+                        "Arn"
+                      ]
+                    },
+                    "runtime": "python3.12",
+                    "timeout": 10
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.170.0"
+                }
+              },
+              "LogRetention": {
+                "id": "LogRetention",
+                "path": "TwilioStreamStack/TwiMLHandler/LogRetention",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwiMLHandler/LogRetention/Resource",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_logs.LogRetention",
+                  "version": "2.170.0"
+                }
+              },
+              "LogGroup": {
+                "id": "LogGroup",
+                "path": "TwilioStreamStack/TwiMLHandler/LogGroup",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.170.0"
+            }
+          },
+          "TwiMLRestApi": {
+            "id": "TwiMLRestApi",
+            "path": "TwilioStreamStack/TwiMLRestApi",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "TwilioStreamStack/TwiMLRestApi/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ApiGateway::RestApi",
+                  "aws:cdk:cloudformation:props": {
+                    "description": "REST API for Twilio TwiML Webhook",
+                    "name": "twilio-stream-twiml"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigateway.CfnRestApi",
+                  "version": "2.170.0"
+                }
+              },
+              "Deployment": {
+                "id": "Deployment",
+                "path": "TwilioStreamStack/TwiMLRestApi/Deployment",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwiMLRestApi/Deployment/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGateway::Deployment",
+                      "aws:cdk:cloudformation:props": {
+                        "description": "REST API for Twilio TwiML Webhook",
+                        "restApiId": {
+                          "Ref": "TwiMLRestApi1A2F5879"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigateway.CfnDeployment",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigateway.Deployment",
+                  "version": "2.170.0"
+                }
+              },
+              "DeploymentStage.prod": {
+                "id": "DeploymentStage.prod",
+                "path": "TwilioStreamStack/TwiMLRestApi/DeploymentStage.prod",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "TwilioStreamStack/TwiMLRestApi/DeploymentStage.prod/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGateway::Stage",
+                      "aws:cdk:cloudformation:props": {
+                        "deploymentId": {
+                          "Ref": "TwiMLRestApiDeployment7052C0E0e12f76d7b9685c905a167f9b8ff456bc"
+                        },
+                        "restApiId": {
+                          "Ref": "TwiMLRestApi1A2F5879"
+                        },
+                        "stageName": "prod"
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigateway.CfnStage",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigateway.Stage",
+                  "version": "2.170.0"
+                }
+              },
+              "Endpoint": {
+                "id": "Endpoint",
+                "path": "TwilioStreamStack/TwiMLRestApi/Endpoint",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnOutput",
+                  "version": "2.170.0"
+                }
+              },
+              "Default": {
+                "id": "Default",
+                "path": "TwilioStreamStack/TwiMLRestApi/Default",
+                "children": {
+                  "twiml": {
+                    "id": "twiml",
+                    "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::ApiGateway::Resource",
+                          "aws:cdk:cloudformation:props": {
+                            "parentId": {
+                              "Fn::GetAtt": [
+                                "TwiMLRestApi1A2F5879",
+                                "RootResourceId"
+                              ]
+                            },
+                            "pathPart": "twiml",
+                            "restApiId": {
+                              "Ref": "TwiMLRestApi1A2F5879"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_apigateway.CfnResource",
+                          "version": "2.170.0"
+                        }
+                      },
+                      "POST": {
+                        "id": "POST",
+                        "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/POST",
+                        "children": {
+                          "ApiPermission.TwilioStreamStackTwiMLRestApi8F2E3F65.POST..twiml": {
+                            "id": "ApiPermission.TwilioStreamStackTwiMLRestApi8F2E3F65.POST..twiml",
+                            "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/POST/ApiPermission.TwilioStreamStackTwiMLRestApi8F2E3F65.POST..twiml",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                              "aws:cdk:cloudformation:props": {
+                                "action": "lambda:InvokeFunction",
+                                "functionName": {
+                                  "Fn::GetAtt": [
+                                    "TwiMLHandler1F361A9F",
+                                    "Arn"
+                                  ]
+                                },
+                                "principal": "apigateway.amazonaws.com",
+                                "sourceArn": {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      "arn:",
+                                      {
+                                        "Ref": "AWS::Partition"
+                                      },
+                                      ":execute-api:",
+                                      {
+                                        "Ref": "AWS::Region"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "AWS::AccountId"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "TwiMLRestApi1A2F5879"
+                                      },
+                                      "/",
+                                      {
+                                        "Ref": "TwiMLRestApiDeploymentStageprodC6093EEA"
+                                      },
+                                      "/POST/twiml"
+                                    ]
+                                  ]
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                              "version": "2.170.0"
+                            }
+                          },
+                          "ApiPermission.Test.TwilioStreamStackTwiMLRestApi8F2E3F65.POST..twiml": {
+                            "id": "ApiPermission.Test.TwilioStreamStackTwiMLRestApi8F2E3F65.POST..twiml",
+                            "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/POST/ApiPermission.Test.TwilioStreamStackTwiMLRestApi8F2E3F65.POST..twiml",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                              "aws:cdk:cloudformation:props": {
+                                "action": "lambda:InvokeFunction",
+                                "functionName": {
+                                  "Fn::GetAtt": [
+                                    "TwiMLHandler1F361A9F",
+                                    "Arn"
+                                  ]
+                                },
+                                "principal": "apigateway.amazonaws.com",
+                                "sourceArn": {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      "arn:",
+                                      {
+                                        "Ref": "AWS::Partition"
+                                      },
+                                      ":execute-api:",
+                                      {
+                                        "Ref": "AWS::Region"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "AWS::AccountId"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "TwiMLRestApi1A2F5879"
+                                      },
+                                      "/test-invoke-stage/POST/twiml"
+                                    ]
+                                  ]
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                              "version": "2.170.0"
+                            }
+                          },
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/POST/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::ApiGateway::Method",
+                              "aws:cdk:cloudformation:props": {
+                                "authorizationType": "NONE",
+                                "httpMethod": "POST",
+                                "integration": {
+                                  "type": "AWS_PROXY",
+                                  "uri": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":apigateway:",
+                                        {
+                                          "Ref": "AWS::Region"
+                                        },
+                                        ":lambda:path/2015-03-31/functions/",
+                                        {
+                                          "Fn::GetAtt": [
+                                            "TwiMLHandler1F361A9F",
+                                            "Arn"
+                                          ]
+                                        },
+                                        "/invocations"
+                                      ]
+                                    ]
+                                  },
+                                  "integrationHttpMethod": "POST"
+                                },
+                                "resourceId": {
+                                  "Ref": "TwiMLRestApitwimlB0A1B65E"
+                                },
+                                "restApiId": {
+                                  "Ref": "TwiMLRestApi1A2F5879"
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_apigateway.CfnMethod",
+                              "version": "2.170.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_apigateway.Method",
+                          "version": "2.170.0"
+                        }
+                      },
+                      "GET": {
+                        "id": "GET",
+                        "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/GET",
+                        "children": {
+                          "ApiPermission.TwilioStreamStackTwiMLRestApi8F2E3F65.GET..twiml": {
+                            "id": "ApiPermission.TwilioStreamStackTwiMLRestApi8F2E3F65.GET..twiml",
+                            "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/GET/ApiPermission.TwilioStreamStackTwiMLRestApi8F2E3F65.GET..twiml",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                              "aws:cdk:cloudformation:props": {
+                                "action": "lambda:InvokeFunction",
+                                "functionName": {
+                                  "Fn::GetAtt": [
+                                    "TwiMLHandler1F361A9F",
+                                    "Arn"
+                                  ]
+                                },
+                                "principal": "apigateway.amazonaws.com",
+                                "sourceArn": {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      "arn:",
+                                      {
+                                        "Ref": "AWS::Partition"
+                                      },
+                                      ":execute-api:",
+                                      {
+                                        "Ref": "AWS::Region"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "AWS::AccountId"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "TwiMLRestApi1A2F5879"
+                                      },
+                                      "/",
+                                      {
+                                        "Ref": "TwiMLRestApiDeploymentStageprodC6093EEA"
+                                      },
+                                      "/GET/twiml"
+                                    ]
+                                  ]
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                              "version": "2.170.0"
+                            }
+                          },
+                          "ApiPermission.Test.TwilioStreamStackTwiMLRestApi8F2E3F65.GET..twiml": {
+                            "id": "ApiPermission.Test.TwilioStreamStackTwiMLRestApi8F2E3F65.GET..twiml",
+                            "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/GET/ApiPermission.Test.TwilioStreamStackTwiMLRestApi8F2E3F65.GET..twiml",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                              "aws:cdk:cloudformation:props": {
+                                "action": "lambda:InvokeFunction",
+                                "functionName": {
+                                  "Fn::GetAtt": [
+                                    "TwiMLHandler1F361A9F",
+                                    "Arn"
+                                  ]
+                                },
+                                "principal": "apigateway.amazonaws.com",
+                                "sourceArn": {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      "arn:",
+                                      {
+                                        "Ref": "AWS::Partition"
+                                      },
+                                      ":execute-api:",
+                                      {
+                                        "Ref": "AWS::Region"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "AWS::AccountId"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "TwiMLRestApi1A2F5879"
+                                      },
+                                      "/test-invoke-stage/GET/twiml"
+                                    ]
+                                  ]
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                              "version": "2.170.0"
+                            }
+                          },
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "TwilioStreamStack/TwiMLRestApi/Default/twiml/GET/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::ApiGateway::Method",
+                              "aws:cdk:cloudformation:props": {
+                                "authorizationType": "NONE",
+                                "httpMethod": "GET",
+                                "integration": {
+                                  "type": "AWS_PROXY",
+                                  "uri": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":apigateway:",
+                                        {
+                                          "Ref": "AWS::Region"
+                                        },
+                                        ":lambda:path/2015-03-31/functions/",
+                                        {
+                                          "Fn::GetAtt": [
+                                            "TwiMLHandler1F361A9F",
+                                            "Arn"
+                                          ]
+                                        },
+                                        "/invocations"
+                                      ]
+                                    ]
+                                  },
+                                  "integrationHttpMethod": "POST"
+                                },
+                                "resourceId": {
+                                  "Ref": "TwiMLRestApitwimlB0A1B65E"
+                                },
+                                "restApiId": {
+                                  "Ref": "TwiMLRestApi1A2F5879"
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_apigateway.CfnMethod",
+                              "version": "2.170.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_apigateway.Method",
+                          "version": "2.170.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_apigateway.Resource",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_apigateway.ResourceBase",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_apigateway.RestApi",
+              "version": "2.170.0"
+            }
+          },
+          "WebSocketURL": {
+            "id": "WebSocketURL",
+            "path": "TwilioStreamStack/WebSocketURL",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "TwiMLWebhookURL": {
+            "id": "TwiMLWebhookURL",
+            "path": "TwilioStreamStack/TwiMLWebhookURL",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "ConnectionsTableName": {
+            "id": "ConnectionsTableName",
+            "path": "TwilioStreamStack/ConnectionsTableName",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "AudioBucketName": {
+            "id": "AudioBucketName",
+            "path": "TwilioStreamStack/AudioBucketName",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "TranscriptsTableName": {
+            "id": "TranscriptsTableName",
+            "path": "TwilioStreamStack/TranscriptsTableName",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "TwilioStreamStack/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "TwilioStreamStack/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.170.0"
+                }
+              },
+              "Condition": {
+                "id": "Condition",
+                "path": "TwilioStreamStack/CDKMetadata/Condition",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnCondition",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.4.4"
+            }
+          },
+          "BootstrapVersion": {
+            "id": "BootstrapVersion",
+            "path": "TwilioStreamStack/BootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnParameter",
+              "version": "2.170.0"
+            }
+          },
+          "CheckBootstrapVersion": {
+            "id": "CheckBootstrapVersion",
+            "path": "TwilioStreamStack/CheckBootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnRule",
+              "version": "2.170.0"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.170.0"
+        }
+      },
+      "RealtimeSTTStack": {
+        "id": "RealtimeSTTStack",
+        "path": "RealtimeSTTStack",
+        "children": {
+          "RealtimeImage": {
+            "id": "RealtimeImage",
+            "path": "RealtimeSTTStack/RealtimeImage",
+            "children": {
+              "Staging": {
+                "id": "Staging",
+                "path": "RealtimeSTTStack/RealtimeImage/Staging",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.AssetStaging",
+                  "version": "2.170.0"
+                }
+              },
+              "Repository": {
+                "id": "Repository",
+                "path": "RealtimeSTTStack/RealtimeImage/Repository",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_ecr.RepositoryBase",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_ecr_assets.DockerImageAsset",
+              "version": "2.170.0"
+            }
+          },
+          "AppRunnerAccessRole": {
+            "id": "AppRunnerAccessRole",
+            "path": "RealtimeSTTStack/AppRunnerAccessRole",
+            "children": {
+              "ImportAppRunnerAccessRole": {
+                "id": "ImportAppRunnerAccessRole",
+                "path": "RealtimeSTTStack/AppRunnerAccessRole/ImportAppRunnerAccessRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.170.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "RealtimeSTTStack/AppRunnerAccessRole/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "Service": "build.apprunner.amazonaws.com"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "managedPolicyArns": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                  "version": "2.170.0"
+                }
+              },
+              "DefaultPolicy": {
+                "id": "DefaultPolicy",
+                "path": "RealtimeSTTStack/AppRunnerAccessRole/DefaultPolicy",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "RealtimeSTTStack/AppRunnerAccessRole/DefaultPolicy/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                      "aws:cdk:cloudformation:props": {
+                        "policyDocument": {
+                          "Statement": [
+                            {
+                              "Action": [
+                                "ecr:BatchCheckLayerAvailability",
+                                "ecr:BatchGetImage",
+                                "ecr:GetDownloadUrlForLayer"
+                              ],
+                              "Effect": "Allow",
+                              "Resource": {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":ecr:",
+                                    {
+                                      "Ref": "AWS::Region"
+                                    },
+                                    ":",
+                                    {
+                                      "Ref": "AWS::AccountId"
+                                    },
+                                    ":repository/",
+                                    {
+                                      "Fn::Sub": "cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}"
+                                    }
+                                  ]
+                                ]
+                              }
+                            },
+                            {
+                              "Action": "ecr:GetAuthorizationToken",
+                              "Effect": "Allow",
+                              "Resource": "*"
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "policyName": "AppRunnerAccessRoleDefaultPolicy4FF2CFAF",
+                        "roles": [
+                          {
+                            "Ref": "AppRunnerAccessRoleC89E5843"
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                      "version": "2.170.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Policy",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Role",
+              "version": "2.170.0"
+            }
+          },
+          "RealtimeService": {
+            "id": "RealtimeService",
+            "path": "RealtimeSTTStack/RealtimeService",
+            "attributes": {
+              "aws:cdk:cloudformation:type": "AWS::AppRunner::Service",
+              "aws:cdk:cloudformation:props": {
+                "healthCheckConfiguration": {
+                  "healthyThreshold": 1,
+                  "interval": 10,
+                  "path": "/health",
+                  "protocol": "HTTP",
+                  "timeout": 5,
+                  "unhealthyThreshold": 5
+                },
+                "instanceConfiguration": {
+                  "cpu": "1024",
+                  "memory": "2048"
+                },
+                "networkConfiguration": {
+                  "ingressConfiguration": {
+                    "isPubliclyAccessible": true
+                  }
+                },
+                "serviceName": "realtime-stt-service",
+                "sourceConfiguration": {
+                  "authenticationConfiguration": {
+                    "accessRoleArn": {
+                      "Fn::GetAtt": [
+                        "AppRunnerAccessRoleC89E5843",
+                        "Arn"
+                      ]
+                    }
+                  },
+                  "autoDeploymentsEnabled": false,
+                  "imageRepository": {
+                    "imageIdentifier": {
+                      "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}:a9586ec37b3024bf48503d6daa21c81ac3d15abfc3cc9b8ae8ed0bfe565647c6"
+                    },
+                    "imageRepositoryType": "ECR",
+                    "imageConfiguration": {
+                      "port": "8000",
+                      "runtimeEnvironmentVariables": [
+                        {
+                          "name": "ELEVENLABS_API_KEY",
+                          "value": "dummykey"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_apprunner.CfnService",
+              "version": "2.170.0"
+            }
+          },
+          "ServiceURL": {
+            "id": "ServiceURL",
+            "path": "RealtimeSTTStack/ServiceURL",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "TwiMLWebhookURL": {
+            "id": "TwiMLWebhookURL",
+            "path": "RealtimeSTTStack/TwiMLWebhookURL",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "WebSocketURL": {
+            "id": "WebSocketURL",
+            "path": "RealtimeSTTStack/WebSocketURL",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.170.0"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "RealtimeSTTStack/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "RealtimeSTTStack/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.170.0"
+                }
+              },
+              "Condition": {
+                "id": "Condition",
+                "path": "RealtimeSTTStack/CDKMetadata/Condition",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnCondition",
+                  "version": "2.170.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.4.4"
+            }
+          },
+          "BootstrapVersion": {
+            "id": "BootstrapVersion",
+            "path": "RealtimeSTTStack/BootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnParameter",
+              "version": "2.170.0"
+            }
+          },
+          "CheckBootstrapVersion": {
+            "id": "CheckBootstrapVersion",
+            "path": "RealtimeSTTStack/CheckBootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnRule",
+              "version": "2.170.0"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.170.0"
+        }
+      },
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree",
+        "constructInfo": {
+          "fqn": "constructs.Construct",
+          "version": "10.4.4"
+        }
+      }
+    },
+    "constructInfo": {
+      "fqn": "aws-cdk-lib.App",
+      "version": "2.170.0"
+    }
+  }
+}

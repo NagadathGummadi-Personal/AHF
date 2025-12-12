@@ -1,0 +1,515 @@
+{
+ "Description": "Twilio Real-Time STT with ECS Fargate",
+ "Resources": {
+  "AppRunnerAccessRoleC89E5843": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "build.apprunner.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RealtimeSTTStack/AppRunnerAccessRole/Resource"
+   }
+  },
+  "AppRunnerAccessRoleDefaultPolicy4FF2CFAF": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:",
+          {
+           "Ref": "AWS::Region"
+          },
+          ":",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":repository/",
+          {
+           "Fn::Sub": "cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}"
+          }
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "AppRunnerAccessRoleDefaultPolicy4FF2CFAF",
+    "Roles": [
+     {
+      "Ref": "AppRunnerAccessRoleC89E5843"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "RealtimeSTTStack/AppRunnerAccessRole/DefaultPolicy/Resource"
+   }
+  },
+  "RealtimeService": {
+   "Type": "AWS::AppRunner::Service",
+   "Properties": {
+    "HealthCheckConfiguration": {
+     "HealthyThreshold": 1,
+     "Interval": 10,
+     "Path": "/health",
+     "Protocol": "HTTP",
+     "Timeout": 5,
+     "UnhealthyThreshold": 5
+    },
+    "InstanceConfiguration": {
+     "Cpu": "1024",
+     "Memory": "2048"
+    },
+    "NetworkConfiguration": {
+     "IngressConfiguration": {
+      "IsPubliclyAccessible": true
+     }
+    },
+    "ServiceName": "realtime-stt-service",
+    "SourceConfiguration": {
+     "AuthenticationConfiguration": {
+      "AccessRoleArn": {
+       "Fn::GetAtt": [
+        "AppRunnerAccessRoleC89E5843",
+        "Arn"
+       ]
+      }
+     },
+     "AutoDeploymentsEnabled": false,
+     "ImageRepository": {
+      "ImageConfiguration": {
+       "Port": "8000",
+       "RuntimeEnvironmentVariables": [
+        {
+         "Name": "ELEVENLABS_API_KEY",
+         "Value": "dummykey"
+        }
+       ]
+      },
+      "ImageIdentifier": {
+       "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}:a9586ec37b3024bf48503d6daa21c81ac3d15abfc3cc9b8ae8ed0bfe565647c6"
+      },
+      "ImageRepositoryType": "ECR"
+     }
+    }
+   },
+   "DependsOn": [
+    "AppRunnerAccessRoleDefaultPolicy4FF2CFAF",
+    "AppRunnerAccessRoleC89E5843"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "RealtimeSTTStack/RealtimeService"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02Mu47CQAxFv4V+Yl4FNZtttgIlH4DMYLLeJOPI9oCiKP+OCM1W595TnB1sDxvYrPBpRby1RcdXmGrH2AZ82mWiqBc0Izf4ltiS/vTY0PFtAkWFigYxdtHxC40CYw9TJR2F8p4WnqXjOL7vZ80Bh0FzSqRQ3lNN+uBIc1iStWPDqQkVmWSNS+WUfci+9P7ZUtKNnSXN4Tz6r6T1HrZ7OKz+jLnQnJx7gurDF8gnG7vlAAAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "RealtimeSTTStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "ServiceURL": {
+   "Description": "Service URL (HTTPS)",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Fn::GetAtt": [
+        "RealtimeService",
+        "ServiceUrl"
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "TwiMLWebhookURL": {
+   "Description": "Configure this URL in Twilio as your voice webhook",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Fn::GetAtt": [
+        "RealtimeService",
+        "ServiceUrl"
+       ]
+      },
+      "/twiml"
+     ]
+    ]
+   }
+  },
+  "WebSocketURL": {
+   "Description": "WebSocket URL for Twilio Media Stream (WSS)",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "wss://",
+      {
+       "Fn::GetAtt": [
+        "RealtimeService",
+        "ServiceUrl"
+       ]
+      },
+      "/media-stream"
+     ]
+    ]
+   }
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-3"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-4"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Equals": [
+      {
+       "Ref": "AWS::Region"
+      },
+      "us-west-2"
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
