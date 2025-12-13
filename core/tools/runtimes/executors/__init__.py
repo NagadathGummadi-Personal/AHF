@@ -105,6 +105,7 @@ from .function_executors import (
 from .http_executors import (
     BaseHttpExecutor,
     HttpToolExecutor,
+    AioHttpExecutor,
 )
 
 __all__ = [
@@ -122,5 +123,6 @@ __all__ = [
     # HTTP executors
     "BaseHttpExecutor",
     "HttpToolExecutor",
+    "AioHttpExecutor",
 ]
 

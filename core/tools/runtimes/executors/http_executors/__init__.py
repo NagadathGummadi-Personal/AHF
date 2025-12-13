@@ -91,10 +91,12 @@ Note:
 
 from .base_http_executor import BaseHttpExecutor
 from .http_executor import HttpToolExecutor
+from .aiohttp_executor import AioHttpExecutor
 
 __all__ = [
     "BaseHttpExecutor",
     "HttpToolExecutor",
+    "AioHttpExecutor",
 ]
 
 

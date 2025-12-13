@@ -1,3 +1,0 @@
-# Twilio Stream Lambda Handlers
-
-

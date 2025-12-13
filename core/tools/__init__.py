@@ -78,6 +78,7 @@ from .runtimes.executors import (
     BaseToolExecutor,
     FunctionToolExecutor,
     HttpToolExecutor,
+    AioHttpExecutor,
     ExecutorFactory,
     NoOpExecutor,
 )
@@ -142,6 +143,7 @@ __all__ = [
     "BaseToolExecutor",
     "FunctionToolExecutor",
     "HttpToolExecutor",
+    "AioHttpExecutor",
     "ExecutorFactory",
     "NoOpExecutor",
     "NoOpSecurity",
