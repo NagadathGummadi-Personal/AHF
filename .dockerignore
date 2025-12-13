@@ -1,0 +1,99 @@
+# =============================================================================
+# Docker Ignore - AHF Framework
+# =============================================================================
+# Excludes files not needed in the Docker build context for faster builds.
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Logs
+logs/
+*.log
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.env
+.env.*
+*.local
+
+# CDK / Infrastructure
+STT/
+cdk.out/
+infrastructure/
+
+# Frontend (separate build)
+frontend/
+
+# Tests (not needed in production)
+tests/
+test_*.py
+*_test.py
+conftest.py
+
+# Scripts
+scripts/
+*.bat
+*.sh
+*.ps1
+
+# Examples
+examples/
+
+# Temporary files
+tmp/
+temp/
+.checkpoints/
+.prompts/
+.workflows/
+
+# OS files
+.DS_Store
+Thumbs.db
+

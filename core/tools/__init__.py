@@ -81,6 +81,11 @@ from .runtimes.executors import (
     AioHttpExecutor,
     ExecutorFactory,
     NoOpExecutor,
+    # Session Manager for Fargate/containerized deployments
+    HttpSessionManager,
+    get_session_manager,
+    shutdown_session_manager,
+    install_signal_handlers,
 )
 from .runtimes.security import NoOpSecurity, BasicSecurity
 from .runtimes.policies import NoOpPolicy
@@ -146,6 +151,11 @@ __all__ = [
     "AioHttpExecutor",
     "ExecutorFactory",
     "NoOpExecutor",
+    # Session Manager (Fargate/containerized deployments)
+    "HttpSessionManager",
+    "get_session_manager",
+    "shutdown_session_manager",
+    "install_signal_handlers",
     "NoOpSecurity",
     "BasicSecurity",
     "NoOpPolicy",

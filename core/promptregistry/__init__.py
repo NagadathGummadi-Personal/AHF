@@ -10,10 +10,12 @@ Features:
 - Version management for prompts (immutable versions)
 - Model-specific prompt variations (different prompts per LLM)
 - Environment-based deployment (prod, staging, dev, test) with fallback
-- Dynamic variable substitution in templates
-- LLM and human evaluation scores
+- Dynamic variable substitution with {{var|default:value}} syntax
+- Conditional prompt blocks with Python expressions
+- Recursive variable replacement
+- LLM and human evaluation system (async, non-blocking)
 - Runtime metrics tracking (latency, tokens, cost)
-- Local file-based storage (JSON/YAML)
+- Local file-based storage (JSON/YAML) with async I/O
 - Extensible storage backends
 
 Usage:
@@ -28,39 +30,30 @@ Usage:
     # Create registry
     registry = LocalPromptRegistry(storage_path=".prompts")
     
-    # Save prompt with full metadata
+    # Save prompt with new {{variable}} syntax and conditionals
     await registry.save_prompt(
-        label="code_review",
-        content="Review this {language} code for {review_type}...",
+        label="greeting",
+        content=\"\"\"{{#if is_new_user}}Welcome to our service, {{user_name|default:Guest}}!
+{{#else}}Welcome back, {{user_name}}!{{#endif}}\"\"\",
         metadata=PromptMetadata(
             model_target="gpt-4",
             environment=PromptEnvironment.PROD,
             prompt_type=PromptType.SYSTEM,
-            tags=["code", "review"],
-            llm_eval_score=0.95,
-            human_eval_score=0.92
         )
     )
     
     # Get prompt with fallback and variable substitution
     result = await registry.get_prompt_with_fallback(
-        "code_review",
+        "greeting",
         model="gpt-4",
         environment=PromptEnvironment.PROD,
-        variables={"language": "Python", "review_type": "bugs"}
+        variables={"user_name": "Alice", "is_new_user": True}
     )
     
-    # Get required variables for a prompt
-    variables = await registry.get_dynamic_variables("code_review")
-    
-    # Record runtime usage
-    await registry.record_usage(
-        prompt_id,
-        latency_ms=150,
-        prompt_tokens=100,
-        completion_tokens=50,
-        cost=0.001
-    )
+    # Evaluate prompt quality (async, non-blocking)
+    from core.promptregistry.evaluators import LLMPromptEvaluator
+    evaluator = LLMPromptEvaluator()
+    eval_result = await evaluator.evaluate(request)
 """
 
 from .constants import (
@@ -115,6 +108,23 @@ from .runtimes import (
     NoOpPromptSecurity,
     RoleBasedPromptSecurity,
     PromptSecurityFactory,
+    # Expression Engine
+    SafeExpressionEvaluator,
+    ExpressionError,
+)
+
+from .evaluators import (
+    # Interfaces
+    IPromptEvaluator,
+    EvaluationRequest,
+    EvaluationResponse,
+    # Implementations
+    LLMPromptEvaluator,
+    HumanPromptEvaluator,
+    CompositeEvaluator,
+    # Factory
+    PromptEvaluatorFactory,
+    get_default_evaluator,
 )
 
 from .defaults import (
@@ -168,6 +178,18 @@ __all__ = [
     "NoOpPromptSecurity",
     "RoleBasedPromptSecurity",
     "PromptSecurityFactory",
+    # Expression Engine
+    "SafeExpressionEvaluator",
+    "ExpressionError",
+    # Evaluators
+    "IPromptEvaluator",
+    "EvaluationRequest",
+    "EvaluationResponse",
+    "LLMPromptEvaluator",
+    "HumanPromptEvaluator",
+    "CompositeEvaluator",
+    "PromptEvaluatorFactory",
+    "get_default_evaluator",
     # Defaults
     "load_default_prompts",
     "get_default_prompt_labels",

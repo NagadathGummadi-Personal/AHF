@@ -467,24 +467,32 @@ class PromptTemplate(BaseModel):
     Template for prompts with dynamic variable support.
     
     Handles extraction and substitution of dynamic variables in prompt templates.
-    Variables are specified using {variable_name} syntax.
+    Variables are specified using {{variable_name}} or {{variable_name|default:value}} syntax.
+    
+    Supports:
+    - Basic variables: {{user_name}}
+    - Variables with defaults: {{user_name|default:Guest}}
+    - Conditional blocks: {{#if is_new_user}}Welcome!{{#else}}Welcome back!{{#endif}}
+    - Recursive replacement: Re-process output for nested variables
     
     Attributes:
-        content: The raw template content with {variables}
+        content: The raw template content with {{variables}}
         dynamic_variables: Set of variable names extracted from content
-        default_values: Default values for variables
+        default_values: Default values for variables (from inline defaults and explicit)
+        recursive_replace: If True, re-process output for nested variables
+        max_recursion_depth: Maximum recursion depth for nested replacement
     
     Example:
         template = PromptTemplate(
-            content="You are {role}. Help the user with {task}.",
-            default_values={"role": "a helpful assistant"}
+            content="You are {{role|default:a helpful assistant}}. Help with {{task}}.",
         )
         
-        # Get required variables
-        vars = template.get_required_variables()  # {"role", "task"}
+        # Get required variables (task is required, role has default)
+        vars = template.get_required_variables()  # {"task"}
         
         # Render with variables
-        rendered = template.render({"role": "an expert", "task": "coding"})
+        rendered = template.render({"task": "coding"})
+        # Result: "You are a helpful assistant. Help with coding."
     """
     
     content: str = Field(description="Raw template content")
@@ -496,15 +504,43 @@ class PromptTemplate(BaseModel):
         default_factory=dict,
         description="Default values for variables"
     )
+    recursive_replace: bool = Field(
+        default=False,
+        description="Enable recursive variable replacement"
+    )
+    max_recursion_depth: int = Field(
+        default=3,
+        description="Maximum recursion depth for nested variables"
+    )
+    
+    # Private attributes for extracted inline defaults
+    _inline_defaults: Dict[str, str] = {}
     
     def model_post_init(self, __context: Any) -> None:
         """Extract variables after initialization."""
         self._extract_variables()
     
     def _extract_variables(self) -> None:
-        """Extract all {variable} patterns from content."""
+        """Extract all {{variable}} patterns from content, including inline defaults."""
+        # Find all matches with optional defaults
         matches = re.findall(VARIABLE_PATTERN, self.content)
-        self.dynamic_variables = set(matches)
+        
+        self.dynamic_variables = set()
+        self._inline_defaults = {}
+        
+        for match in matches:
+            if isinstance(match, tuple):
+                var_name = match[0]
+                default_value = match[1] if len(match) > 1 and match[1] else None
+            else:
+                var_name = match
+                default_value = None
+            
+            self.dynamic_variables.add(var_name)
+            
+            # Store inline default if present
+            if default_value is not None:
+                self._inline_defaults[var_name] = default_value
     
     def get_required_variables(self) -> Set[str]:
         """
@@ -512,9 +548,10 @@ class PromptTemplate(BaseModel):
         
         Returns:
             Set of variable names that must be provided for rendering.
-            Variables with default values are not included.
+            Variables with default values (explicit or inline) are not included.
         """
-        return self.dynamic_variables - set(self.default_values.keys())
+        all_defaults = set(self.default_values.keys()) | set(self._inline_defaults.keys())
+        return self.dynamic_variables - all_defaults
     
     def get_all_variables(self) -> Set[str]:
         """
@@ -524,6 +561,18 @@ class PromptTemplate(BaseModel):
             Set of all variable names (required and optional).
         """
         return self.dynamic_variables.copy()
+    
+    def get_effective_defaults(self) -> Dict[str, Any]:
+        """
+        Get all default values (inline defaults + explicit defaults).
+        
+        Explicit defaults take precedence over inline defaults.
+        
+        Returns:
+            Dictionary of variable name to default value
+        """
+        # Inline defaults first, then override with explicit
+        return {**self._inline_defaults, **self.default_values}
     
     def validate_variables(self, variables: Dict[str, Any]) -> List[str]:
         """
@@ -543,7 +592,8 @@ class PromptTemplate(BaseModel):
     def render(
         self,
         variables: Optional[Dict[str, Any]] = None,
-        strict: bool = True
+        strict: bool = True,
+        context: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Render the template with provided variables.
@@ -551,6 +601,7 @@ class PromptTemplate(BaseModel):
         Args:
             variables: Dictionary of variable values
             strict: If True, raise error for missing required variables
+            context: Additional context for conditional evaluation
             
         Returns:
             Rendered prompt string
@@ -559,9 +610,11 @@ class PromptTemplate(BaseModel):
             ValueError: If strict=True and required variables are missing
         """
         variables = variables or {}
+        context = context or {}
         
-        # Merge with defaults
-        merged = {**self.default_values, **variables}
+        # Merge defaults with provided values (provided takes precedence)
+        effective_defaults = self.get_effective_defaults()
+        merged = {**effective_defaults, **variables}
         
         # Validate if strict
         if strict:
@@ -569,17 +622,110 @@ class PromptTemplate(BaseModel):
             if missing:
                 raise ValueError(ERROR_MISSING_VARIABLES.format(variables=missing))
         
-        # Render template
-        try:
-            return self.content.format(**merged)
-        except KeyError as e:
-            if strict:
-                raise ValueError(f"Missing variable: {e}")
-            # Non-strict: leave unresolved variables as-is
-            result = self.content
-            for key, value in merged.items():
-                result = result.replace(f"{{{key}}}", str(value))
-            return result
+        # Start rendering
+        result = self._render_once(self.content, merged, context, strict)
+        
+        # Apply recursive replacement if enabled
+        if self.recursive_replace:
+            result = self._recursive_render(result, merged, context, strict)
+        
+        return result
+    
+    def _render_once(
+        self,
+        content: str,
+        variables: Dict[str, Any],
+        context: Dict[str, Any],
+        strict: bool,
+    ) -> str:
+        """Perform a single pass of variable substitution."""
+        result = content
+        
+        # First, process conditional blocks
+        result = self._process_conditionals(result, {**variables, **context})
+        
+        # Then, substitute variables
+        # Replace {{var|default:value}} and {{var}} patterns
+        def replace_var(match):
+            var_name = match.group(1)
+            inline_default = match.group(2) if match.lastindex >= 2 else None
+            
+            if var_name in variables:
+                return str(variables[var_name])
+            elif inline_default is not None:
+                return inline_default
+            elif not strict:
+                return match.group(0)  # Leave as-is
+            else:
+                raise ValueError(f"Missing variable: {var_name}")
+        
+        result = re.sub(VARIABLE_PATTERN, replace_var, result)
+        
+        return result
+    
+    def _recursive_render(
+        self,
+        content: str,
+        variables: Dict[str, Any],
+        context: Dict[str, Any],
+        strict: bool,
+        depth: int = 0,
+    ) -> str:
+        """Recursively render nested variables up to max depth."""
+        if depth >= self.max_recursion_depth:
+            return content
+        
+        # Check if there are still variables to replace
+        if not re.search(VARIABLE_PATTERN, content):
+            return content
+        
+        # Another pass
+        rendered = self._render_once(content, variables, context, strict=False)
+        
+        # If no change, stop
+        if rendered == content:
+            return rendered
+        
+        # Recurse
+        return self._recursive_render(rendered, variables, context, strict, depth + 1)
+    
+    def _process_conditionals(
+        self,
+        content: str,
+        context: Dict[str, Any],
+    ) -> str:
+        """
+        Process conditional blocks using safe Python expression evaluation.
+        
+        Syntax: {{#if condition}}content{{#else}}alt{{#endif}}
+        """
+        from ..runtimes.expression_engine import SafeExpressionEvaluator
+        
+        evaluator = SafeExpressionEvaluator(context)
+        
+        # Process conditional blocks (handles nested blocks)
+        def process_block(match):
+            condition = match.group(1)
+            true_content = match.group(2) if match.lastindex >= 2 else ""
+            false_content = match.group(3) if match.lastindex >= 3 and match.group(3) else ""
+            
+            try:
+                result = evaluator.evaluate(condition)
+                return true_content if result else false_content
+            except Exception:
+                # On evaluation error, keep the false content or empty
+                return false_content
+        
+        # Use a non-greedy pattern with DOTALL for multiline
+        pattern = r'\{\{#if\s+(.+?)\}\}(.*?)(?:\{\{#else\}\}(.*?))?\{\{#endif\}\}'
+        
+        # Keep processing until no more conditionals
+        prev_content = None
+        while prev_content != content:
+            prev_content = content
+            content = re.sub(pattern, process_block, content, flags=re.DOTALL)
+        
+        return content
 
 
 class PromptVersion(BaseModel):

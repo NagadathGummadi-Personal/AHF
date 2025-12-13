@@ -106,6 +106,13 @@ from .http_executors import (
     BaseHttpExecutor,
     HttpToolExecutor,
     AioHttpExecutor,
+    # Session Manager for Fargate/containerized deployments
+    HttpSessionManager,
+    get_session_manager,
+    get_session_manager_sync,
+    shutdown_session_manager,
+    reset_session_manager,
+    install_signal_handlers,
 )
 
 __all__ = [
@@ -124,5 +131,12 @@ __all__ = [
     "BaseHttpExecutor",
     "HttpToolExecutor",
     "AioHttpExecutor",
+    # Session Manager (Fargate/containerized deployments)
+    "HttpSessionManager",
+    "get_session_manager",
+    "get_session_manager_sync",
+    "shutdown_session_manager",
+    "reset_session_manager",
+    "install_signal_handlers",
 ]
 

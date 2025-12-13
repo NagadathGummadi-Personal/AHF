@@ -6,6 +6,7 @@ All components are pluggable:
 - Validators: NoOpPromptValidator, BasicPromptValidator, or custom
 - Security: NoOpPromptSecurity, RoleBasedPromptSecurity, or custom
 - BasePromptRegistry: Abstract base class for creating custom registries
+- ExpressionEngine: Safe Python expression evaluation for conditionals
 
 Note: LLM usage tracking is now handled directly in core/llms.
       Use llm.set_prompt_registry(registry) and pass prompt_id in LLMContext.
@@ -30,6 +31,11 @@ from .security import (
     PromptSecurityFactory,
 )
 
+from .expression_engine import (
+    SafeExpressionEvaluator,
+    ExpressionError,
+)
+
 __all__ = [
     # Base
     "BasePromptRegistry",
@@ -45,5 +51,8 @@ __all__ = [
     "NoOpPromptSecurity",
     "RoleBasedPromptSecurity",
     "PromptSecurityFactory",
+    # Expression Engine
+    "SafeExpressionEvaluator",
+    "ExpressionError",
 ]
 

@@ -129,8 +129,26 @@ CATEGORY_EXAMPLE = "example"
 # DYNAMIC VARIABLE PATTERNS
 # ============================================================================
 
-# Pattern for extracting {variable_name} from templates
-VARIABLE_PATTERN = r'\{([a-zA-Z_][a-zA-Z0-9_]*)\}'
+# Pattern for extracting {{variable_name}} from templates (double braces)
+# Supports: {{var}} and {{var|default:value}}
+VARIABLE_PATTERN = r'\{\{([a-zA-Z_][a-zA-Z0-9_]*)(?:\|default:([^}]*))?\}\}'
+
+# Conditional block patterns for Python inline expressions
+# Syntax: {{#if condition}}content{{#else}}alt{{#endif}}
+CONDITIONAL_IF_PATTERN = r'\{\{#if\s+(.+?)\}\}'
+CONDITIONAL_ELSE_PATTERN = r'\{\{#else\}\}'
+CONDITIONAL_ENDIF_PATTERN = r'\{\{#endif\}\}'
+CONDITIONAL_ELIF_PATTERN = r'\{\{#elif\s+(.+?)\}\}'
+
+# Full conditional block pattern (captures entire block)
+CONDITIONAL_BLOCK_PATTERN = r'\{\{#if\s+(.+?)\}\}(.*?)(?:\{\{#else\}\}(.*?))?\{\{#endif\}\}'
+
+# Default values
+DEFAULT_RECURSIVE_REPLACE = False
+MAX_RECURSION_DEPTH = 3
+
+# Legacy pattern (for migration detection)
+LEGACY_VARIABLE_PATTERN = r'\{([a-zA-Z_][a-zA-Z0-9_]*)\}'
 
 # ============================================================================
 # AGENT PROMPT LABELS

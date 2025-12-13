@@ -8,8 +8,9 @@ Includes:
 - Agent memory interfaces (IAgentMemory, IAgentScratchpad, IAgentChecklist, IAgentObserver)
 - Cache interfaces (ICache, IToolMemory)
 - Task queue interfaces (ITask, ITaskQueue, ICheckpointer, IInterruptHandler)
+- Metrics store interfaces (IMetricsStore)
 
-Version: 2.1.0
+Version: 2.2.0
 """
 
 # Core memory interfaces
@@ -43,6 +44,11 @@ from .task_queue_interfaces import (
     IInterruptHandler,
 )
 
+# Metrics store interfaces
+from .metrics_store_interfaces import (
+    IMetricsStore,
+)
+
 __all__ = [
     # Core memory
     "IMemory",
@@ -63,4 +69,6 @@ __all__ = [
     "ITaskQueue",
     "ICheckpointer",
     "IInterruptHandler",
+    # Metrics store
+    "IMetricsStore",
 ]

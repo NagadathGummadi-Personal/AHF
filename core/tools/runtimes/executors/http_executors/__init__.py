@@ -92,11 +92,26 @@ Note:
 from .base_http_executor import BaseHttpExecutor
 from .http_executor import HttpToolExecutor
 from .aiohttp_executor import AioHttpExecutor
+from .session_manager import (
+    HttpSessionManager,
+    get_session_manager,
+    get_session_manager_sync,
+    shutdown_session_manager,
+    reset_session_manager,
+    install_signal_handlers,
+)
 
 __all__ = [
     "BaseHttpExecutor",
     "HttpToolExecutor",
     "AioHttpExecutor",
+    # Session Manager for Fargate
+    "HttpSessionManager",
+    "get_session_manager",
+    "get_session_manager_sync",
+    "shutdown_session_manager",
+    "reset_session_manager",
+    "install_signal_handlers",
 ]
 
 

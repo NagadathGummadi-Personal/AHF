@@ -3,8 +3,12 @@ Local Prompt Registry and Storage Implementation.
 
 Provides file-system based prompt storage and registry.
 Supports both JSON and YAML formats.
+
+All file I/O operations are truly async using asyncio.to_thread()
+or aiofiles when available.
 """
 
+import asyncio
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Literal
@@ -31,6 +35,13 @@ try:
     YAML_AVAILABLE = True
 except ImportError:
     YAML_AVAILABLE = False
+
+# Optional aiofiles support (fallback to asyncio.to_thread)
+try:
+    import aiofiles
+    AIOFILES_AVAILABLE = True
+except ImportError:
+    AIOFILES_AVAILABLE = False
 
 
 # =============================================================================
@@ -102,43 +113,71 @@ class LocalFileStorage(IPromptStorage):
         return None
     
     async def save(self, key: str, data: Dict[str, Any]) -> None:
-        """Save data to storage."""
+        """Save data to storage (truly async)."""
         file_path = self._get_file_path(key)
         
+        if self.format == STORAGE_FORMAT_YAML:
+            content = yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        else:
+            content = json.dumps(data, indent=2, ensure_ascii=False)
+        
+        if AIOFILES_AVAILABLE:
+            async with aiofiles.open(file_path, "w", encoding=UTF_8) as f:
+                await f.write(content)
+        else:
+            # Fallback to thread pool
+            await asyncio.to_thread(self._sync_write, file_path, content)
+    
+    def _sync_write(self, file_path: Path, content: str) -> None:
+        """Synchronous write helper for thread pool."""
         with open(file_path, "w", encoding=UTF_8) as f:
-            if self.format == STORAGE_FORMAT_YAML:
-                yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
-            else:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write(content)
     
     async def load(self, key: str) -> Optional[Dict[str, Any]]:
-        """Load data from storage (supports both JSON and YAML)."""
+        """Load data from storage (truly async, supports both JSON and YAML)."""
         file_path = self._find_existing_file(key)
         
         if file_path is None:
             return None
         
+        if AIOFILES_AVAILABLE:
+            async with aiofiles.open(file_path, "r", encoding=UTF_8) as f:
+                content = await f.read()
+        else:
+            # Fallback to thread pool
+            content = await asyncio.to_thread(self._sync_read, file_path)
+        
+        if file_path.suffix in [YAML_EXTENSION, YML_EXTENSION]:
+            if not YAML_AVAILABLE:
+                raise ImportError("YAML support requires PyYAML")
+            return yaml.safe_load(content)
+        else:
+            return json.loads(content)
+    
+    def _sync_read(self, file_path: Path) -> str:
+        """Synchronous read helper for thread pool."""
         with open(file_path, "r", encoding=UTF_8) as f:
-            if file_path.suffix in [YAML_EXTENSION, YML_EXTENSION]:
-                if not YAML_AVAILABLE:
-                    raise ImportError("YAML support requires PyYAML")
-                return yaml.safe_load(f)
-            else:
-                return json.load(f)
+            return f.read()
     
     async def delete(self, key: str) -> None:
-        """Delete data from storage."""
+        """Delete data from storage (truly async)."""
         file_path = self._find_existing_file(key)
         
         if file_path and file_path.exists():
-            file_path.unlink()
+            await asyncio.to_thread(file_path.unlink)
     
     async def exists(self, key: str) -> bool:
         """Check if key exists in storage."""
+        # This is fast enough to be sync
         return self._find_existing_file(key) is not None
     
     async def list_keys(self, prefix: Optional[str] = None) -> List[str]:
-        """List all keys in storage."""
+        """List all keys in storage (truly async)."""
+        # Run glob operations in thread pool
+        return await asyncio.to_thread(self._sync_list_keys, prefix)
+    
+    def _sync_list_keys(self, prefix: Optional[str] = None) -> List[str]:
+        """Synchronous list keys helper for thread pool."""
         keys = set()
         
         for pattern in [f"*{JSON_EXTENSION}", f"*{YAML_EXTENSION}", f"*{YML_EXTENSION}"]:

@@ -88,6 +88,8 @@ from .interfaces import (
     ITaskQueue,
     ICheckpointer,
     IInterruptHandler,
+    # Metrics store interfaces
+    IMetricsStore,
 )
 
 # ============================================================================
@@ -191,6 +193,16 @@ from .cache import (
     MemoryFactory as ToolMemoryFactory,  # Renamed to avoid conflict with core MemoryFactory
 )
 
+# ============================================================================
+# Metrics Store (for Evaluators and Metrics)
+# ============================================================================
+from .metrics_store import (
+    BaseMetricsStore,
+    InMemoryMetricsStore,
+    DynamoDBMetricsStore,
+    create_metrics_store,
+)
+
 __all__ = [
     # =========================================================================
     # Interfaces
@@ -214,6 +226,8 @@ __all__ = [
     "ITaskQueue",
     "ICheckpointer",
     "IInterruptHandler",
+    # Metrics store
+    "IMetricsStore",
     
     # =========================================================================
     # Core Memory Base Classes
@@ -306,4 +320,11 @@ __all__ = [
     "create_table_if_not_exists",
     "DEFAULT_TTL_DAYS",
     "MAX_TTL_DAYS",
+    # =========================================================================
+    # Metrics Store
+    # =========================================================================
+    "BaseMetricsStore",
+    "InMemoryMetricsStore",
+    "DynamoDBMetricsStore",
+    "create_metrics_store",
 ]

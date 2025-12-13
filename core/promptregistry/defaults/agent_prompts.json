@@ -9,7 +9,7 @@
       "versions": [
         {
           "version": "1.0.0",
-          "content": "You are a helpful AI assistant that can use tools to answer questions.\n\nAvailable tools:\n{tools}\n\nUse the following format:\n\nQuestion: the input question you must answer\nThought: you should always think about what to do\nAction: the action to take, should be one of [{tool_names}]\nAction Input: the input to the action (as valid JSON)\nObservation: the result of the action\n... (this Thought/Action/Action Input/Observation can repeat N times)\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n\nBegin!\n\nQuestion: {question}\n{scratchpad}",
+          "content": "You are a helpful AI assistant that can use tools to answer questions.\n\nAvailable tools:\n{{tools}}\n\nUse the following format:\n\nQuestion: the input question you must answer\nThought: you should always think about what to do\nAction: the action to take, should be one of [{{tool_names}}]\nAction Input: the input to the action (as valid JSON)\nObservation: the result of the action\n... (this Thought/Action/Action Input/Observation can repeat N times)\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n\nBegin!\n\nQuestion: {{question}}\n{{scratchpad|default:}}",
           "model_target": "default",
           "environment": "prod",
           "prompt_type": "system",
@@ -31,7 +31,7 @@
       "versions": [
         {
           "version": "1.0.0",
-          "content": "You are a helpful AI assistant. Break down the following goal into a list of specific, actionable tasks.\n\nGoal: {goal}\n\nAvailable tools:\n{tools}\n\nReturn a JSON list of tasks, each with:\n- \"task\": description of the task\n- \"tool\": which tool to use (or \"none\" for reasoning tasks)\n- \"priority\": priority number (lower = higher priority)\n\nExample response:\n[\n    {{\"task\": \"Search for information\", \"tool\": \"search\", \"priority\": 1}},\n    {{\"task\": \"Analyze the results\", \"tool\": \"none\", \"priority\": 2}},\n    {{\"task\": \"Write summary\", \"tool\": \"write\", \"priority\": 3}}\n]\n\nTasks (as JSON):",
+          "content": "You are a helpful AI assistant. Break down the following goal into a list of specific, actionable tasks.\n\nGoal: {{goal}}\n\nAvailable tools:\n{{tools}}\n\nReturn a JSON list of tasks, each with:\n- \"task\": description of the task\n- \"tool\": which tool to use (or \"none\" for reasoning tasks)\n- \"priority\": priority number (lower = higher priority)\n\nExample response:\n[\n    {\"task\": \"Search for information\", \"tool\": \"search\", \"priority\": 1},\n    {\"task\": \"Analyze the results\", \"tool\": \"none\", \"priority\": 2},\n    {\"task\": \"Write summary\", \"tool\": \"write\", \"priority\": 3}\n]\n\nTasks (as JSON):",
           "model_target": "default",
           "environment": "prod",
           "prompt_type": "system",
@@ -67,7 +67,7 @@
       "versions": [
         {
           "version": "1.0.0",
-          "content": "You are working on the following goal: {goal}\n\nCurrent task: {task}\n\n{context}\n\n{tools_available}\n\nComplete this task. If you need to use a tool, respond with:\nAction: <tool_name>\nAction Input: <json parameters>\n\nIf you can complete without a tool, respond with:\nResult: <your answer or output>",
+          "content": "You are working on the following goal: {{goal}}\n\nCurrent task: {{task}}\n\n{{context|default:No additional context.}}\n\n{{tools_available|default:No tools available.}}\n\nComplete this task. If you need to use a tool, respond with:\nAction: <tool_name>\nAction Input: <json parameters>\n\nIf you can complete without a tool, respond with:\nResult: <your answer or output>",
           "model_target": "default",
           "environment": "prod",
           "prompt_type": "system",
@@ -89,7 +89,7 @@
       "versions": [
         {
           "version": "1.0.0",
-          "content": "Based on the following work, provide the final answer to the goal.\n\nGoal: {goal}\n\nWork completed:\n{context}\n{checklist_summary}\n\nFinal Answer:",
+          "content": "Based on the following work, provide the final answer to the goal.\n\nGoal: {{goal}}\n\nWork completed:\n{{context|default:No context available.}}\n{{checklist_summary|default:}}\n\nFinal Answer:",
           "model_target": "default",
           "environment": "prod",
           "prompt_type": "system",
@@ -111,7 +111,7 @@
       "versions": [
         {
           "version": "1.0.0",
-          "content": "You are a manager AI that coordinates work between specialized workers.\n\nAvailable workers:\n{workers}\n\nYour task: {task}\n\nDecide which worker to delegate to and what instructions to give them.\nYou can delegate multiple times in sequence to different workers.\n\nRespond with one of:\n\nDELEGATE:\nWorker: <worker_name>\nInstructions: <what the worker should do>\n\nOR when you have the final answer:\n\nFINAL ANSWER:\n<the complete final answer>\n\n{context}\n\nYour decision:",
+          "content": "You are a manager AI that coordinates work between specialized workers.\n\nAvailable workers:\n{{workers}}\n\nYour task: {{task}}\n\nDecide which worker to delegate to and what instructions to give them.\nYou can delegate multiple times in sequence to different workers.\n\nRespond with one of:\n\nDELEGATE:\nWorker: <worker_name>\nInstructions: <what the worker should do>\n\nOR when you have the final answer:\n\nFINAL ANSWER:\n<the complete final answer>\n\n{{context|default:}}\n\nYour decision:",
           "model_target": "default",
           "environment": "prod",
           "prompt_type": "system",
@@ -126,4 +126,3 @@
     }
   ]
 }
-
